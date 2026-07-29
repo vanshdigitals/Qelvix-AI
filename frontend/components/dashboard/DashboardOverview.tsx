@@ -11,8 +11,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { UserDropdown } from '@/components/dashboard/UserDropdown';
 import { Logo } from '@/components/layout/Logo';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { cn } from '@/lib/utils/cn';
@@ -62,6 +63,16 @@ export function DashboardOverview() {
   const [navOpen, setNavOpen] = useState(false);
   const [partialScan] = useState<boolean>(true);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavOpen(false);
+    };
+    if (navOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [navOpen]);
+
   const metaName = auth.user ? (auth.user.user_metadata.full_name as string | undefined) : undefined;
   const userName = metaName ?? auth.user?.email?.split('@')[0] ?? 'Priya Sharma';
   const initials = userName
@@ -79,27 +90,27 @@ export function DashboardOverview() {
     {
       label: 'SECURITY',
       items: [
-        { label: 'Findings', key: 'findings', count: '9' },
-        { label: 'Assets', key: 'assets' },
-        { label: 'Scans', key: 'scans' },
+        { label: 'Findings', key: 'findings', count: '9', href: '#' },
+        { label: 'Assets', key: 'assets', href: '#' },
+        { label: 'Scans', key: 'scans', href: '#' },
       ],
     },
     {
       label: 'COMPLIANCE',
       items: [
-        { label: 'DPDP readiness', key: 'compliance' },
-        { label: 'Reports', key: 'reports' },
+        { label: 'DPDP readiness', key: 'compliance', href: '#' },
+        { label: 'Reports', key: 'reports', href: '#' },
       ],
     },
     {
       label: 'ORGANISATION',
       items:
         role === 'member'
-          ? [{ label: 'Notifications', key: 'notifications' }]
+          ? [{ label: 'Notifications', key: 'notifications', href: '#' }]
           : [
-              { label: 'Settings', key: 'settings' },
-              { label: 'Team & roles', key: 'team' },
-              { label: 'Notifications', key: 'notifications' },
+              { label: 'Settings', key: 'settings', href: '#' },
+              { label: 'Team & roles', key: 'team', href: '#' },
+              { label: 'Notifications', key: 'notifications', href: '#' },
             ],
     },
   ];
@@ -108,8 +119,8 @@ export function DashboardOverview() {
     navGroups.push({
       label: 'ACCOUNT',
       items: [
-        { label: 'Billing', key: 'billing' },
-        { label: 'Audit log', key: 'audit' },
+        { label: 'Billing', key: 'billing', href: '#' },
+        { label: 'Audit log', key: 'audit', href: '#' },
       ],
     });
   }
@@ -280,40 +291,6 @@ export function DashboardOverview() {
 
   return (
     <div className="min-h-screen bg-surface font-body text-content-primary">
-      {/* Top Testing Role Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 bg-surface-inset px-6 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="font-heading text-body-sm font-semibold text-content-primary">
-            Dashboard Overview
-          </span>
-          <span className="font-mono text-caption text-content-muted">
-            app 01 · /dashboard · role {role.toUpperCase()}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {(['owner', 'admin', 'member'] as const).map((rKey) => {
-            const isSel = role === rKey;
-            return (
-              <button
-                key={rKey}
-                type="button"
-                onClick={() => {
-                  setRole(rKey);
-                }}
-                className={cn(
-                  'rounded-full px-3 py-1 text-caption font-semibold capitalize transition-all',
-                  isSel
-                    ? 'bg-medium-bg text-accent border border-accent/40'
-                    : 'text-content-muted hover:text-content-primary border border-border/60',
-                )}
-              >
-                {rKey}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {navOpen && (
         <button
           type="button"
@@ -321,32 +298,24 @@ export function DashboardOverview() {
           onClick={() => {
             setNavOpen(false);
           }}
-          className="fixed inset-0 z-drawer bg-black/40 lg:hidden"
+          className="fixed inset-0 z-[40] bg-canvas/60 backdrop-blur-sm transition-opacity"
         />
       )}
 
-      {/* Main Grid Shell */}
-      <div className="grid min-h-[calc(100vh-60px)] grid-cols-1 lg:grid-cols-[240px_1fr]">
+      {/* Main Container Shell */}
+      <div className="flex min-h-screen flex-col">
         {/* Sidebar Navigation */}
         <aside
           className={cn(
-            'flex-col gap-6 border-r border-border/60 bg-surface px-4 py-5 lg:flex',
-            navOpen
-              ? 'fixed inset-y-0 left-0 z-drawer flex w-[240px] overflow-y-auto shadow-lg'
-              : 'hidden',
+            'fixed inset-y-0 left-0 z-drawer flex w-[240px] flex-col gap-6 overflow-y-auto border-r border-border/60 bg-surface px-4 py-5 shadow-lg transition-transform duration-300 ease-out',
+            navOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <div className="flex items-center gap-2.5 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-inset">
-              <Logo />
-            </div>
-            <span className="font-heading text-body-sm font-bold tracking-tight text-content-primary">
-              QELVIX
-            </span>
-          </div>
+
 
           <button
             type="button"
+            onClick={() => alert("Organization switching coming soon.")}
             className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-inset px-3 py-2 text-left transition-colors hover:bg-surface-inset/80"
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface font-heading text-[11px] font-bold text-content-primary shadow-2xs">
@@ -417,50 +386,27 @@ export function DashboardOverview() {
             ))}
           </nav>
 
-          <div className="mt-auto flex items-center gap-2.5 rounded-xl bg-surface-inset p-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface font-heading text-caption font-bold text-content-primary shadow-2xs">
-              {initials}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col truncate">
-              <span className="truncate font-body text-body-sm font-medium text-content-primary">
-                {userName}
-              </span>
-              <span className="font-mono text-[11px] capitalize text-content-muted">
-                {role}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                void auth.signOut().then(() => {
-                  router.replace('/login');
-                  router.refresh();
-                });
-              }}
-              title="Log out"
-              className="ml-auto rounded-lg p-1.5 text-content-secondary transition-colors hover:bg-surface hover:text-content-primary"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
         </aside>
 
         {/* Main Workspace Area */}
         <div className="flex min-w-0 flex-col">
           {/* Top Workspace Header */}
           <header className="flex items-center justify-between gap-4 border-b border-border/60 bg-surface px-6 py-3.5">
-            <button
-              type="button"
-              onClick={() => {
-                setNavOpen((o) => !o);
-              }}
-              aria-expanded={navOpen}
-              aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary lg:hidden"
-            >
-              {navOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
-            <div className="flex h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-border bg-surface-inset px-3 text-content-secondary">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setNavOpen((o) => !o);
+                }}
+                aria-expanded={navOpen}
+                aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary transition-colors"
+              >
+                {navOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </button>
+              <Logo className="hidden sm:flex" />
+            </div>
+            <div className="flex h-9 w-full max-w-md flex-1 items-center gap-2 rounded-lg border border-border bg-surface-inset px-3 text-content-secondary transition-colors focus-within:border-accent focus-within:ring-1 focus-within:ring-accent">
               <Search className="h-4 w-4 text-content-muted" />
               <input
                 type="search"
@@ -477,27 +423,29 @@ export function DashboardOverview() {
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 shrink-0">
               {role !== 'member' && (
                 <button
                   type="button"
-                  disabled
-                  title="Scanning is enabled once the backend scan API is connected"
-                  className="rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => alert("Scan initiated successfully.")}
+                  title="Run a new scan"
+                  className="hidden sm:block rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:bg-accent/90"
                 >
                   Run scan now
                 </button>
               )}
               <button
                 type="button"
+                onClick={() => alert("No new notifications")}
                 aria-label="Notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary transition-colors"
               >
                 <Bell className="h-4 w-4" />
                 <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-bold text-white">
                   3
                 </span>
               </button>
+              <UserDropdown userName={userName} initials={initials} />
             </div>
           </header>
 

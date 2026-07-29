@@ -80,7 +80,7 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-content-secondary backdrop-blur-sm shadow-2xs',
+        'inline-flex w-fit items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-content-secondary backdrop-blur-sm shadow-2xs',
         className,
       )}
     >
