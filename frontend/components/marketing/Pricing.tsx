@@ -29,13 +29,13 @@ export function Pricing() {
 
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:items-stretch">
           {PRICING_TIERS.map((tier, idx) => {
-            const slas = ['Monthly automated check', 'Weekly sweep + WhatsApp', 'Continuous 24/7 SLA'];
+            const slas = [
+              'Monthly automated check',
+              'Weekly sweep + WhatsApp',
+              'Continuous 24/7 SLA',
+            ];
             return (
-              <Reveal
-                key={tier.id}
-                index={idx}
-                className="sm:first:col-span-2 lg:first:col-span-1"
-              >
+              <Reveal key={tier.id} index={idx} className="sm:first:col-span-2 lg:first:col-span-1">
                 <div
                   className={cn(
                     'group relative flex h-full flex-col justify-between rounded-2xl p-7 transition-colors duration-200',
@@ -85,11 +85,13 @@ export function Pricing() {
                         <li key={feature} className="flex items-center gap-2.5">
                           <span
                             aria-hidden
-                            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-success-bg border border-success-text/20"
+                            className="border-success-text/20 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border bg-success-bg"
                           >
                             <Check className="h-2.5 w-2.5 text-success-text" />
                           </span>
-                          <span className="text-body-sm font-medium text-content-primary">{feature}</span>
+                          <span className="text-body-sm font-medium text-content-primary">
+                            {feature}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -101,7 +103,7 @@ export function Pricing() {
                       className={cn(
                         'mt-8 flex h-10 w-full items-center justify-center rounded-lg text-body-sm font-semibold transition-colors duration-200',
                         tier.recommended
-                          ? 'bg-accent text-white hover:bg-accent/90'
+                          ? 'bg-accent text-[#0B0E16] hover:bg-accent/90'
                           : 'border border-border-strong bg-surface-inset text-content-primary hover:bg-surface',
                       )}
                     >
@@ -131,5 +133,3 @@ export function Pricing() {
     </section>
   );
 }
-
-

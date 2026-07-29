@@ -64,4 +64,3 @@ export function AnnouncementBar({ message, linkLabel, linkHref, id }: Announceme
     </AnimatePresence>
   );
 }
-

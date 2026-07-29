@@ -26,7 +26,12 @@ export function HowItWorks() {
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {WORKFLOW_STEPS.map((step, index) => {
             const Icon = ICONS[index % ICONS.length] ?? Globe;
-            const stepMetrics = ['SLA: < 60s', 'Automated DNS TXT', '7 Engine Sweep', 'WhatsApp & Email'];
+            const stepMetrics = [
+              'SLA: < 60s',
+              'Automated DNS TXT',
+              '7 Engine Sweep',
+              'WhatsApp & Email',
+            ];
             return (
               <Reveal key={step.id} index={index} delayStep={0.06}>
                 <div className="group relative flex h-full flex-col justify-between rounded-xl border border-border/80 bg-surface p-6 shadow-2xs transition-colors duration-200 hover:border-border-strong hover:bg-surface-inset">
@@ -48,7 +53,9 @@ export function HowItWorks() {
                   </div>
                   <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 font-mono text-caption text-content-muted">
                     <span>Execution</span>
-                    <span className="font-semibold text-content-secondary">{stepMetrics[index]}</span>
+                    <span className="font-semibold text-content-secondary">
+                      {stepMetrics[index]}
+                    </span>
                   </div>
                 </div>
               </Reveal>
@@ -59,5 +66,3 @@ export function HowItWorks() {
     </section>
   );
 }
-
-

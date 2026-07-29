@@ -79,29 +79,37 @@ export function InteractiveDemo() {
           <div className="mx-auto max-w-5xl overflow-hidden rounded-xl border border-border/90 bg-surface shadow-md ring-1 ring-black/5">
             <WindowChrome label={DEMO_SCAN.domain} />
 
-
             {/* Quick Metrics Header Bar */}
             <div className="grid grid-cols-2 border-b border-border bg-surface-inset px-6 py-4 sm:grid-cols-4">
               <div className="border-r border-border/60 pr-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">Last Scan</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                  Last Scan
+                </span>
                 <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
-                  {DEMO_SCAN.scannedAt} <span className="text-caption font-normal text-content-muted">(42ms)</span>
+                  {DEMO_SCAN.scannedAt}{' '}
+                  <span className="text-caption font-normal text-content-muted">(42ms)</span>
                 </p>
               </div>
               <div className="border-r border-border/60 px-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">Public Assets</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                  Public Assets
+                </span>
                 <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
                   {DEMO_SCAN.assets.length} Monitored
                 </p>
               </div>
               <div className="border-r border-border/60 px-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">Active Findings</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                  Active Findings
+                </span>
                 <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
                   {DEMO_SCAN.findings.length} Flagged
                 </p>
               </div>
               <div className="pl-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">DPDP Status</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                  DPDP Status
+                </span>
                 <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-body-md font-semibold text-medium-text">
                   <span className="h-2 w-2 rounded-full bg-medium-text" />
                   Action Required
@@ -132,8 +140,8 @@ export function InteractiveDemo() {
                       className={cn(
                         'flex-1 rounded-md px-3.5 py-2.5 text-left text-body-md transition-all duration-200 ease-out lg:flex-none',
                         view === entry.id
-                          ? 'bg-surface text-content-primary shadow-sm border border-border font-semibold'
-                          : 'text-content-secondary hover:text-content-primary hover:bg-surface/50 font-medium',
+                          ? 'border border-border bg-surface font-semibold text-content-primary shadow-sm'
+                          : 'font-medium text-content-secondary hover:bg-surface/50 hover:text-content-primary',
                       )}
                     >
                       {entry.label}
@@ -182,7 +190,7 @@ export function InteractiveDemo() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-2 text-caption text-content-muted">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-2 w-2 rounded-full bg-success-text animate-pulse" />
+              <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success-text" />
               <span className="font-mono">LIVE AUDIT ENGINE: 7 CONTINUOUS AGENTS ACTIVE</span>
             </div>
             <span>Interactive evaluation stage • Click tabs to inspect</span>
@@ -193,11 +201,12 @@ export function InteractiveDemo() {
   );
 }
 
-
 function ScoreHeader() {
   return (
     <div>
-      <p className="font-mono text-[11px] uppercase tracking-wider font-semibold text-content-muted">Overall Risk Index</p>
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+        Overall Risk Index
+      </p>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="tabular font-display text-[2.75rem] font-bold leading-none text-content-primary">
           {DEMO_SCAN.riskScore}
@@ -229,7 +238,7 @@ function AssetsView() {
             className="group flex flex-col justify-between rounded-lg border border-border/80 bg-surface p-4 shadow-2xs transition-all duration-200 hover:border-border-strong hover:shadow-xs"
           >
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-success-text" />
                 <Globe className="h-4 w-4 shrink-0 text-content-secondary" />
                 <span className="truncate font-mono text-mono-data font-semibold text-content-primary">
@@ -269,9 +278,11 @@ function FindingsView() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2.5">
                 <ShieldAlert className="h-4 w-4 shrink-0 text-content-secondary" />
-                <p className="truncate font-display text-body-lg font-semibold text-content-primary">{finding.title}</p>
+                <p className="truncate font-display text-body-lg font-semibold text-content-primary">
+                  {finding.title}
+                </p>
               </div>
-              <p className="mt-1 truncate font-mono text-caption text-content-secondary pl-6.5">
+              <p className="pl-6.5 mt-1 truncate font-mono text-caption text-content-secondary">
                 {finding.asset}
               </p>
             </div>
@@ -297,16 +308,20 @@ function DetailView() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
         <div className="flex items-center gap-3">
           <SeverityBadge severity={finding.severity} />
-          <span className="font-mono text-mono-data font-semibold text-content-secondary">{finding.findingType}</span>
+          <span className="font-mono text-mono-data font-semibold text-content-secondary">
+            {finding.findingType}
+          </span>
         </div>
         <span className="font-mono text-caption text-content-muted">Decided by rules_engine</span>
       </div>
-      <h3 className="mt-4 font-display text-h3 text-content-primary font-semibold">{finding.title}</h3>
+      <h3 className="mt-4 font-display text-h3 font-semibold text-content-primary">
+        {finding.title}
+      </h3>
       <p className="mt-1 font-mono text-mono-data text-content-secondary">{finding.asset}</p>
-      
+
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border/80 bg-surface p-4 shadow-2xs">
-          <p className="font-mono text-[11px] uppercase tracking-wider font-semibold text-content-secondary">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-secondary">
             Plain Language Explanation
           </p>
           <p className="mt-2 text-body-md leading-relaxed text-content-secondary">
@@ -319,10 +334,10 @@ function DetailView() {
         </div>
 
         <div className="rounded-lg border border-border/80 bg-surface-inset p-4 font-mono text-caption">
-          <p className="text-[11px] uppercase tracking-wider font-semibold text-content-secondary">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-content-secondary">
             Deterministic Rule Evidence
           </p>
-          <pre className="mt-2.5 whitespace-pre-wrap break-words overflow-x-hidden overflow-y-auto max-h-[160px] rounded bg-surface p-3 text-content-primary border border-border/50 text-[11px] leading-relaxed select-all">
+          <pre className="mt-2.5 max-h-[160px] select-all overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words rounded border border-border/50 bg-surface p-3 text-[11px] leading-relaxed text-content-primary">
             {`{
   "rule": "admin_panel_exposed",
   "asset": "admin.example-textiles.in",
@@ -336,4 +351,3 @@ function DetailView() {
     </div>
   );
 }
-

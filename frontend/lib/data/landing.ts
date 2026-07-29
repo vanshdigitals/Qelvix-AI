@@ -13,8 +13,8 @@ export interface ProblemStatement {
 export const PROBLEMS: readonly ProblemStatement[] = [
   { id: 'exposure', statement: "You don't know what's publicly exposed to attackers." },
   { id: 'dpdp', statement: "You don't know if your organization is DPDP-compliant." },
-  { id: 'discovery', statement: "You find out about breaches from customers, not your tools." },
-  { id: 'shadow', statement: "Unmonitored subdomains and stale assets create hidden risk." },
+  { id: 'discovery', statement: 'You find out about breaches from customers, not your tools.' },
+  { id: 'shadow', statement: 'Unmonitored subdomains and stale assets create hidden risk.' },
 ] as const;
 
 export interface SolutionAnswer {
@@ -224,7 +224,6 @@ export const FAQS: readonly FaqItem[] = [
       'Yes. Qelvix automatically discovers associated subdomains, mail servers, and admin portals tied to your root domain and monitors them under a single unified dashboard.',
   },
 ] as const;
-
 
 /* -------------------------------------------------------------------------- */
 /* Demo fixture                                                                */

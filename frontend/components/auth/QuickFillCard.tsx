@@ -33,8 +33,7 @@ export function QuickFillCard({ label, onActivate, busy = false, error }: QuickF
         </dl>
       ) : (
         <p className="mt-1.5 text-[11px] text-content-muted">
-          Demo account not configured. Set NEXT_PUBLIC_DEMO_EMAIL and
-          NEXT_PUBLIC_DEMO_PASSWORD.
+          Demo account not configured. Set NEXT_PUBLIC_DEMO_EMAIL and NEXT_PUBLIC_DEMO_PASSWORD.
         </p>
       )}
 

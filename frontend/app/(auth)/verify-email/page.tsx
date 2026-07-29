@@ -57,14 +57,14 @@ export default function VerifyEmailPage() {
               onClick={() => {
                 router.push('/onboarding');
               }}
-              className="mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 font-body text-body-sm font-semibold text-white shadow-2xs transition-all duration-200 hover:shadow-xs"
+              className="font-body mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-all duration-200 hover:shadow-xs"
             >
               Continue
             </button>
           ) : (
             <Link
               href="/login"
-              className="mt-6 flex h-11 w-full items-center justify-center rounded-lg border border-border-strong px-4 font-body text-body-sm font-semibold text-content-primary transition-colors duration-200 hover:bg-surface-inset"
+              className="font-body mt-6 flex h-11 w-full items-center justify-center rounded-lg border border-border-strong px-4 text-body-sm font-semibold text-content-primary transition-colors duration-200 hover:bg-surface-inset"
             >
               Back to log in
             </Link>

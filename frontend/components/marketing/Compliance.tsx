@@ -33,11 +33,13 @@ export function Compliance() {
               Where you stand on the DPDP Act
             </h2>
             <p className="mt-3 max-w-measure text-body-md leading-relaxed text-content-secondary">
-              India&rsquo;s Digital Personal Data Protection Act expects specific compliance practices of any
-              business handling customer data. Qelvix verifies externally visible indicators so you know what to resolve first.
+              India&rsquo;s Digital Personal Data Protection Act expects specific compliance
+              practices of any business handling customer data. Qelvix verifies externally visible
+              indicators so you know what to resolve first.
             </p>
-            <p className="mt-3 max-w-measure text-caption text-content-muted leading-relaxed">
-              Readiness indicators evaluate public configurations against DPDP expectations. They do not constitute formal legal certification.
+            <p className="mt-3 max-w-measure text-caption leading-relaxed text-content-muted">
+              Readiness indicators evaluate public configurations against DPDP expectations. They do
+              not constitute formal legal certification.
             </p>
           </Reveal>
         </div>
@@ -55,7 +57,8 @@ export function Compliance() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-flex rounded-full border border-border/60 bg-surface px-2.5 py-0.5 font-mono text-[11px] font-semibold text-content-secondary shadow-2xs">
-                    {COMPLIANCE_INDICATORS.filter((i) => i.state === 'success').length} / {COMPLIANCE_INDICATORS.length} Ready
+                    {COMPLIANCE_INDICATORS.filter((i) => i.state === 'success').length} /{' '}
+                    {COMPLIANCE_INDICATORS.length} Ready
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-medium-bg px-2.5 py-0.5 font-mono text-[11px] font-semibold text-medium-text">
                     Action Needed
@@ -84,7 +87,7 @@ export function Compliance() {
                           </span>
                           <span
                             className={cn(
-                              'inline-flex shrink-0 items-center gap-1 rounded-[3px] border border-current/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider uppercase leading-none',
+                              'border-current/15 inline-flex shrink-0 items-center gap-1 rounded-[3px] border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase leading-none tracking-wider',
                               STATE_STYLES[indicator.state],
                             )}
                           >
@@ -123,5 +126,3 @@ export function Compliance() {
     </section>
   );
 }
-
-

@@ -64,7 +64,7 @@ export function AppearanceDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-36 origin-top-right rounded-lg border border-border/80 bg-surface p-1 shadow-md ring-1 ring-black/5 z-dropdown animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className="absolute right-0 top-full z-dropdown mt-2 w-36 origin-top-right rounded-lg border border-border/80 bg-surface p-1 shadow-md ring-1 ring-black/5 duration-100 animate-in fade-in-0 zoom-in-95">
           {THEME_OPTIONS.map((option) => {
             const Icon = option.icon;
             const isSelected = activeTheme === option.value;
@@ -79,7 +79,7 @@ export function AppearanceDropdown() {
                 className={cn(
                   'flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-100',
                   isSelected
-                    ? 'bg-surface-inset text-content-primary font-semibold'
+                    ? 'bg-surface-inset font-semibold text-content-primary'
                     : 'text-content-secondary hover:bg-surface-inset/60 hover:text-content-primary',
                 )}
               >

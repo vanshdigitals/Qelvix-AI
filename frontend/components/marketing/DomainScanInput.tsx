@@ -67,7 +67,7 @@ export function DomainScanInput({
         className={cn(
           'flex w-full flex-col gap-2 rounded-xl border bg-surface p-1.5 shadow-sm transition-all duration-200 sm:flex-row sm:items-center sm:gap-2',
           error
-            ? 'border-critical-text ring-1 ring-critical-text/20'
+            ? 'ring-critical-text/20 border-critical-text ring-1'
             : focused
               ? 'border-accent ring-2 ring-accent/15'
               : 'border-border/80 hover:border-border-strong',
@@ -122,7 +122,7 @@ export function DomainScanInput({
         <button
           type="submit"
           disabled={submitting}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 font-body text-body-sm font-semibold text-white transition-colors duration-200 hover:bg-accent/90 disabled:opacity-40 sm:w-auto"
+          className="font-body flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-body-sm font-semibold text-[#0B0E16] transition-colors duration-200 hover:bg-accent/90 disabled:opacity-40 sm:w-auto"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {submitLabel}
@@ -147,4 +147,3 @@ export function DomainScanInput({
     </form>
   );
 }
-

@@ -63,7 +63,7 @@ export function Architecture() {
                     <button
                       type="button"
                       onClick={copyEvidence}
-                      className="inline-flex items-center gap-1 rounded bg-surface px-2 py-1 text-[11px] font-medium text-content-secondary border border-border/80 hover:text-content-primary transition-colors"
+                      className="inline-flex items-center gap-1 rounded border border-border/80 bg-surface px-2 py-1 text-[11px] font-medium text-content-secondary transition-colors hover:text-content-primary"
                     >
                       {copied ? (
                         <>
@@ -80,13 +80,13 @@ export function Architecture() {
                   </div>
                   <pre
                     aria-label="Deterministic rule output"
-                    className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-border/80 bg-canvas p-3.5 font-mono text-[11px] sm:text-xs leading-relaxed text-content-primary overflow-hidden"
+                    className="mt-3 overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-border/80 bg-canvas p-3.5 font-mono text-[11px] leading-relaxed text-content-primary sm:text-xs"
                   >
                     <code>{RULE_EVIDENCE}</code>
                   </pre>
                 </div>
 
-                <div className="p-4.5 lg:p-6 flex flex-col justify-between">
+                <div className="flex flex-col justify-between p-4.5 lg:p-6">
                   <div>
                     <span className="inline-flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.06em] text-accent">
                       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -96,7 +96,7 @@ export function Architecture() {
                       {finding?.explanation}
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-caption text-content-muted">
+                  <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-caption text-content-muted">
                     <span>Evaluated by Rule Engine</span>
                     <span>100% Deterministic</span>
                   </div>
@@ -111,13 +111,13 @@ export function Architecture() {
           <Reveal>
             <div className="flex flex-col items-start gap-1">
               <Eyebrow>The pipeline</Eyebrow>
-              <h3 className="mt-2 font-display text-h3 tracking-tight font-semibold text-content-primary">
+              <h3 className="mt-2 font-display text-h3 font-semibold tracking-tight text-content-primary">
                 Seven specialized agents across four phases
               </h3>
             </div>
           </Reveal>
 
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:mt-10">
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-10 lg:grid-cols-4">
             {AGENT_PHASES.map((phase, index) => {
               const output = PHASE_OUTPUTS[index] ?? PHASE_OUTPUTS[0];
               const slas = ['< 15s Latency', '< 30s Scan', 'Realtime Calc', 'Instant Dispatch'];
@@ -129,7 +129,7 @@ export function Architecture() {
                         <span className="font-mono text-caption font-semibold uppercase tracking-wider text-accent">
                           {phase.label}
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-[10px] font-semibold text-content-muted border border-border/60">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-inset px-2 py-0.5 font-mono text-[10px] font-semibold text-content-muted">
                           Phase 0{index + 1}
                         </span>
                       </div>
@@ -163,7 +163,7 @@ export function Architecture() {
 
           <Reveal index={1}>
             <div className="mt-10 flex flex-wrap items-center gap-2.5 border-t border-border/60 pt-6">
-              <span className="font-mono text-caption uppercase tracking-wider font-semibold text-content-secondary mr-2">
+              <span className="mr-2 font-mono text-caption font-semibold uppercase tracking-wider text-content-secondary">
                 Continuous Data Feeds:
               </span>
               {DATA_SOURCES.map((source) => (
@@ -182,5 +182,3 @@ export function Architecture() {
     </section>
   );
 }
-
-

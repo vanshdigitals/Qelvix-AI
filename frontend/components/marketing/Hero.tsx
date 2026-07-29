@@ -8,7 +8,11 @@ import { GridBackdrop, Eyebrow } from '@/components/marketing/primitives';
 import { SurfaceField, type SurfaceFieldState } from '@/components/marketing/SurfaceField';
 import { EASE_OUT } from '@/lib/motion/tokens';
 
-const REASSURANCES = ['No credit card required', 'Results in under a minute', 'DPDP compliance ready'] as const;
+const REASSURANCES = [
+  'No credit card required',
+  'Results in under a minute',
+  'DPDP compliance ready',
+] as const;
 
 export function Hero() {
   const [fieldState, setFieldState] = useState<SurfaceFieldState>('rest');
@@ -17,11 +21,15 @@ export function Hero() {
   const rise = (index: number) => ({
     initial: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0.12 : 0.5, ease: EASE_OUT, delay: reduceMotion ? 0 : index * 0.08 },
+    transition: {
+      duration: reduceMotion ? 0.12 : 0.5,
+      ease: EASE_OUT,
+      delay: reduceMotion ? 0 : index * 0.08,
+    },
   });
 
   return (
-    <section className="relative isolate flex items-center overflow-hidden pt-10 pb-12 md:pt-14 md:pb-16">
+    <section className="relative isolate flex items-center overflow-hidden pb-12 pt-10 md:pb-16 md:pt-14">
       {/* Background dot grid + subtle static surface field */}
       <GridBackdrop pattern="dots" glow="top" />
       <div className="absolute inset-0">
@@ -45,8 +53,8 @@ export function Hero() {
             {...rise(2)}
             className="mt-5 max-w-[48ch] text-body-lg leading-relaxed text-content-secondary"
           >
-            Qelvix scans your public footprint the way an attacker would, then explains findings
-            in plain language. See your security risk score in under a minute.
+            Qelvix scans your public footprint the way an attacker would, then explains findings in
+            plain language. See your security risk score in under a minute.
           </motion.p>
 
           <motion.div {...rise(3)} className="relative mt-8 w-full max-w-[560px]">
@@ -65,7 +73,9 @@ export function Hero() {
           >
             {REASSURANCES.map((item, index) => (
               <li key={item} className="flex items-center gap-4">
-                {index > 0 && <span aria-hidden className="h-1 w-1 rounded-full bg-border-strong" />}
+                {index > 0 && (
+                  <span aria-hidden className="h-1 w-1 rounded-full bg-border-strong" />
+                )}
                 <span>{item}</span>
               </li>
             ))}
@@ -80,15 +90,20 @@ export function Hero() {
           </motion.a>
 
           {/* Aeline & Catalis inspired data intelligence proof row */}
-          <motion.div
-            {...rise(6)}
-            className="mt-10 w-full border-t border-border/60 pt-6"
-          >
+          <motion.div {...rise(6)} className="mt-10 w-full border-t border-border/60 pt-6">
             <p className="text-caption font-semibold uppercase tracking-[0.1em] text-content-muted">
               Continuous Intelligence Sources & Audit Feeds
             </p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
-              {['Shodan', 'SSL Labs', 'VirusTotal', 'NVD', 'AbuseIPDB', 'SecurityTrails', 'Google Safe Browsing'].map((feed) => (
+              {[
+                'Shodan',
+                'SSL Labs',
+                'VirusTotal',
+                'NVD',
+                'AbuseIPDB',
+                'SecurityTrails',
+                'Google Safe Browsing',
+              ].map((feed) => (
                 <span
                   key={feed}
                   className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface/70 px-3 py-1 font-mono text-caption font-semibold text-content-secondary shadow-2xs transition-all duration-200 hover:border-border-strong hover:bg-surface hover:text-content-primary"
@@ -104,6 +119,3 @@ export function Hero() {
     </section>
   );
 }
-
-
-

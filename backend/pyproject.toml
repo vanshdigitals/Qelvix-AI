@@ -30,7 +30,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "ANN201"]
+"tests/*" = ["S101", "ANN201", "S106"]  # S106: fixture values, never real secrets
 "migrations/*" = ["ANN", "E501"]
 
 [tool.ruff.lint.isort]

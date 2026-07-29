@@ -63,9 +63,7 @@ export function OnboardingWizard() {
   const [domain, setDomain] = useState('');
   const [industry, setIndustry] = useState<string>('Manufacturing');
   const [size, setSize] = useState<string>('11–50');
-  const [invites, setInvites] = useState<Invite[]>([
-    { email: 'it@company.in', role: 'Admin' },
-  ]);
+  const [invites, setInvites] = useState<Invite[]>([{ email: 'it@company.in', role: 'Admin' }]);
   const [inviteEmail, setInviteEmail] = useState('');
 
   // Timeline animation states for verify & scan
@@ -143,7 +141,6 @@ export function OnboardingWizard() {
     setInvites((prev) => prev.filter((_, i) => i !== idx));
   }
 
-
   function renderTimelineItems(): React.ReactNode {
     const items =
       step === 'verify'
@@ -201,7 +198,7 @@ export function OnboardingWizard() {
         <button
           type="button"
           onClick={completeOnboarding}
-          className="text-body-sm font-medium text-content-muted hover:text-content-primary transition-colors"
+          className="text-body-sm font-medium text-content-muted transition-colors hover:text-content-primary"
         >
           Skip
         </button>
@@ -224,8 +221,8 @@ export function OnboardingWizard() {
             <div className="space-y-4">
               <span className="font-mono text-caption text-accent">FIRST LOGIN</span>
               <p className="font-body text-body-sm text-content-secondary">
-                Six short steps and one DNS record. After that, scanning is automatic and you
-                only hear from us when something needs you.
+                Six short steps and one DNS record. After that, scanning is automatic and you only
+                hear from us when something needs you.
               </p>
             </div>
           )}
@@ -254,7 +251,7 @@ export function OnboardingWizard() {
                       setOrg(e.target.value);
                     }}
                     placeholder="Vardhman Exports Pvt Ltd"
-                    className="mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 font-body text-body-sm text-content-primary outline-none focus:border-accent"
+                    className="font-body mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
                   />
                 </div>
 
@@ -287,7 +284,7 @@ export function OnboardingWizard() {
                       setContact(e.target.value);
                     }}
                     placeholder="priya@vardhmanexports.in"
-                    className="mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 font-body text-body-sm text-content-primary outline-none focus:border-accent"
+                    className="font-body mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
                   />
                   <p className="mt-1 text-caption text-content-muted">
                     Who we contact first if something critical appears (DPDP §8.6).
@@ -305,8 +302,7 @@ export function OnboardingWizard() {
                   What does the business do?
                 </h2>
                 <p className="font-body text-body-sm text-content-secondary">
-                  Industry sets your DPDP clause defaults and the benchmarks we compare you
-                  against.
+                  Industry sets your DPDP clause defaults and the benchmarks we compare you against.
                 </p>
               </div>
 
@@ -330,9 +326,7 @@ export function OnboardingWizard() {
                       <span className="font-body text-body-sm font-medium text-content-primary">
                         {ind.label}
                       </span>
-                      <span className="mt-0.5 text-caption text-content-muted">
-                        {ind.note}
-                      </span>
+                      <span className="mt-0.5 text-caption text-content-muted">{ind.note}</span>
                     </button>
                   );
                 })}
@@ -348,8 +342,7 @@ export function OnboardingWizard() {
                   Which domain should we monitor?
                 </h2>
                 <p className="font-body text-body-sm text-content-secondary">
-                  Qelvix only scans domains you prove ownership of. Nothing is scanned before
-                  that.
+                  Qelvix only scans domains you prove ownership of. Nothing is scanned before that.
                 </p>
               </div>
 
@@ -405,9 +398,7 @@ export function OnboardingWizard() {
                       <span className="font-body text-body-sm font-medium text-content-primary">
                         {sz.label}
                       </span>
-                      <span className="mt-0.5 text-caption text-content-muted">
-                        {sz.note}
-                      </span>
+                      <span className="mt-0.5 text-caption text-content-muted">{sz.note}</span>
                     </button>
                   );
                 })}
@@ -433,9 +424,7 @@ export function OnboardingWizard() {
                     key={`${inv.email}-${inv.role}`}
                     className="flex items-center justify-between rounded-xl border border-border bg-surface-inset px-4 py-3"
                   >
-                    <span className="font-mono text-body-sm text-content-primary">
-                      {inv.email}
-                    </span>
+                    <span className="font-mono text-body-sm text-content-primary">{inv.email}</span>
                     <div className="flex items-center gap-3">
                       <span className="rounded-full border border-border/80 px-2.5 py-0.5 text-caption font-medium text-content-secondary">
                         {inv.role}
@@ -462,7 +451,7 @@ export function OnboardingWizard() {
                       setInviteEmail(e.target.value);
                     }}
                     placeholder="teammate@company.in"
-                    className="h-10 flex-1 rounded-lg border border-border bg-surface px-3 font-body text-body-sm text-content-primary outline-none focus:border-accent"
+                    className="font-body h-10 flex-1 rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
                   />
                   <button
                     type="button"
@@ -508,8 +497,7 @@ export function OnboardingWizard() {
                   Scanning {domain || 'vardhmanexports.in'}
                 </h2>
                 <p className="font-body text-body-sm text-content-secondary">
-                  Real checks against your real infrastructure. Three agents, roughly two
-                  minutes.
+                  Real checks against your real infrastructure. Three agents, roughly two minutes.
                 </p>
               </div>
 
@@ -532,10 +520,10 @@ export function OnboardingWizard() {
               <div className="space-y-3">
                 <div className="flex flex-col rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <span className="rounded-full bg-critical/10 px-2 py-0.5 text-caption font-semibold text-critical-text">
+                    <span className="bg-critical/10 rounded-full px-2 py-0.5 text-caption font-semibold text-critical-text">
                       Critical
                     </span>
-                    <p className="mt-2 font-body text-body-sm font-medium text-content-primary">
+                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
                       SSL certificate expired 4 days ago
                     </p>
                     <p className="font-mono text-caption text-content-muted">
@@ -546,10 +534,10 @@ export function OnboardingWizard() {
 
                 <div className="flex flex-col rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold text-warning-text">
+                    <span className="bg-warning/10 text-warning-text rounded-full px-2 py-0.5 text-caption font-semibold">
                       High
                     </span>
-                    <p className="mt-2 font-body text-body-sm font-medium text-content-primary">
+                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
                       No DMARC record — email is spoofable
                     </p>
                     <p className="font-mono text-caption text-content-muted">
@@ -563,7 +551,7 @@ export function OnboardingWizard() {
                     <span className="rounded-full bg-accent/10 px-2 py-0.5 text-caption font-semibold text-accent">
                       Medium
                     </span>
-                    <p className="mt-2 font-body text-body-sm font-medium text-content-primary">
+                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
                       SPF uses ~all instead of -all
                     </p>
                     <p className="font-mono text-caption text-content-muted">

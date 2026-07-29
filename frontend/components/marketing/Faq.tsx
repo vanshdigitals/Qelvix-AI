@@ -65,7 +65,7 @@ export function Faq() {
                         id={`faq-trigger-${faq.id}`}
                         className="flex min-h-[44px] w-full items-center justify-between gap-4 px-4 py-3.5 text-left md:px-5"
                       >
-                        <span className="flex items-center gap-3 text-body-md tracking-tight font-semibold text-content-primary">
+                        <span className="flex items-center gap-3 text-body-md font-semibold tracking-tight text-content-primary">
                           <span className="font-mono text-caption font-semibold text-accent/80">
                             0{index + 1}
                           </span>
@@ -94,7 +94,7 @@ export function Faq() {
                           transition={{ duration: reduceMotion ? 0.12 : 0.2, ease: EASE_OUT }}
                           className="overflow-hidden"
                         >
-                          <div className="border-t border-border/40 mx-4 md:mx-5 pt-3 pb-4">
+                          <div className="mx-4 border-t border-border/40 pb-4 pt-3 md:mx-5">
                             <p className="text-body-sm leading-relaxed text-content-secondary">
                               {faq.answer}
                             </p>
@@ -112,5 +112,3 @@ export function Faq() {
     </section>
   );
 }
-
-

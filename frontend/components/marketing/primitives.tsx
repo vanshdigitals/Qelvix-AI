@@ -21,16 +21,11 @@ interface GridBackdropProps {
   className?: string;
 }
 
-export function GridBackdrop({
-  pattern = 'dots',
-  glow = 'top',
-  className,
-}: GridBackdropProps) {
+export function GridBackdrop({ pattern = 'dots', glow = 'top', className }: GridBackdropProps) {
   const grid =
     pattern === 'dots'
       ? {
-          backgroundImage:
-            'radial-gradient(var(--color-border-default) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--color-border-default) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }
       : {
@@ -49,15 +44,16 @@ export function GridBackdrop({
           : null;
 
   return (
-    <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
+    <div
+      aria-hidden
+      className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
+    >
       <div
         className="absolute inset-0 opacity-60"
         style={{
           ...grid,
-          maskImage:
-            'radial-gradient(120% 80% at 50% 0%, black 20%, transparent 75%)',
-          WebkitMaskImage:
-            'radial-gradient(120% 80% at 50% 0%, black 20%, transparent 75%)',
+          maskImage: 'radial-gradient(120% 80% at 50% 0%, black 20%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(120% 80% at 50% 0%, black 20%, transparent 75%)',
         }}
       />
       {glowPosition && (
@@ -80,7 +76,7 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
   return (
     <span
       className={cn(
-        'inline-flex w-fit items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-content-secondary backdrop-blur-sm shadow-2xs',
+        'inline-flex w-fit items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-content-secondary shadow-2xs backdrop-blur-sm',
         className,
       )}
     >
@@ -92,7 +88,6 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
     </span>
   );
 }
-
 
 /* -------------------------------------------------------------------------- */
 /* SectionHeader — kicker number + eyebrow + heading, one composition         */

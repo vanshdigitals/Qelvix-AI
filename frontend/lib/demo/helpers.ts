@@ -6,8 +6,7 @@
  * authenticates through Supabase like any other user — nothing is bypassed.
  */
 export const demoHelpersEnabled =
-  process.env.NODE_ENV === 'development' ||
-  process.env.NEXT_PUBLIC_ENABLE_DEMO_HELPERS === 'true';
+  process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEMO_HELPERS === 'true';
 
 export const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL ?? '';
 export const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? '';

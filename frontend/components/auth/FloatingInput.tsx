@@ -23,7 +23,22 @@ export interface FloatingInputProps extends InputHTMLAttributes<HTMLInputElement
  */
 export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
   (
-    { label, id, name, type = 'text', error, success, helperText, aside, valid, className, disabled, value, onChange, ...props },
+    {
+      label,
+      id,
+      name,
+      type = 'text',
+      error,
+      success,
+      helperText,
+      aside,
+      valid,
+      className,
+      disabled,
+      value,
+      onChange,
+      ...props
+    },
     ref,
   ) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -53,13 +68,13 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
             aria-invalid={error ? true : undefined}
             aria-describedby={msgId}
             className={cn(
-              'h-10 w-full rounded-lg border bg-surface px-3.5 font-body text-body-sm text-content-primary outline-none transition-[border-color,box-shadow] duration-150 ease-out',
+              'font-body h-10 w-full rounded-lg border bg-surface px-3.5 text-body-sm text-content-primary outline-none transition-[border-color,box-shadow] duration-150 ease-out',
               'placeholder:text-content-muted',
               'focus:border-focus focus:ring-2 focus:ring-focus/25',
               error
-                ? 'border-critical-text focus:border-critical-text focus:ring-critical-text/25'
+                ? 'focus:ring-critical-text/25 border-critical-text focus:border-critical-text'
                 : success
-                  ? 'border-success-text focus:border-success-text focus:ring-success-text/25'
+                  ? 'focus:ring-success-text/25 border-success-text focus:border-success-text'
                   : 'border-border-strong hover:border-content-muted',
               'disabled:cursor-not-allowed disabled:opacity-40',
               (isPasswordType || (valid && !error)) && 'pr-10',

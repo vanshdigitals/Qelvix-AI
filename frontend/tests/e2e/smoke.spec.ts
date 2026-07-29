@@ -6,5 +6,10 @@ import { expect, test } from '@playwright/test';
 test('index route renders', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: 'Qelvix' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: 'Know what the internet knows about your business',
+    }),
+  ).toBeVisible();
 });

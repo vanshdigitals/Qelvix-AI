@@ -13,9 +13,13 @@ export default function NotFound() {
       return;
     }
 
-    const timer = setInterval(() => { setCountdown((c) => Math.max(0, c - 1)); }, 1000);
+    const timer = setInterval(() => {
+      setCountdown((c) => Math.max(0, c - 1));
+    }, 1000);
 
-    return () => { clearInterval(timer); };
+    return () => {
+      clearInterval(timer);
+    };
   }, [countdown, router]);
 
   return (
@@ -27,10 +31,10 @@ export default function NotFound() {
         <h1 className="font-display text-[4rem] font-bold leading-none tracking-tight text-content-primary md:text-[5.5rem]">
           404
         </h1>
-        <p className="mt-4 font-body text-body-lg text-content-secondary">
+        <p className="font-body mt-4 text-body-lg text-content-secondary">
           This page doesn&apos;t exist — or it moved.
         </p>
-        <p className="mt-2 font-body text-body-sm text-content-muted">
+        <p className="font-body mt-2 text-body-sm text-content-muted">
           Redirecting to home in {countdown}s
         </p>
 
@@ -39,7 +43,7 @@ export default function NotFound() {
           onClick={() => {
             router.push('/');
           }}
-          className="mt-8 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-6 font-body text-body-sm font-semibold text-white transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+          className="font-body mt-8 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-6 text-body-sm font-semibold text-white transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
         >
           Go to Homepage
         </button>

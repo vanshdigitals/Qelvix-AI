@@ -57,7 +57,7 @@ export function UserDropdown({ userName, initials }: UserDropdownProps) {
         aria-haspopup="true"
         aria-label="User menu"
         className={cn(
-          'flex h-9 w-9 items-center justify-center rounded-full bg-surface-inset font-heading text-caption font-bold text-content-primary shadow-2xs transition-colors duration-150 ease-out border border-border/60',
+          'font-heading flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-surface-inset text-caption font-bold text-content-primary shadow-2xs transition-colors duration-150 ease-out',
           'hover:border-border-strong hover:bg-surface-inset/80',
           open && 'border-border-strong bg-surface-inset/80',
         )}
@@ -66,11 +66,11 @@ export function UserDropdown({ userName, initials }: UserDropdownProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-48 origin-top-right rounded-lg border border-border/80 bg-surface p-1 shadow-md ring-1 ring-black/5 z-dropdown animate-in fade-in-0 zoom-in-95 duration-100">
-          <div className="px-2.5 py-2 border-b border-border/60 mb-1">
-            <p className="text-body-sm font-medium text-content-primary truncate">{userName}</p>
+        <div className="absolute right-0 top-full z-dropdown mt-2 w-48 origin-top-right rounded-lg border border-border/80 bg-surface p-1 shadow-md ring-1 ring-black/5 duration-100 animate-in fade-in-0 zoom-in-95">
+          <div className="mb-1 border-b border-border/60 px-2.5 py-2">
+            <p className="truncate text-body-sm font-medium text-content-primary">{userName}</p>
           </div>
-          
+
           <button
             type="button"
             onClick={() => {
@@ -82,7 +82,7 @@ export function UserDropdown({ userName, initials }: UserDropdownProps) {
             <User className="h-4 w-4" />
             Profile
           </button>
-          
+
           <button
             type="button"
             onClick={() => {
@@ -94,9 +94,9 @@ export function UserDropdown({ userName, initials }: UserDropdownProps) {
             <Settings className="h-4 w-4" />
             Settings
           </button>
-          
+
           <div className="my-1 border-t border-border/60" />
-          
+
           <button
             type="button"
             onClick={() => {

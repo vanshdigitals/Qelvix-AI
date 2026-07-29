@@ -16,7 +16,8 @@ function SuccessContent() {
 
   if (type === 'verified') {
     title = 'Account Email Verified!';
-    description = 'Your organization workspace is fully configured and ready for automated scanning.';
+    description =
+      'Your organization workspace is fully configured and ready for automated scanning.';
   } else if (type === 'reset') {
     title = 'Password Reset Complete';
     description = 'Your new password has been updated securely. You may now access your dashboard.';
@@ -27,7 +28,7 @@ function SuccessContent() {
 
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-success-text/30 bg-success-bg text-success-text shadow-2xs">
+      <div className="border-success-text/30 flex h-16 w-16 items-center justify-center rounded-2xl border bg-success-bg text-success-text shadow-2xs">
         <CheckCircle2 className="h-9 w-9" />
       </div>
 
@@ -35,14 +36,14 @@ function SuccessContent() {
         {title}
       </h1>
 
-      <p className="mt-2 text-body-sm leading-relaxed text-content-secondary max-w-[34ch]">
+      <p className="mt-2 max-w-[34ch] text-body-sm leading-relaxed text-content-secondary">
         {description}
       </p>
 
       <div className="mt-8 w-full">
         <Link
           href="/dashboard"
-          className="flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 font-body text-body-sm font-semibold text-white shadow-2xs transition-colors duration-200 hover:bg-accent/90"
+          className="font-body flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-colors duration-200 hover:bg-accent/90"
         >
           Continue to Dashboard →
         </Link>

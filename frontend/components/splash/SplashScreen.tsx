@@ -94,11 +94,11 @@ export function SplashScreen() {
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center px-6 text-center">
         {/* Splash Mark & Wordmark */}
-        <div className="flex items-center justify-center scale-125">
+        <div className="flex scale-125 items-center justify-center">
           <Logo />
         </div>
 
-        <p className="mt-5 font-body text-body-sm text-content-secondary">
+        <p className="font-body mt-5 text-body-sm text-content-secondary">
           Continuous exposure monitoring, explained in plain language.
         </p>
 

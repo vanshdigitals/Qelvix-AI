@@ -24,7 +24,7 @@ export function DemoHelperCard({ onFill, email }: DemoHelperCardProps) {
       <button
         type="button"
         onClick={onFill}
-        className="mt-3 w-full rounded-lg bg-accent px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-accent-hover"
+        className="hover:bg-accent-hover mt-3 w-full rounded-lg bg-accent px-4 py-2 text-body-sm font-medium text-[#0B0E16] transition-colors"
       >
         Fill Demo Credentials
       </button>

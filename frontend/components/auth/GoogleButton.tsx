@@ -54,8 +54,9 @@ export function GoogleButton({ label = 'Continue with Google', disabled }: Googl
         disabled={isDisabled}
         aria-describedby={unavailable ? 'google-unavailable' : undefined}
         className={cn(
-          'relative flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-border-strong bg-surface px-4 font-body text-body-sm font-semibold text-content-primary shadow-2xs transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out',
-          !isDisabled && 'hover:border-content-muted hover:bg-surface-inset hover:shadow-xs active:scale-[.985]',
+          'font-body relative flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-border-strong bg-surface px-4 text-body-sm font-semibold text-content-primary shadow-2xs transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out',
+          !isDisabled &&
+            'hover:border-content-muted hover:bg-surface-inset hover:shadow-xs active:scale-[.985]',
           isDisabled && 'cursor-not-allowed opacity-60',
         )}
       >

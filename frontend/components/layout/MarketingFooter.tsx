@@ -46,18 +46,26 @@ export function MarketingFooter() {
           <RevealChild className="lg:col-span-4">
             <Logo />
             <p className="mt-4 max-w-[32ch] text-body-sm leading-relaxed text-content-secondary">
-              Continuous, deterministic attack surface monitoring and DPDP readiness for Indian enterprises and growing brands.
+              Continuous, deterministic attack surface monitoring and DPDP readiness for Indian
+              enterprises and growing brands.
             </p>
 
             {/* Live Operational Status Badge */}
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface px-3 py-1 font-mono text-caption font-semibold text-content-secondary shadow-2xs">
-              <span aria-hidden className="inline-flex h-2 w-2 rounded-full bg-success-text animate-pulse" />
+              <span
+                aria-hidden
+                className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success-text"
+              />
               <span>All 7 Scan Engines Operational</span>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono text-content-muted">
-              <span className="rounded border border-border/60 bg-surface-inset px-2 py-0.5">DPDP Act (2023) Aligned</span>
-              <span className="rounded border border-border/60 bg-surface-inset px-2 py-0.5">TLS 1.3 / AES-256</span>
+            <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-[11px] text-content-secondary">
+              <span className="rounded border border-border/60 bg-surface-inset px-2 py-0.5">
+                DPDP Act (2023) Aligned
+              </span>
+              <span className="rounded border border-border/60 bg-surface-inset px-2 py-0.5">
+                TLS 1.3 / AES-256
+              </span>
             </div>
           </RevealChild>
 
@@ -87,10 +95,14 @@ export function MarketingFooter() {
 
         {/* Bottom Bar: Copyright & Social SVG Icons */}
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
-          <div className="flex flex-wrap items-center gap-4 text-caption text-content-muted">
+          <div className="flex flex-wrap items-center gap-4 text-caption text-content-secondary">
             <span>© {new Date().getFullYear()} Qelvix Inc. All rights reserved.</span>
-            <span className="hidden sm:inline" aria-hidden>•</span>
-            <span className="font-mono text-content-secondary">100% Deterministic Security Evaluation</span>
+            <span className="hidden sm:inline" aria-hidden>
+              •
+            </span>
+            <span className="font-mono text-content-secondary">
+              100% Deterministic Security Evaluation
+            </span>
           </div>
           <div className="flex items-center gap-5 text-content-muted">
             <a
@@ -112,7 +124,11 @@ export function MarketingFooter() {
               className="transition-colors hover:text-content-primary"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                />
               </svg>
             </a>
             <a
@@ -132,6 +148,3 @@ export function MarketingFooter() {
     </footer>
   );
 }
-
-
-

@@ -154,7 +154,7 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
-      - run: npx --yes @lhci/cli@0.14.x autorun --config=lighthouserc.json
+      - run: npx --yes @lhci/cli@0.14.x autorun --config=../lighthouserc.json
 
   g6-contract:
     name: G6 · Contract snapshot

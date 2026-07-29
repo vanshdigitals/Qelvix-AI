@@ -19,8 +19,9 @@ export function Problem() {
             >
               You already suspect this
             </h2>
-            <p className="max-w-measure text-body-md text-content-secondary leading-relaxed">
-              Four critical attack surface blind spots most business owners feel but haven&rsquo;t been able to monitor.
+            <p className="max-w-measure text-body-md leading-relaxed text-content-secondary">
+              Four critical attack surface blind spots most business owners feel but haven&rsquo;t
+              been able to monitor.
             </p>
           </div>
         </Reveal>
@@ -56,5 +57,3 @@ export function Problem() {
     </section>
   );
 }
-
-

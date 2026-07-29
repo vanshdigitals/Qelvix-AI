@@ -6,7 +6,11 @@ import { cn } from '@/lib/utils/cn';
 // Severity is never signalled by colour alone: each carries a fixed icon and a
 // fixed text label (05 §3.1, INV-28).
 const SEVERITY = {
-  critical: { label: 'Critical', Icon: AlertOctagon, className: 'bg-critical-bg text-critical-text' },
+  critical: {
+    label: 'Critical',
+    Icon: AlertOctagon,
+    className: 'bg-critical-bg text-critical-text',
+  },
   high: { label: 'High', Icon: ShieldAlert, className: 'bg-high-bg text-high-text' },
   medium: { label: 'Medium', Icon: AlertTriangle, className: 'bg-medium-bg text-medium-text' },
   low: { label: 'Low', Icon: Info, className: 'bg-low-bg text-low-text' },
@@ -18,7 +22,7 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-[3px] border border-current/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider uppercase leading-none',
+        'border-current/15 inline-flex shrink-0 items-center gap-1 rounded-[3px] border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase leading-none tracking-wider',
         className,
       )}
     >

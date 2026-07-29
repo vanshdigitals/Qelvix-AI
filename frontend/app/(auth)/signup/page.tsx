@@ -176,11 +176,13 @@ function SignupForm() {
           onChange={(e) => {
             setConfirmPassword(e.target.value);
           }}
-          error={confirmPassword && password !== confirmPassword ? 'Passwords do not match' : undefined}
+          error={
+            confirmPassword && password !== confirmPassword ? 'Passwords do not match' : undefined
+          }
           autoComplete="new-password"
         />
 
-        <label className="mt-1 flex items-start gap-2.5 cursor-pointer text-caption text-content-secondary">
+        <label className="mt-1 flex cursor-pointer items-start gap-2.5 text-caption text-content-secondary">
           <input
             type="checkbox"
             checked={termsAgreed}
@@ -197,12 +199,13 @@ function SignupForm() {
             and{' '}
             <Link href="/legal/privacy" className="font-medium text-accent hover:underline">
               Privacy Policy
-            </Link>.
+            </Link>
+            .
           </span>
         </label>
 
         {error && (
-          <p className="mt-1 text-caption text-critical-text flex items-center gap-1">
+          <p className="mt-1 flex items-center gap-1 text-caption text-critical-text">
             <span aria-hidden>⚠</span> {error}
           </p>
         )}
@@ -210,7 +213,7 @@ function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-1 flex h-10 w-full items-center justify-center rounded-lg bg-accent px-4 font-body text-body-sm font-semibold text-white shadow-2xs transition-[background-color,transform] duration-150 ease-out hover:bg-accent/90 active:scale-[.985] disabled:opacity-60 disabled:active:scale-100"
+          className="font-body mt-1 flex h-10 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-[background-color,transform] duration-150 ease-out hover:bg-accent/90 active:scale-[.985] disabled:opacity-60 disabled:active:scale-100"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -237,7 +240,7 @@ function SignupForm() {
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-semibold text-accent hover:underline underline-offset-2"
+          className="font-semibold text-accent underline-offset-2 hover:underline"
         >
           Log in
         </Link>

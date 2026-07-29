@@ -14,7 +14,7 @@ export function FinalCta() {
     <section
       data-theme="dark"
       aria-labelledby="final-cta-heading"
-      className="relative isolate overflow-hidden bg-canvas px-5 py-16 md:px-page-margin md:py-20 border-t border-border"
+      className="relative isolate overflow-hidden border-t border-border bg-canvas px-5 py-16 md:px-page-margin md:py-20"
     >
       <GridBackdrop pattern="dots" glow="center" />
       <div className="absolute inset-0">
@@ -55,4 +55,3 @@ export function FinalCta() {
     </section>
   );
 }
-

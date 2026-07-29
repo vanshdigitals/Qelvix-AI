@@ -45,7 +45,7 @@ function CheckEmailContent() {
         Check your email
       </h1>
 
-      <p className="mt-2 text-body-sm leading-relaxed text-content-secondary max-w-[36ch]">
+      <p className="mt-2 max-w-[36ch] text-body-sm leading-relaxed text-content-secondary">
         {isReset
           ? `We sent a password recovery link to ${email}`
           : `We sent a confirmation link to ${email}. Click the link inside to activate your workspace.`}
@@ -60,7 +60,7 @@ function CheckEmailContent() {
           type="button"
           onClick={handleResend}
           disabled={resendCountdown > 0}
-          className="mt-3 inline-flex h-9 items-center justify-center rounded-lg border border-border/80 bg-surface px-4 font-body text-caption font-semibold text-content-primary transition-all hover:bg-surface-raised disabled:opacity-60"
+          className="font-body mt-3 inline-flex h-9 items-center justify-center rounded-lg border border-border/80 bg-surface px-4 text-caption font-semibold text-content-primary transition-all hover:bg-surface-raised disabled:opacity-60"
         >
           {resendCountdown > 0
             ? `Resend email in ${resendCountdown.toString()}s`

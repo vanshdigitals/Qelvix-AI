@@ -52,7 +52,8 @@ export default function ForgotPasswordPage() {
             Reset your password
           </h1>
           <p className="mt-1.5 text-body-sm text-content-secondary">
-            Enter the business email associated with your Qelvix account and we&rsquo;ll send you a recovery link.
+            Enter the business email associated with your Qelvix account and we&rsquo;ll send you a
+            recovery link.
           </p>
         </div>
 
@@ -77,7 +78,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 font-body text-body-sm font-semibold text-white shadow-2xs transition-[background-color,transform] duration-150 ease-out hover:bg-accent/90 active:scale-[.985] disabled:opacity-60 disabled:active:scale-100"
+            className="font-body mt-2 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-[background-color,transform] duration-150 ease-out hover:bg-accent/90 active:scale-[.985] disabled:opacity-60 disabled:active:scale-100"
           >
             {loading ? (
               <span className="flex items-center gap-2">

@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  AlertTriangle,
-  Bell,
-  ChevronRight,
-  Menu,
-  Search,
-  X,
-} from 'lucide-react';
+import { AlertTriangle, Bell, ChevronRight, Menu, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -63,15 +56,21 @@ export function DashboardOverview() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setNavOpen(false); }
+      if (e.key === 'Escape') {
+        setNavOpen(false);
+      }
     };
     if (navOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      return () => { document.removeEventListener('keydown', handleKeyDown); };
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
     }
   }, [navOpen]);
 
-  const metaName = auth.user ? (auth.user.user_metadata.full_name as string | undefined) : undefined;
+  const metaName = auth.user
+    ? (auth.user.user_metadata.full_name as string | undefined)
+    : undefined;
   const userName = metaName ?? auth.user?.email?.split('@')[0] ?? 'Priya Sharma';
   const initials = userName
     .split(' ')
@@ -144,13 +143,7 @@ export function DashboardOverview() {
     }
 
     return (
-      <svg
-        width={132}
-        height={132}
-        viewBox="0 0 132 132"
-        aria-hidden="true"
-        className="block"
-      >
+      <svg width={132} height={132} viewBox="0 0 132 132" aria-hidden="true" className="block">
         <path
           d={arc(1)}
           fill="none"
@@ -171,16 +164,11 @@ export function DashboardOverview() {
           x={66}
           y={70}
           textAnchor="middle"
-          className="font-mono text-2xl font-semibold fill-content-primary"
+          className="fill-content-primary font-mono text-2xl font-semibold"
         >
           {score}
         </text>
-        <text
-          x={66}
-          y={88}
-          textAnchor="middle"
-          className="font-body text-xs fill-content-muted"
-        >
+        <text x={66} y={88} textAnchor="middle" className="font-body fill-content-muted text-xs">
           risk score
         </text>
       </svg>
@@ -198,7 +186,10 @@ export function DashboardOverview() {
       h - ((v - min) / (max - min)) * (h - 6) - 3,
     ]);
     const line = coords
-      .map(([x, y], idx) => `${idx === 0 ? 'M' : 'L'}${String(x?.toFixed(1) ?? '0')} ${String(y?.toFixed(1) ?? '0')}`)
+      .map(
+        ([x, y], idx) =>
+          `${idx === 0 ? 'M' : 'L'}${String(x?.toFixed(1) ?? '0')} ${String(y?.toFixed(1) ?? '0')}`,
+      )
       .join(' ');
 
     return (
@@ -288,7 +279,7 @@ export function DashboardOverview() {
       : ['Run scan now', 'Invite team member', 'Download latest report'];
 
   return (
-    <div className="min-h-screen bg-surface font-body text-content-primary">
+    <div className="font-body min-h-screen bg-surface text-content-primary">
       {navOpen && (
         <button
           type="button"
@@ -309,17 +300,17 @@ export function DashboardOverview() {
             navOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-
-
           <button
             type="button"
-            onClick={() => { alert("Organization switching coming soon."); }}
+            onClick={() => {
+              alert('Organization switching coming soon.');
+            }}
             className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-inset px-3 py-2 text-left transition-colors hover:bg-surface-inset/80"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface font-heading text-[11px] font-bold text-content-primary shadow-2xs">
+            <span className="font-heading flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface text-[11px] font-bold text-content-primary shadow-2xs">
               VE
             </span>
-            <span className="flex-1 truncate font-body text-body-sm font-medium text-content-primary">
+            <span className="font-body flex-1 truncate text-body-sm font-medium text-content-primary">
               Vardhman Exports
             </span>
             <ChevronRight className="h-4 w-4 text-content-muted" />
@@ -383,7 +374,6 @@ export function DashboardOverview() {
               </div>
             ))}
           </nav>
-
         </aside>
 
         {/* Main Workspace Area */}
@@ -398,7 +388,7 @@ export function DashboardOverview() {
                 }}
                 aria-expanded={navOpen}
                 aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary transition-colors"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary transition-colors hover:text-content-primary"
               >
                 {navOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
@@ -414,29 +404,33 @@ export function DashboardOverview() {
                   setSearch(e.target.value);
                 }}
                 placeholder="Search findings, assets, scans..."
-                className="w-full bg-transparent font-body text-body-sm text-content-primary outline-none placeholder:text-content-muted"
+                className="font-body w-full bg-transparent text-body-sm text-content-primary outline-none placeholder:text-content-muted"
               />
-              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] text-content-muted border border-border/60">
+              <span className="rounded border border-border/60 bg-surface px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
                 ⌘K
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex shrink-0 items-center gap-2.5">
               {role !== 'member' && (
                 <button
                   type="button"
-                  onClick={() => { alert("Scan initiated successfully."); }}
+                  onClick={() => {
+                    alert('Scan initiated successfully.');
+                  }}
                   title="Run a new scan"
-                  className="hidden sm:block rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:bg-accent/90"
+                  className="hidden rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:bg-accent/90 sm:block"
                 >
                   Run scan now
                 </button>
               )}
               <button
                 type="button"
-                onClick={() => { alert("No new notifications"); }}
+                onClick={() => {
+                  alert('No new notifications');
+                }}
                 aria-label="Notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary transition-colors"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary transition-colors hover:text-content-primary"
               >
                 <Bell className="h-4 w-4" />
                 <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-bold text-white">
@@ -454,7 +448,7 @@ export function DashboardOverview() {
                 <h1 className="font-heading text-heading-md font-bold tracking-tight text-content-primary">
                   Overview
                 </h1>
-                <p className="mt-1 font-body text-body-sm text-content-secondary">
+                <p className="font-body mt-1 text-body-sm text-content-secondary">
                   Last scan today 06:04 IST · next scheduled scan Monday 06:00 IST
                 </p>
               </div>
@@ -463,15 +457,13 @@ export function DashboardOverview() {
             {partialScan && (
               <div
                 role="alert"
-                className="flex items-start gap-3 rounded-xl border border-high-text/40 bg-high-bg p-4 text-body-sm text-content-secondary"
+                className="border-high-text/40 flex items-start gap-3 rounded-xl border bg-high-bg p-4 text-body-sm text-content-secondary"
               >
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-high-text" />
                 <p>
-                  <span className="font-medium text-content-primary">
-                    Based on a partial scan.
-                  </span>{' '}
-                  The DNS agent timed out on two subdomains and will retry automatically at
-                  06:00. Findings below exclude those hosts.
+                  <span className="font-medium text-content-primary">Based on a partial scan.</span>{' '}
+                  The DNS agent timed out on two subdomains and will retry automatically at 06:00.
+                  Findings below exclude those hosts.
                 </p>
               </div>
             )}
@@ -506,7 +498,8 @@ export function DashboardOverview() {
                 {/* Findings summary table */}
                 <div className="space-y-2.5 border-t border-border/60 pt-4">
                   {findingsList.map((f) => {
-                    const sevColor = SEVERITY_COLORS[f.severity.toLowerCase()] ?? SEVERITY_COLORS.low;
+                    const sevColor =
+                      SEVERITY_COLORS[f.severity.toLowerCase()] ?? SEVERITY_COLORS.low;
                     return (
                       <div
                         key={`${f.title}-${f.asset}`}
@@ -528,7 +521,7 @@ export function DashboardOverview() {
                         </div>
                         <div className="flex items-center gap-3 font-mono text-caption text-content-muted">
                           <span>{f.asset}</span>
-                          <span className="rounded bg-surface px-1.5 py-0.5 border border-border/60">
+                          <span className="rounded border border-border/60 bg-surface px-1.5 py-0.5">
                             {f.age}
                           </span>
                         </div>
@@ -547,10 +540,10 @@ export function DashboardOverview() {
                       AI EXPLANATION · CLAUDE
                     </span>
                   </div>
-                  <p className="mt-3 font-body text-body-sm leading-relaxed text-content-primary">
-                    Renew the mail certificate first — it is the only finding that breaks
-                    something customers touch. DMARC is a 20-minute DNS change and closes your
-                    biggest spoofing risk. Everything else can wait for next week&apos;s scan.
+                  <p className="font-body mt-3 text-body-sm leading-relaxed text-content-primary">
+                    Renew the mail certificate first — it is the only finding that breaks something
+                    customers touch. DMARC is a 20-minute DNS change and closes your biggest
+                    spoofing risk. Everything else can wait for next week&apos;s scan.
                   </p>
                 </div>
 
@@ -576,15 +569,8 @@ export function DashboardOverview() {
                         key={row.label}
                         className="flex flex-col rounded-xl border border-border/60 bg-surface-inset p-3"
                       >
-                        <span className="text-caption text-content-muted">
-                          {row.label}
-                        </span>
-                        <span
-                          className={cn(
-                            'mt-1 font-mono text-lg font-semibold',
-                            row.text,
-                          )}
-                        >
+                        <span className="text-caption text-content-muted">{row.label}</span>
+                        <span className={cn('mt-1 font-mono text-lg font-semibold', row.text)}>
                           {row.count}
                         </span>
                       </div>
@@ -639,9 +625,7 @@ export function DashboardOverview() {
                       <div className="flex items-center gap-2.5">
                         <span className={cn('h-2 w-2 shrink-0 rounded-full', ev.color)} />
                         <span className="text-content-secondary">
-                          <span className="font-medium text-content-primary">
-                            {ev.actor}
-                          </span>{' '}
+                          <span className="font-medium text-content-primary">{ev.actor}</span>{' '}
                           {ev.text}
                         </span>
                       </div>
@@ -681,7 +665,7 @@ export function DashboardOverview() {
                       <button
                         key={qa}
                         type="button"
-                        className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary px-2"
+                        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                         <span>{qa}</span>
