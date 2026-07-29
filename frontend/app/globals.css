@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — 05_DESIGN_SYSTEM.md §3.
+   Primitives first, semantic second. Components reference semantic tokens only. */
+
+@layer base {
+  :root {
+    /* Primitives — §3.1 */
+    --ink-950: #080a10;
+    --ink-900: #0f1420;
+    --ink-800: #161c2c;
+    --ink-700: #212940;
+    --ink-600: #323c58;
+    --ink-400: #6b7690;
+    --ink-200: #aeb6c9;
+    --fog-50: #f4f5f8;
+    --fog-100: #e8eaf0;
+    --fog-600: #4b5468;
+    --fog-900: #12151f;
+    --white: #ffffff;
+    --signal-600: #0891b2;
+    --signal-500: #06b6d4;
+    --signal-300: #67e8f9;
+    --breach-600: #dc2626;
+    --breach-500: #ef4444;
+    --breach-100: #fee2e2;
+    --flare-600: #d9480f;
+    --flare-500: #f0651e;
+    --flare-100: #fee4d6;
+    --caution-600: #b45309;
+    --caution-500: #d97b1f;
+    --caution-100: #fceacb;
+    --verified-600: #0d9165;
+    --verified-500: #14b87f;
+    --verified-100: #d6f5e8;
+
+    /* Semantic — surface & text, light theme (marketing default) */
+    --color-bg-canvas: var(--fog-50);
+    --color-bg-surface: var(--white);
+    --color-bg-surface-raised: var(--white);
+    --color-bg-inset: var(--fog-50);
+    --color-border-default: var(--fog-100);
+    --color-border-subtle: var(--fog-50);
+    --color-border-strong: #d3d7e0;
+    --color-text-primary: var(--fog-900);
+    --color-text-secondary: var(--fog-600);
+    --color-text-muted: #8992a8;
+    --color-accent-primary: var(--signal-600);
+    --color-accent-emphasis: var(--signal-600);
+    --color-focus-ring: var(--signal-600);
+
+    /* RGB channels — enable Tailwind alpha modifiers (bg-accent/10, border-border/80).
+       The full-color vars above remain for inline CSS and canvas consumers. */
+    --color-accent-primary-rgb: 8 145 178;
+    --color-accent-emphasis-rgb: 8 145 178;
+    --color-focus-rgb: 8 145 178;
+    --color-bg-canvas-rgb: 244 245 248;
+    --color-bg-surface-rgb: 255 255 255;
+    --color-bg-surface-raised-rgb: 255 255 255;
+    --color-bg-inset-rgb: 244 245 248;
+    --color-border-default-rgb: 232 234 240;
+    --color-border-subtle-rgb: 244 245 248;
+    --color-border-strong-rgb: 211 215 224;
+    --color-text-primary-rgb: 18 21 31;
+    --color-text-secondary-rgb: 75 84 104;
+    --color-text-muted-rgb: 137 146 168;
+
+    /* Semantic — status, light theme */
+    --color-critical-text: var(--breach-600);
+    --color-critical-bg: var(--breach-100);
+    --color-high-text: var(--flare-600);
+    --color-high-bg: var(--flare-100);
+    --color-medium-text: var(--caution-600);
+    --color-medium-bg: var(--caution-100);
+    --color-low-text: var(--fog-600);
+    --color-low-bg: #edeff3;
+    --color-info-text: var(--signal-600);
+    --color-info-bg: #dff7fb;
+    --color-success-text: var(--verified-600);
+    --color-success-bg: var(--verified-100);
+
+    /* Elevation — §3.3, light values */
+    --shadow-sm: 0 1px 2px rgb(18 21 31 / 0.08);
+    --shadow-md: 0 4px 12px rgb(18 21 31 / 0.12);
+    --shadow-lg: 0 12px 32px rgb(18 21 31 / 0.16);
+  }
+
+  [data-theme='dark'] {
+    --color-bg-canvas: var(--ink-950);
+    --color-bg-surface: var(--ink-900);
+    --color-bg-surface-raised: var(--ink-800);
+    --color-bg-inset: #0b0e16;
+    --color-border-default: var(--ink-700);
+    --color-border-subtle: var(--ink-800);
+    --color-border-strong: var(--ink-600);
+    --color-text-primary: var(--white);
+    --color-text-secondary: var(--ink-200);
+    --color-text-muted: var(--ink-400);
+    --color-accent-primary: var(--signal-500);
+    --color-accent-emphasis: var(--signal-300);
+    --color-focus-ring: var(--signal-300);
+
+    --color-accent-primary-rgb: 6 182 212;
+    --color-accent-emphasis-rgb: 103 232 249;
+    --color-focus-rgb: 103 232 249;
+    --color-bg-canvas-rgb: 8 10 16;
+    --color-bg-surface-rgb: 15 20 32;
+    --color-bg-surface-raised-rgb: 22 28 44;
+    --color-bg-inset-rgb: 11 14 22;
+    --color-border-default-rgb: 33 41 64;
+    --color-border-subtle-rgb: 22 28 44;
+    --color-border-strong-rgb: 50 60 88;
+    --color-text-primary-rgb: 255 255 255;
+    --color-text-secondary-rgb: 174 182 201;
+    --color-text-muted-rgb: 107 118 144;
+
+    --color-critical-text: var(--breach-500);
+    --color-critical-bg: rgb(220 38 38 / 0.16);
+    --color-high-text: var(--flare-500);
+    --color-high-bg: rgb(217 72 15 / 0.16);
+    --color-medium-text: var(--caution-500);
+    --color-medium-bg: rgb(180 83 9 / 0.16);
+    --color-low-text: var(--ink-400);
+    --color-low-bg: rgb(33 41 64 / 0.4);
+    --color-info-text: var(--signal-300);
+    --color-info-bg: rgb(6 182 212 / 0.16);
+    --color-success-text: var(--verified-500);
+    --color-success-bg: rgb(13 145 101 / 0.16);
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.48);
+    --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.56);
+  }
+
+  * {
+    border-color: var(--color-border-default);
+  }
+
+  body {
+    background-color: var(--color-bg-canvas);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Numerals align in columns wherever they are compared — 05 §1 */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Custom Global Scrollbar — High-End SaaS Quality */
+  html {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+  }
+
+  [data-theme='dark'] {
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #CBD5E1;
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #94A3B8;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-color: #64748B;
+  }
+
+  [data-theme='dark'] ::-webkit-scrollbar-thumb,
+  html[data-theme='dark'] ::-webkit-scrollbar-thumb,
+  body[data-theme='dark'] ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.18);
+  }
+
+  [data-theme='dark'] ::-webkit-scrollbar-thumb:hover,
+  html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover,
+  body[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.28);
+  }
+
+  [data-theme='dark'] ::-webkit-scrollbar-thumb:active,
+  html[data-theme='dark'] ::-webkit-scrollbar-thumb:active,
+  body[data-theme='dark'] ::-webkit-scrollbar-thumb:active {
+    background-color: rgba(255, 255, 255, 0.40);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+

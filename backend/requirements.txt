@@ -1,0 +1,44 @@
+# Qelvix backend runtime dependencies.
+# Every package here traces to a row in docs/03_BACKEND.md §1.
+# Pinned exactly: an unpinned transitive upgrade is an unreviewed change.
+
+# API framework — 03 §1
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Agent orchestration — 03 §1 (LangGraph 0.2.x)
+langgraph==0.2.61
+langchain-core==0.3.29
+
+# Task queue — 03 §1 (Celery + Redis)
+celery==5.4.0
+redis==5.2.1
+
+# Scheduler — 03 §12 (APScheduler in-process for MVP cron)
+apscheduler==3.11.0
+
+# ORM + migrations — 03 §1 (SQLAlchemy 2.0 async + Alembic)
+sqlalchemy[asyncio]==2.0.36
+alembic==1.14.0
+asyncpg==0.30.0
+greenlet==3.1.1
+
+# Settings — 03 §11 (pydantic-settings is the sole env entry point)
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# Auth — 03 §1 (Supabase Auth, JWT validation)
+pyjwt[crypto]==2.10.1
+
+# LLM — 03 §1, §9 (claude-sonnet-4-6, called only from claude_service.py)
+anthropic==0.42.0
+
+# External service clients — 03 §8
+httpx==0.28.1
+
+# PDF export — 03 §1 (Phase 2 reports)
+weasyprint==63.1
+
+# Structured JSON logging — 03 §10, 06 §13
+python-json-logger==3.2.1

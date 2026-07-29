@@ -1,0 +1,55 @@
+# Pre-commit hooks: format, lint, secret scan (09 F0).
+# Install once per clone: pre-commit install
+default_language_version:
+  python: python3.11
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=512']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(docs/contracts/openapi.json|frontend/package-lock\.json)$
+
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx --prefix frontend prettier --write
+        language: system
+        files: ^frontend/.*\.(ts|tsx|css|json|md)$
+        exclude: ^frontend/lib/api/types\.generated\.ts$
+
+      - id: agents-md-length
+        name: AGENTS.md line ceiling
+        entry: bash scripts/check_agents_md_length.sh
+        language: system
+        files: ^AGENTS\.md$
+        pass_filenames: false
+
+      - id: frozen-docs
+        name: frozen documents are never edited
+        entry: bash scripts/check_frozen_docs.sh
+        language: system
+        files: ^docs/(README|0[1-7]_).*\.md$
+        pass_filenames: true
