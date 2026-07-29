@@ -1,6 +1,6 @@
 'use client';
 
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { SUPABASE_NOT_CONFIGURED_MESSAGE } from '@/lib/supabase/config';
 
 export interface AuthResult {
@@ -40,7 +40,7 @@ function siteUrl(path: string): string {
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -52,7 +52,7 @@ export async function signUpWithPassword(
   password: string,
   metadata: { fullName: string; companyName: string },
 ): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { data, error } = await supabase.auth.signUp({
@@ -69,7 +69,7 @@ export async function signUpWithPassword(
 }
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -79,7 +79,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
 }
 
 export async function updatePassword(password: string): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.updateUser({ password });
@@ -87,7 +87,7 @@ export async function updatePassword(password: string): Promise<AuthResult> {
 }
 
 export async function resendVerification(email: string): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.resend({
@@ -99,7 +99,7 @@ export async function resendVerification(email: string): Promise<AuthResult> {
 }
 
 export async function signOut(): Promise<AuthResult> {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.signOut();

@@ -11,7 +11,7 @@ let cached: SupabaseClient | null = null;
  * Browser Supabase client. Returns null when the environment is not configured,
  * so callers surface a clear message instead of constructing a broken client.
  */
-export function getSupabaseBrowserClient(): SupabaseClient | null {
+export function createClient(): SupabaseClient | null {
   if (!isSupabaseConfigured) return null;
   cached ??= createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return cached;

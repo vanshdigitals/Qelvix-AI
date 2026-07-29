@@ -6,7 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from '@/lib/supabase/config';
 
 /** Server-side Supabase client bound to the request's cookie store. */
-export function getSupabaseServerClient(): SupabaseClient | null {
+export function createClient(): SupabaseClient | null {
   if (!isSupabaseConfigured) return null;
 
   const cookieStore = cookies();

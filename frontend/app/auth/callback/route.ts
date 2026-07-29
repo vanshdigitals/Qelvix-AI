@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { getSupabaseServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { POST_LOGIN_ROUTE } from '@/lib/supabase/config';
 
 /**
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);
   }
 
-  const supabase = getSupabaseServerClient();
+  const supabase = createClient();
   if (!supabase) {
     return NextResponse.redirect(`${origin}/login?error=not_configured`);
   }

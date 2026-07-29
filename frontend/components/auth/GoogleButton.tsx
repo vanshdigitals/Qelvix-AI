@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { cn } from '@/lib/utils/cn';
 
@@ -23,7 +23,7 @@ export function GoogleButton({ label = 'Continue with Google', disabled }: Googl
   const [error, setError] = useState('');
 
   async function handleClick(): Promise<void> {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = createClient();
     if (!supabase) return;
 
     setLoading(true);

@@ -4,13 +4,12 @@ import {
   AlertTriangle,
   Bell,
   ChevronRight,
-  LogOut,
   Menu,
   Search,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { UserDropdown } from '@/components/dashboard/UserDropdown';
@@ -55,9 +54,8 @@ const SEVERITY_COLORS: Record<string, { bg: string; text: string; dot: string }>
 };
 
 export function DashboardOverview() {
-  const router = useRouter();
   const auth = useAuth();
-  const [role, setRole] = useState<UserRole>('owner');
+  const [role] = useState<UserRole>('owner');
   const pathname = usePathname();
   const [search, setSearch] = useState('');
   const [navOpen, setNavOpen] = useState(false);
@@ -65,11 +63,11 @@ export function DashboardOverview() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setNavOpen(false);
+      if (e.key === 'Escape') { setNavOpen(false); }
     };
     if (navOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      return () => { document.removeEventListener('keydown', handleKeyDown); };
     }
   }, [navOpen]);
 
@@ -315,7 +313,7 @@ export function DashboardOverview() {
 
           <button
             type="button"
-            onClick={() => alert("Organization switching coming soon.")}
+            onClick={() => { alert("Organization switching coming soon."); }}
             className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-inset px-3 py-2 text-left transition-colors hover:bg-surface-inset/80"
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface font-heading text-[11px] font-bold text-content-primary shadow-2xs">
@@ -427,7 +425,7 @@ export function DashboardOverview() {
               {role !== 'member' && (
                 <button
                   type="button"
-                  onClick={() => alert("Scan initiated successfully.")}
+                  onClick={() => { alert("Scan initiated successfully."); }}
                   title="Run a new scan"
                   className="hidden sm:block rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:bg-accent/90"
                 >
@@ -436,7 +434,7 @@ export function DashboardOverview() {
               )}
               <button
                 type="button"
-                onClick={() => alert("No new notifications")}
+                onClick={() => { alert("No new notifications"); }}
                 aria-label="Notifications"
                 className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary transition-colors"
               >

@@ -13,11 +13,9 @@ export default function NotFound() {
       return;
     }
 
-    const timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
+    const timer = setInterval(() => { setCountdown((c) => Math.max(0, c - 1)); }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => { clearInterval(timer); };
   }, [countdown, router]);
 
   return (
