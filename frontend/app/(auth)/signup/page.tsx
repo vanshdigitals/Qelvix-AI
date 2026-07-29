@@ -99,11 +99,11 @@ function SignupForm() {
           <code className="mx-1 font-mono">frontend/.env.local</code>to enable sign-up.
         </p>
       )}
-      <div>
-        <h1 className="font-display text-h3 font-bold tracking-tight text-content-primary">
+      <div className="mb-6">
+        <h1 className="font-display text-h2 font-bold tracking-tight text-content-primary">
           Start your free scan
         </h1>
-        <p className="mt-1 text-body-sm text-content-secondary">
+        <p className="mt-2 text-body-sm text-content-secondary">
           No credit card required. Scans ready in under 60 seconds.
         </p>
       </div>

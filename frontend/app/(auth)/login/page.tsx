@@ -7,18 +7,18 @@ import { Suspense, useState, type FormEvent } from 'react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FloatingInput } from '@/components/auth/FloatingInput';
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { DemoHelperCard } from '@/components/auth/DemoHelperCard';
 import { signInWithPassword } from '@/lib/auth/actions';
 import { POST_LOGIN_ROUTE, isSupabaseConfigured } from '@/lib/supabase/config';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState(() => process.env.NEXT_PUBLIC_DEMO_EMAIL ?? '');
-  const [password, setPassword] = useState(() => process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? '');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
     setError('');
@@ -58,15 +58,21 @@ function LoginForm() {
             <code className="mx-1 font-mono">frontend/.env.local</code>to enable sign-in.
           </p>
         )}
-        <div>
-            <h1 className="font-display text-h3 font-bold tracking-tight text-content-primary">
+        <div className="mb-6">
+            <h1 className="font-display text-h2 font-bold tracking-tight text-content-primary">
               Welcome back
             </h1>
-            <p className="mt-1 text-body-sm text-content-secondary">
+            <p className="mt-2 text-body-sm text-content-secondary">
               Log in to monitor your security footprint
             </p>
+            <DemoHelperCard
+              email="demo@qelvix.com"
+              onFill={() => {
+                setEmail('demo@qelvix.com');
+                setPassword('DemoQelvix2026!');
+              }}
+            />
         </div>
-
         {/* Form Container */}
         <form
           onSubmit={(e) => {

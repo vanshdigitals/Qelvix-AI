@@ -31,24 +31,6 @@ const STEPS: OnboardingStep[] = [
   'report',
 ];
 
-const STEPPER_KEYS: OnboardingStep[] = [
-  'business',
-  'industry',
-  'domain',
-  'size',
-  'team',
-  'verify',
-];
-
-const STEPPER_LABELS: Record<string, string> = {
-  business: 'Business',
-  industry: 'Industry',
-  domain: 'Domain',
-  size: 'Size',
-  team: 'Team',
-  verify: 'Verify',
-};
-
 const INDUSTRIES = [
   { label: 'Manufacturing', note: 'Plant, ERP, vendor portals' },
   { label: 'Export / Trade', note: 'Cross-border data, DPDP §16' },
@@ -161,8 +143,6 @@ export function OnboardingWizard() {
     setInvites((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  const stepperIdx = STEPPER_KEYS.indexOf(step);
-  const showStepper = stepperIdx > -1;
 
   function renderTimelineItems(): React.ReactNode {
     const items =
@@ -215,104 +195,34 @@ export function OnboardingWizard() {
     <div className="relative min-h-screen bg-surface px-4 py-8 md:px-8">
       <SurfaceField state="rest" />
 
-      {/* Top Rail Navigation */}
-      <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 pb-8">
-        <div>
-          <h1 className="font-heading text-heading-sm font-semibold text-content-primary">
-            Onboarding
-          </h1>
-          <p className="font-mono text-caption text-content-muted">
-            Qelvix Workspace Setup · {step}
-          </p>
-        </div>
+      {/* Top Header */}
+      <div className="relative z-10 mx-auto flex max-w-2xl items-center justify-between pb-6">
+        <Logo />
+        <button
+          type="button"
+          onClick={completeOnboarding}
+          className="text-body-sm font-medium text-content-muted hover:text-content-primary transition-colors"
+        >
+          Skip
+        </button>
+      </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {STEPS.map((sKey) => {
-            const isCur = step === sKey;
-            return (
-              <button
-                key={sKey}
-                type="button"
-                onClick={() => {
-                  setStep(sKey);
-                }}
-                className={cn(
-                  'rounded-full px-3 py-1 text-caption font-semibold capitalize transition-colors',
-                  isCur
-                    ? 'bg-accent/15 text-accent border border-accent/40'
-                    : 'text-content-muted hover:text-content-primary border border-border/60',
-                )}
-              >
-                {sKey}
-              </button>
-            );
-          })}
-        </div>
+      <div className="relative z-10 mx-auto mb-6 max-w-2xl text-center">
+        <h1 className="font-display text-h2 font-bold tracking-tight text-content-primary">
+          Welcome to Qelvix
+        </h1>
+        <p className="mt-2 text-body-sm text-content-secondary">
+          Let&apos;s set up your workspace in a few quick steps.
+        </p>
       </div>
 
       {/* Main Card */}
       <div className="relative z-10 mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-md md:p-8">
-        {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-border/60 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface-inset">
-              <Logo />
-            </div>
-
-            {showStepper && (
-              <div className="hidden flex-wrap items-center gap-2 sm:flex">
-                {STEPPER_KEYS.map((k, idx) => {
-                  const isCur = k === step;
-                  const isDone = STEPPER_KEYS.indexOf(k) < stepperIdx;
-                  return (
-                    <div key={k} className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium',
-                          isCur
-                            ? 'bg-surface-inset text-content-primary'
-                            : isDone
-                              ? 'text-content-secondary'
-                              : 'text-content-muted',
-                        )}
-                      >
-                        {isDone && <Check className="h-3 w-3 text-content-primary" />}
-                        <span>{STEPPER_LABELS[k]}</span>
-                      </span>
-                      {idx < STEPPER_KEYS.length - 1 && (
-                        <span className="h-px w-3 bg-border/80" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4">
-            {showStepper && (
-              <span className="font-mono text-caption text-content-muted">
-                {String(stepperIdx + 1).padStart(2, '0')} / 06
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={completeOnboarding}
-              className="rounded-lg px-2.5 py-1 text-caption font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
-            >
-              Skip to dashboard →
-            </button>
-          </div>
-        </div>
-
         {/* Step Body */}
         <div className="py-8">
           {step === 'welcome' && (
             <div className="space-y-4">
               <span className="font-mono text-caption text-accent">FIRST LOGIN</span>
-              <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                Welcome to Qelvix
-              </h2>
               <p className="font-body text-body-sm text-content-secondary">
                 Six short steps and one DNS record. After that, scanning is automatic and you
                 only hear from us when something needs you.

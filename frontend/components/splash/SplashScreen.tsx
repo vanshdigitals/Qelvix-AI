@@ -93,8 +93,8 @@ export function SplashScreen() {
       <SurfaceField state="rest" />
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center px-6 text-center">
-        {/* Splash Mark & Wordmark reusing existing prototype styling */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface-inset shadow-md">
+        {/* Splash Mark & Wordmark */}
+        <div className="flex items-center justify-center scale-125">
           <Logo />
         </div>
 

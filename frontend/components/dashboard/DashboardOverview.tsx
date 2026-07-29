@@ -5,9 +5,12 @@ import {
   Bell,
   ChevronRight,
   LogOut,
+  Menu,
   Search,
+  X,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Logo } from '@/components/layout/Logo';
@@ -22,22 +25,24 @@ interface NavGroup {
     label: string;
     key: string;
     count?: string;
+    /** Only set once the route exists; otherwise the item is inert. */
+    href?: string;
   }[];
 }
 
 const SEVERITY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   critical: {
-    bg: 'bg-critical/15 dark:bg-critical/20',
+    bg: 'bg-critical-bg',
     text: 'text-critical-text',
     dot: 'bg-critical-text',
   },
   high: {
-    bg: 'bg-warning/15 dark:bg-warning/20',
-    text: 'text-warning-text',
-    dot: 'bg-warning-text',
+    bg: 'bg-high-bg',
+    text: 'text-high-text',
+    dot: 'bg-high-text',
   },
   medium: {
-    bg: 'bg-accent/15 dark:bg-accent/20',
+    bg: 'bg-medium-bg',
     text: 'text-accent',
     dot: 'bg-accent',
   },
@@ -52,7 +57,9 @@ export function DashboardOverview() {
   const router = useRouter();
   const auth = useAuth();
   const [role, setRole] = useState<UserRole>('owner');
-  const [activeNav, setActiveNav] = useState<string>('dashboard');
+  const pathname = usePathname();
+  const [search, setSearch] = useState('');
+  const [navOpen, setNavOpen] = useState(false);
   const [partialScan] = useState<boolean>(true);
 
   const metaName = auth.user ? (auth.user.user_metadata.full_name as string | undefined) : undefined;
@@ -67,7 +74,7 @@ export function DashboardOverview() {
   const navGroups: NavGroup[] = [
     {
       label: 'OVERVIEW',
-      items: [{ label: 'Dashboard', key: 'dashboard' }],
+      items: [{ label: 'Dashboard', key: 'dashboard', href: '/dashboard' }],
     },
     {
       label: 'SECURITY',
@@ -149,7 +156,7 @@ export function DashboardOverview() {
           stroke="currentColor"
           strokeWidth={10}
           strokeLinecap="round"
-          className="text-warning-text"
+          className="text-high-text"
         />
         <text
           x={66}
@@ -296,7 +303,7 @@ export function DashboardOverview() {
                 className={cn(
                   'rounded-full px-3 py-1 text-caption font-semibold capitalize transition-all',
                   isSel
-                    ? 'bg-accent/15 text-accent border border-accent/40'
+                    ? 'bg-medium-bg text-accent border border-accent/40'
                     : 'text-content-muted hover:text-content-primary border border-border/60',
                 )}
               >
@@ -307,10 +314,28 @@ export function DashboardOverview() {
         </div>
       </div>
 
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => {
+            setNavOpen(false);
+          }}
+          className="fixed inset-0 z-drawer bg-black/40 lg:hidden"
+        />
+      )}
+
       {/* Main Grid Shell */}
       <div className="grid min-h-[calc(100vh-60px)] grid-cols-1 lg:grid-cols-[240px_1fr]">
         {/* Sidebar Navigation */}
-        <aside className="flex flex-col gap-6 border-r border-border/60 bg-surface px-4 py-5">
+        <aside
+          className={cn(
+            'flex-col gap-6 border-r border-border/60 bg-surface px-4 py-5 lg:flex',
+            navOpen
+              ? 'fixed inset-y-0 left-0 z-drawer flex w-[240px] overflow-y-auto shadow-lg'
+              : 'hidden',
+          )}
+        >
           <div className="flex items-center gap-2.5 px-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-inset">
               <Logo />
@@ -340,34 +365,52 @@ export function DashboardOverview() {
                   {group.label}
                 </span>
                 {group.items.map((item) => {
-                  const isCur = activeNav === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => {
-                        setActiveNav(item.key);
-                      }}
-                      className={cn(
-                        'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-body-sm font-medium transition-all',
-                        isCur
-                          ? 'bg-surface-inset text-content-primary'
-                          : 'text-content-secondary hover:bg-surface-inset/50 hover:text-content-primary',
-                      )}
-                    >
+                  const isCur = item.href ? pathname === item.href : false;
+                  const base = cn(
+                    'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-body-sm font-medium transition-all',
+                    isCur
+                      ? 'bg-surface-inset text-content-primary'
+                      : 'text-content-secondary hover:bg-surface-inset/50 hover:text-content-primary',
+                    !item.href && 'cursor-not-allowed opacity-50 hover:bg-transparent',
+                  );
+                  const inner = (
+                    <>
                       <span
                         className={cn(
                           'h-1.5 w-1.5 rounded-full',
                           isCur ? 'bg-accent' : 'bg-transparent',
                         )}
                       />
-                      <span className="flex-1 text-left">{item.label}</span>
+                      <span className="flex-1 truncate text-left">{item.label}</span>
                       {item.count && (
-                        <span className="rounded-full bg-critical/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-critical-text">
+                        <span className="rounded-full bg-critical-bg px-1.5 py-0.5 font-mono text-[11px] font-semibold text-critical-text">
                           {item.count}
                         </span>
                       )}
-                    </button>
+                    </>
+                  );
+
+                  return item.href ? (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      aria-current={isCur ? 'page' : undefined}
+                      onClick={() => {
+                        setNavOpen(false);
+                      }}
+                      className={base}
+                    >
+                      {inner}
+                    </Link>
+                  ) : (
+                    <span
+                      key={item.key}
+                      aria-disabled="true"
+                      title="Not available yet"
+                      className={base}
+                    >
+                      {inner}
+                    </span>
                   );
                 })}
               </div>
@@ -390,7 +433,8 @@ export function DashboardOverview() {
               type="button"
               onClick={() => {
                 void auth.signOut().then(() => {
-                  router.push('/login');
+                  router.replace('/login');
+                  router.refresh();
                 });
               }}
               title="Log out"
@@ -405,10 +449,26 @@ export function DashboardOverview() {
         <div className="flex min-w-0 flex-col">
           {/* Top Workspace Header */}
           <header className="flex items-center justify-between gap-4 border-b border-border/60 bg-surface px-6 py-3.5">
+            <button
+              type="button"
+              onClick={() => {
+                setNavOpen((o) => !o);
+              }}
+              aria-expanded={navOpen}
+              aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-inset text-content-secondary hover:text-content-primary lg:hidden"
+            >
+              {navOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
             <div className="flex h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-border bg-surface-inset px-3 text-content-secondary">
               <Search className="h-4 w-4 text-content-muted" />
               <input
-                type="text"
+                type="search"
+                aria-label="Search findings, assets and scans"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
                 placeholder="Search findings, assets, scans..."
                 className="w-full bg-transparent font-body text-body-sm text-content-primary outline-none placeholder:text-content-muted"
               />
@@ -421,7 +481,9 @@ export function DashboardOverview() {
               {role !== 'member' && (
                 <button
                   type="button"
-                  className="rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105"
+                  disabled
+                  title="Scanning is enabled once the backend scan API is connected"
+                  className="rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Run scan now
                 </button>
@@ -455,9 +517,9 @@ export function DashboardOverview() {
             {partialScan && (
               <div
                 role="alert"
-                className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-body-sm text-content-secondary"
+                className="flex items-start gap-3 rounded-xl border border-high-text/40 bg-high-bg p-4 text-body-sm text-content-secondary"
               >
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-text" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-high-text" />
                 <p>
                   <span className="font-medium text-content-primary">
                     Based on a partial scan.
@@ -476,8 +538,8 @@ export function DashboardOverview() {
                   <h2 className="font-heading text-heading-sm font-semibold text-content-primary">
                     Security health
                   </h2>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-0.5 text-caption font-medium text-warning-text">
-                    <span className="h-1.5 w-1.5 rounded-full bg-warning-text" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-high-bg px-2.5 py-0.5 text-caption font-medium text-high-text">
+                    <span className="h-1.5 w-1.5 rounded-full bg-high-text" />
                     <span>Needs attention</span>
                   </span>
                 </div>
@@ -553,14 +615,14 @@ export function DashboardOverview() {
                   </h3>
                   <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-surface-inset">
                     <span className="w-[13%] bg-critical-text" />
-                    <span className="w-[27%] bg-warning-text" />
+                    <span className="w-[27%] bg-high-text" />
                     <span className="w-[40%] bg-accent" />
                     <span className="w-[20%] bg-content-muted" />
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {[
                       { label: 'Critical', count: '2', text: 'text-critical-text' },
-                      { label: 'High', count: '4', text: 'text-warning-text' },
+                      { label: 'High', count: '4', text: 'text-high-text' },
                       { label: 'Medium', count: '6', text: 'text-accent' },
                       { label: 'Low', count: '3', text: 'text-content-secondary' },
                     ].map((row) => (
@@ -603,7 +665,7 @@ export function DashboardOverview() {
                         <span
                           className={cn(
                             'font-mono font-semibold',
-                            row.warn ? 'text-warning-text' : 'text-content-primary',
+                            row.warn ? 'text-high-text' : 'text-content-primary',
                           )}
                         >
                           {row.val}
