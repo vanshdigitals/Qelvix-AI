@@ -1,10 +1,11 @@
 'use client';
 
-import { Check, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronRight, ExternalLink, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Logo } from '@/components/layout/Logo';
+import { SeverityBadge } from '@/components/dashboard/shared';
 import { SurfaceField } from '@/components/marketing/SurfaceField';
 import { cn } from '@/lib/utils/cn';
 
@@ -13,23 +14,55 @@ export type OnboardingStep =
   | 'business'
   | 'industry'
   | 'domain'
+  | 'verify'
   | 'size'
   | 'team'
-  | 'verify'
+  | 'notify'
   | 'scan'
   | 'report';
 
-const STEPS: OnboardingStep[] = [
+// Domain verification is a hard gate (01 §Tier-1), so it sits right after the
+// domain is entered — before size/team/notify — and the flow cannot skip past it.
+const FLOW: OnboardingStep[] = [
   'welcome',
   'business',
   'industry',
   'domain',
+  'verify',
   'size',
   'team',
-  'verify',
+  'notify',
   'scan',
   'report',
 ];
+
+// The seven numbered steps the persistent stepper reflects.
+const STEPPER: { key: OnboardingStep; label: string }[] = [
+  { key: 'business', label: 'Business' },
+  { key: 'industry', label: 'Industry' },
+  { key: 'domain', label: 'Domain' },
+  { key: 'verify', label: 'Verify' },
+  { key: 'size', label: 'Size' },
+  { key: 'team', label: 'Team' },
+  { key: 'notify', label: 'Alerts' },
+];
+
+const STEP_TITLES: Record<OnboardingStep, string> = {
+  welcome: 'Welcome to Qelvix',
+  business: 'About your business',
+  industry: 'What does the business do?',
+  domain: 'Which domain should we monitor?',
+  verify: 'Verify domain ownership',
+  size: 'How many people work here?',
+  team: 'Invite the people who fix things',
+  notify: 'Notification setup',
+  scan: 'Running your first scan',
+  report: 'Here is where you stand',
+};
+
+// Steps a user may skip; skipping only advances to the next step, never past
+// verification/notification setup (01 §exit-paths).
+const SKIPPABLE = new Set<OnboardingStep>(['business', 'industry', 'size', 'team']);
 
 const INDUSTRIES = [
   { label: 'Manufacturing', note: 'Plant, ERP, vendor portals' },
@@ -47,6 +80,11 @@ const SIZES = [
   { label: '250+', note: 'Talk to us' },
 ] as const;
 
+const COUNTRY_CODES = ['+91', '+1', '+44', '+65', '+971'] as const;
+
+const DOMAIN_RE = /^(?!-)[a-z0-9-]{1,63}(?<!-)(\.[a-z0-9-]{1,63})+$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 interface Invite {
   email: string;
   role: 'Admin' | 'Member';
@@ -61,49 +99,92 @@ export function OnboardingWizard() {
   const [gst, setGst] = useState('');
   const [contact, setContact] = useState('');
   const [domain, setDomain] = useState('');
+  const [domainTouched, setDomainTouched] = useState(false);
   const [industry, setIndustry] = useState<string>('Manufacturing');
   const [size, setSize] = useState<string>('11–50');
   const [invites, setInvites] = useState<Invite[]>([{ email: 'it@company.in', role: 'Admin' }]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteError, setInviteError] = useState('');
+
+  // Notification setup
+  const [countryCode, setCountryCode] = useState<string>('+91');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [emailOnly, setEmailOnly] = useState(false);
+  const [waConsent, setWaConsent] = useState(false);
 
   // Timeline animation states for verify & scan
   const [timelineDone, setTimelineDone] = useState(0);
   const [timelineActive, setTimelineActive] = useState(-1);
   const [timelineComplete, setTimelineComplete] = useState(false);
 
+  // Accessibility: move focus to the step heading and announce the change.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [announce, setAnnounce] = useState('');
+  const [timelineAnnounce, setTimelineAnnounce] = useState('');
+
+  const stepperIndex = STEPPER.findIndex((s) => s.key === step); // -1 for welcome/scan/report
+  const domainValid = DOMAIN_RE.test(domain.trim());
+  const domainError = domainTouched && domain.trim().length > 0 && !domainValid;
+  const waValid = whatsapp.replace(/\D/g, '').length >= 7;
+
+  const timelineItems = useMemo(
+    () =>
+      step === 'verify'
+        ? ['Reading DNS for domain', 'TXT record found', 'Signature matched', 'Domain verified']
+        : [
+            'Asset discovery (14 assets)',
+            'SSL/TLS analysis (3 findings)',
+            'DNS analysis (4 findings)',
+            'Risk scoring (score 47)',
+          ],
+    [step],
+  );
+
   useEffect(() => {
-    if (step === 'verify' || step === 'scan') {
-      const isScan = step === 'scan';
-      const maxCount = 4;
-      setTimelineDone(0);
-      setTimelineActive(0);
-      setTimelineComplete(false);
-
-      const timers: NodeJS.Timeout[] = [];
-      let elapsed = 300;
-
-      for (let i = 0; i < maxCount; i++) {
-        elapsed += isScan ? 900 : 600;
-        const currentIdx = i;
-        timers.push(
-          setTimeout(() => {
-            setTimelineDone(currentIdx + 1);
-            setTimelineActive(currentIdx + 1 < maxCount ? currentIdx + 1 : -1);
-            if (currentIdx + 1 === maxCount) {
-              setTimelineComplete(true);
-            }
-          }, elapsed),
-        );
-      }
-
-      return () => {
-        timers.forEach((t) => {
-          clearTimeout(t);
-        });
-      };
+    // Announce and focus the new step's heading for keyboard/SR users.
+    const title = STEP_TITLES[step];
+    if (stepperIndex >= 0) {
+      setAnnounce(`Step ${String(stepperIndex + 1)} of ${String(STEPPER.length)}: ${title}`);
+    } else {
+      setAnnounce(title);
     }
-    return undefined;
+    headingRef.current?.focus();
+  }, [step, stepperIndex]);
+
+  useEffect(() => {
+    if (step !== 'verify' && step !== 'scan') return undefined;
+    const isScan = step === 'scan';
+    const maxCount = 4;
+    setTimelineDone(0);
+    setTimelineActive(0);
+    setTimelineComplete(false);
+
+    const timers: NodeJS.Timeout[] = [];
+    let elapsed = 300;
+    for (let i = 0; i < maxCount; i++) {
+      elapsed += isScan ? 900 : 600;
+      const currentIdx = i;
+      timers.push(
+        setTimeout(() => {
+          setTimelineDone(currentIdx + 1);
+          setTimelineActive(currentIdx + 1 < maxCount ? currentIdx + 1 : -1);
+          if (currentIdx + 1 === maxCount) setTimelineComplete(true);
+        }, elapsed),
+      );
+    }
+    return () => {
+      timers.forEach((t) => {
+        clearTimeout(t);
+      });
+    };
   }, [step]);
+
+  useEffect(() => {
+    // Announce each completed timeline row so SR users get the live moment too.
+    if (timelineDone > 0 && timelineDone <= timelineItems.length) {
+      setTimelineAnnounce(`${timelineItems[timelineDone - 1] ?? ''} — complete`);
+    }
+  }, [timelineDone, timelineItems]);
 
   function completeOnboarding(): void {
     try {
@@ -115,318 +196,391 @@ export function OnboardingWizard() {
     router.push('/dashboard');
   }
 
+  function goTo(next: OnboardingStep): void {
+    setStep(next);
+  }
+
   function handleNext(): void {
-    const idx = STEPS.indexOf(step);
-    if (idx < STEPS.length - 1) {
-      setStep(STEPS[idx + 1] ?? 'report');
+    const idx = FLOW.indexOf(step);
+    if (idx < FLOW.length - 1) {
+      goTo(FLOW[idx + 1] ?? 'report');
     } else {
       completeOnboarding();
     }
   }
 
   function handleBack(): void {
-    const idx = STEPS.indexOf(step);
-    if (idx > 0) {
-      setStep(STEPS[idx - 1] ?? 'welcome');
-    }
+    const idx = FLOW.indexOf(step);
+    if (idx > 0) goTo(FLOW[idx - 1] ?? 'welcome');
   }
 
   function addInvite(): void {
-    if (!inviteEmail.trim()) return;
-    setInvites((prev) => [...prev, { email: inviteEmail.trim(), role: 'Member' }]);
+    const email = inviteEmail.trim();
+    if (!email) return;
+    if (!EMAIL_RE.test(email)) {
+      setInviteError('Enter a valid email address.');
+      return;
+    }
+    setInvites((prev) => [...prev, { email, role: 'Member' }]);
     setInviteEmail('');
+    setInviteError('');
   }
 
   function removeInvite(idx: number): void {
     setInvites((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function renderTimelineItems(): React.ReactNode {
-    const items =
-      step === 'verify'
-        ? [
-            'Reading DNS for domain',
-            'TXT record found',
-            'Signature matched',
-            'Domain verified · asset whitelisted',
-          ]
-        : [
-            'Asset Discovery (14 assets)',
-            'SSL/TLS Analysis (3 findings)',
-            'DNS Analysis (4 findings)',
-            'Risk scoring (score 47)',
-          ];
+  // Whether Continue is allowed for the current step.
+  const continueBlocked =
+    (step === 'domain' && !domainValid) ||
+    ((step === 'verify' || step === 'scan') && !timelineComplete) ||
+    (step === 'notify' && !emailOnly && whatsapp.trim().length > 0 && (!waValid || !waConsent));
 
-    return (
-      <div className="mt-6 flex flex-col gap-3 text-left">
-        {items.map((label, idx) => {
-          const isDone = idx < timelineDone;
-          const isActive = idx === timelineActive;
-
-          return (
-            <div
-              key={label}
-              className={cn(
-                'flex items-center gap-3 transition-opacity duration-200',
-                isDone || isActive ? 'opacity-100' : 'opacity-50',
-              )}
-            >
-              <span className="flex h-5 w-5 items-center justify-center">
-                {isDone ? (
-                  <Check className="h-4 w-4 text-content-primary" />
-                ) : isActive ? (
-                  <span className="h-2 w-2 animate-ping rounded-full bg-accent" />
-                ) : (
-                  <span className="h-2 w-2 rounded-full border border-content-muted" />
-                )}
-              </span>
-              <span className="font-body text-body-sm text-content-primary">{label}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+  const showSkip = SKIPPABLE.has(step);
+  const continueLabel =
+    step === 'welcome' ? 'Get started' : step === 'report' ? 'Go to dashboard' : 'Continue';
+  const effectiveDomain = domain.trim() || 'vardhmanexports.in';
 
   return (
     <div className="relative min-h-screen bg-surface px-4 py-8 md:px-8">
       <SurfaceField state="rest" />
 
-      {/* Top Header */}
-      <div className="relative z-10 mx-auto flex max-w-2xl items-center justify-between pb-6">
-        <Logo />
-        <button
-          type="button"
-          onClick={completeOnboarding}
-          className="text-body-sm font-medium text-content-muted transition-colors hover:text-content-primary"
-        >
-          Skip
-        </button>
+      {/* Live regions: step changes + timeline progress (visually hidden). */}
+      <div aria-live="polite" className="sr-only">
+        {announce}
+      </div>
+      <div aria-live="polite" className="sr-only">
+        {timelineAnnounce}
       </div>
 
-      <div className="relative z-10 mx-auto mb-6 max-w-2xl text-center">
-        <h1 className="font-display text-h2 font-bold tracking-tight text-content-primary">
-          Welcome to Qelvix
-        </h1>
-        <p className="mt-2 text-body-sm text-content-secondary">
-          Let&apos;s set up your workspace in a few quick steps.
-        </p>
+      {/* Brand row (unchanged). */}
+      <div className="relative z-10 mx-auto flex max-w-2xl items-center justify-between pb-6">
+        <Logo />
       </div>
+
+      {/* Persistent stepper replaces the repeated static header. */}
+      <nav aria-label="Onboarding progress" className="relative z-10 mx-auto mb-6 max-w-2xl">
+        <ol className="flex items-center gap-1.5">
+          {STEPPER.map((s, i) => {
+            const state =
+              stepperIndex < 0
+                ? step === 'welcome'
+                  ? 'upcoming'
+                  : 'done'
+                : i < stepperIndex
+                  ? 'done'
+                  : i === stepperIndex
+                    ? 'current'
+                    : 'upcoming';
+            return (
+              <li key={s.key} className="flex flex-1 items-center gap-1.5">
+                <div className="flex flex-col items-center gap-1">
+                  <span
+                    aria-current={state === 'current' ? 'step' : undefined}
+                    className={cn(
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-caption font-semibold transition-colors',
+                      state === 'current' && 'bg-accent text-[#0B0E16]',
+                      state === 'done' && 'bg-accent/20 text-accent',
+                      state === 'upcoming' && 'border border-border text-content-muted',
+                    )}
+                  >
+                    {state === 'done' ? (
+                      <Check className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      String(i + 1)
+                    )}
+                    <span className="sr-only">
+                      {s.label} — {state}
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      'hidden text-caption sm:block',
+                      state === 'current' ? 'text-content-primary' : 'text-content-muted',
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {i < STEPPER.length - 1 && (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'h-px flex-1 self-start',
+                      i < stepperIndex ? 'bg-accent/40' : 'bg-border',
+                    )}
+                    style={{ marginTop: '13px' }}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {/* Main Card */}
       <div className="relative z-10 mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-md md:p-8">
-        {/* Step Body */}
-        <div className="py-8">
+        <div className="py-2">
+          {/* Every step renders a consistent, focusable h1. */}
+          {step !== 'welcome' && (
+            <div className="mb-6">
+              <span className="font-mono text-caption text-accent">
+                {stepperIndex >= 0
+                  ? `STEP ${String(stepperIndex + 1)} OF ${String(STEPPER.length)}`
+                  : step === 'scan'
+                    ? 'FIRST SCAN'
+                    : 'FIRST REPORT'}
+              </span>
+              <h1
+                ref={headingRef}
+                tabIndex={-1}
+                className="font-display text-h2 font-bold tracking-tight text-content-primary outline-none"
+              >
+                {step === 'scan' ? `Scanning ${effectiveDomain}` : STEP_TITLES[step]}
+              </h1>
+            </div>
+          )}
+
           {step === 'welcome' && (
             <div className="space-y-4">
-              <span className="font-mono text-caption text-accent">FIRST LOGIN</span>
-              <p className="font-body text-body-sm text-content-secondary">
-                Six short steps and one DNS record. After that, scanning is automatic and you only
+              <h1
+                ref={headingRef}
+                tabIndex={-1}
+                className="font-display text-h2 font-bold tracking-tight text-content-primary outline-none"
+              >
+                Welcome to Qelvix
+              </h1>
+              <p className="text-body-sm text-content-secondary">
+                Seven short steps and one DNS record. After that, scanning is automatic and you only
                 hear from us when something needs you.
               </p>
             </div>
           )}
 
           {step === 'business' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 1 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  About your business
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  This appears on reports you share with banks, clients, or auditors.
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                This appears on reports you share with banks, clients, or auditors.
+              </p>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ob-org" className="text-body-sm font-medium text-content-secondary">
+                  Registered business name
+                </label>
+                <input
+                  id="ob-org"
+                  type="text"
+                  value={org}
+                  onChange={(e) => {
+                    setOrg(e.target.value);
+                  }}
+                  placeholder="Vardhman Exports Pvt Ltd"
+                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="ob-gst"
+                    className="text-body-sm font-medium text-content-secondary"
+                  >
+                    GSTIN
+                  </label>
+                  <span className="rounded-full bg-surface-inset px-2 py-0.5 text-caption text-content-muted">
+                    Optional
+                  </span>
+                </div>
+                <input
+                  id="ob-gst"
+                  type="text"
+                  value={gst}
+                  onChange={(e) => {
+                    setGst(e.target.value);
+                  }}
+                  placeholder="27AAECV1234F1Z5"
+                  aria-describedby="ob-gst-hint"
+                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent"
+                />
+                <p id="ob-gst-hint" className="text-caption text-content-muted">
+                  Shown on compliance reports. Leave blank if you would rather not provide it.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-caption font-medium text-content-secondary">
-                    Registered business name
-                  </label>
-                  <input
-                    type="text"
-                    value={org}
-                    onChange={(e) => {
-                      setOrg(e.target.value);
-                    }}
-                    placeholder="Vardhman Exports Pvt Ltd"
-                    className="font-body mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-content-secondary">
-                    GSTIN (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={gst}
-                    onChange={(e) => {
-                      setGst(e.target.value);
-                    }}
-                    placeholder="27AAECV1234F1Z5"
-                    className="mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent"
-                  />
-                  <p className="mt-1 text-caption text-content-muted">
-                    Shown on compliance reports. Skip if you would rather not.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-content-secondary">
-                    Breach-notification contact
-                  </label>
-                  <input
-                    type="email"
-                    value={contact}
-                    onChange={(e) => {
-                      setContact(e.target.value);
-                    }}
-                    placeholder="priya@vardhmanexports.in"
-                    className="font-body mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
-                  />
-                  <p className="mt-1 text-caption text-content-muted">
-                    Who we contact first if something critical appears (DPDP §8.6).
-                  </p>
-                </div>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="ob-contact"
+                  className="text-body-sm font-medium text-content-secondary"
+                >
+                  Breach-notification contact
+                </label>
+                <input
+                  id="ob-contact"
+                  type="email"
+                  value={contact}
+                  onChange={(e) => {
+                    setContact(e.target.value);
+                  }}
+                  placeholder="priya@vardhmanexports.in"
+                  aria-describedby="ob-contact-hint"
+                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
+                />
+                <p id="ob-contact-hint" className="text-caption text-content-muted">
+                  Who we contact first if something critical appears (DPDP §8.6).
+                </p>
               </div>
             </div>
           )}
 
           {step === 'industry' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 2 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  What does the business do?
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Industry sets your DPDP clause defaults and the benchmarks we compare you against.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {INDUSTRIES.map((ind) => {
-                  const isSel = industry === ind.label;
-                  return (
-                    <button
-                      key={ind.label}
-                      type="button"
-                      onClick={() => {
-                        setIndustry(ind.label);
-                      }}
-                      className={cn(
-                        'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
-                        isSel
-                          ? 'border-accent bg-surface-inset'
-                          : 'border-border/80 hover:bg-surface-inset/50',
-                      )}
-                    >
-                      <span className="font-body text-body-sm font-medium text-content-primary">
-                        {ind.label}
-                      </span>
-                      <span className="mt-0.5 text-caption text-content-muted">{ind.note}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Industry sets your DPDP clause defaults and the benchmarks we compare you against.
+              </p>
+              <RadioCards
+                name="industry"
+                legend="Select your industry"
+                options={INDUSTRIES}
+                value={industry}
+                onChange={setIndustry}
+                className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+              />
             </div>
           )}
 
           {step === 'domain' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 3 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  Which domain should we monitor?
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Qelvix only scans domains you prove ownership of. Nothing is scanned before that.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-caption font-medium text-content-secondary">
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Qelvix only scans domains you prove ownership of. Nothing is scanned before that.
+              </p>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="ob-domain"
+                  className="text-body-sm font-medium text-content-secondary"
+                >
                   Primary domain
                 </label>
                 <input
+                  id="ob-domain"
                   type="text"
+                  inputMode="url"
                   value={domain}
                   onChange={(e) => {
                     setDomain(e.target.value);
                   }}
+                  onBlur={() => {
+                    setDomainTouched(true);
+                  }}
                   placeholder="vardhmanexports.in"
-                  className="mt-1.5 h-11 w-full rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent"
+                  aria-invalid={domainError}
+                  aria-describedby={domainError ? 'ob-domain-error' : 'ob-domain-hint'}
+                  className={cn(
+                    'h-11 w-full rounded-lg border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent',
+                    domainError ? 'border-critical-text' : 'border-border',
+                  )}
                 />
-                <p className="mt-1 text-caption text-content-muted">
-                  Subdomains are discovered automatically — you do not need to list them.
-                </p>
+                {domainError ? (
+                  <p id="ob-domain-error" className="text-caption text-critical-text">
+                    Enter a valid domain like example.in — no http:// or paths.
+                  </p>
+                ) : (
+                  <p id="ob-domain-hint" className="text-caption text-content-muted">
+                    Subdomains are discovered automatically — you do not need to list them.
+                  </p>
+                )}
               </div>
+            </div>
+          )}
+
+          {step === 'verify' && (
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Add one TXT record for{' '}
+                <span className="font-mono text-content-primary">{effectiveDomain}</span>. We check
+                every 30 seconds and continue on our own.
+              </p>
+
+              <div className="rounded-xl border border-border bg-surface-inset p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-caption text-content-muted">TXT RECORD</span>
+                  <span className="font-mono text-caption text-accent">qelvix-verify=6a8d9e2c</span>
+                </div>
+              </div>
+
+              <ol className="flex flex-col gap-3 pt-2 text-left">
+                {timelineItems.map((label, idx) => {
+                  const isDone = idx < timelineDone;
+                  const isActive = idx === timelineActive;
+                  return (
+                    <li
+                      key={label}
+                      className={cn(
+                        'flex items-center gap-3 transition-opacity duration-200',
+                        isDone || isActive ? 'opacity-100' : 'opacity-50',
+                      )}
+                    >
+                      <span className="flex h-5 w-5 items-center justify-center">
+                        {isDone ? (
+                          <Check className="h-4 w-4 text-content-primary" aria-hidden />
+                        ) : isActive ? (
+                          <span className="h-2 w-2 animate-ping rounded-full bg-accent" />
+                        ) : (
+                          <span className="h-2 w-2 rounded-full border border-content-muted" />
+                        )}
+                      </span>
+                      <span className="text-body-sm text-content-primary">{label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <p className="text-caption text-content-muted">
+                Don&apos;t control your DNS?{' '}
+                <a
+                  href="/docs/domain-verification"
+                  className="inline-flex items-center gap-1 font-medium text-accent underline underline-offset-2"
+                >
+                  Read the step-by-step guide
+                  <ExternalLink className="h-3 w-3" aria-hidden />
+                </a>
+              </p>
             </div>
           )}
 
           {step === 'size' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 4 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  How many people work here?
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Used for scan scheduling and seat limits — nothing else.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {SIZES.map((sz) => {
-                  const isSel = size === sz.label;
-                  return (
-                    <button
-                      key={sz.label}
-                      type="button"
-                      onClick={() => {
-                        setSize(sz.label);
-                      }}
-                      className={cn(
-                        'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
-                        isSel
-                          ? 'border-accent bg-surface-inset'
-                          : 'border-border/80 hover:bg-surface-inset/50',
-                      )}
-                    >
-                      <span className="font-body text-body-sm font-medium text-content-primary">
-                        {sz.label}
-                      </span>
-                      <span className="mt-0.5 text-caption text-content-muted">{sz.note}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Used for scan scheduling and seat limits — nothing else.
+              </p>
+              <RadioCards
+                name="size"
+                legend="Select your company size"
+                options={SIZES}
+                value={size}
+                onChange={setSize}
+                className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+              />
             </div>
           )}
 
           {step === 'team' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 5 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  Invite the people who fix things
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Usually whoever runs your website or IT. You can do this later from Settings.
-                </p>
-              </div>
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Usually whoever runs your website or IT. You can do this later from Settings.
+              </p>
 
-              <div className="space-y-2">
+              <ul className="flex flex-col gap-2">
                 {invites.map((inv, idx) => (
-                  <div
+                  <li
                     key={`${inv.email}-${inv.role}`}
-                    className="flex items-center justify-between rounded-xl border border-border bg-surface-inset px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-inset px-4 py-3"
                   >
-                    <span className="font-mono text-body-sm text-content-primary">{inv.email}</span>
-                    <div className="flex items-center gap-3">
+                    <span className="min-w-0 truncate font-mono text-body-sm text-content-primary">
+                      {inv.email}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-3">
                       <span className="rounded-full border border-border/80 px-2.5 py-0.5 text-caption font-medium text-content-secondary">
+                        <span className="sr-only">Role: </span>
                         {inv.role}
                       </span>
                       <button
@@ -434,138 +588,231 @@ export function OnboardingWizard() {
                         onClick={() => {
                           removeInvite(idx);
                         }}
-                        aria-label="Remove invite"
-                        className="text-content-muted hover:text-critical-text"
+                        aria-label={`Remove invite for ${inv.email}`}
+                        className="rounded text-content-muted transition-colors hover:text-critical-text"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden />
                       </button>
                     </div>
-                  </div>
+                  </li>
                 ))}
+              </ul>
 
-                <div className="flex gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-1">
+                <label htmlFor="ob-invite" className="sr-only">
+                  Teammate email
+                </label>
+                <div className="flex gap-2">
                   <input
+                    id="ob-invite"
                     type="email"
                     value={inviteEmail}
                     onChange={(e) => {
                       setInviteEmail(e.target.value);
+                      if (inviteError) setInviteError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addInvite();
+                      }
                     }}
                     placeholder="teammate@company.in"
-                    className="font-body h-10 flex-1 rounded-lg border border-border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent"
+                    aria-invalid={inviteError.length > 0}
+                    aria-describedby={inviteError ? 'ob-invite-error' : undefined}
+                    className={cn(
+                      'h-10 flex-1 rounded-lg border bg-surface px-3 text-body-sm text-content-primary outline-none focus:border-accent',
+                      inviteError ? 'border-critical-text' : 'border-border',
+                    )}
                   />
                   <button
                     type="button"
                     onClick={addInvite}
                     className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border px-4 text-caption font-medium text-content-primary hover:bg-surface-inset"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4" aria-hidden />
                     <span>Add</span>
                   </button>
                 </div>
+                {inviteError && (
+                  <p id="ob-invite-error" className="text-caption text-critical-text">
+                    {inviteError}
+                  </p>
+                )}
               </div>
             </div>
           )}
 
-          {step === 'verify' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">STEP 6 OF 6</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  Verify domain ownership
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Add one TXT record. We check every 30 seconds and continue on our own.
+          {step === 'notify' && (
+            <div className="space-y-5">
+              <p className="text-body-sm text-content-secondary">
+                Critical findings always reach you. Choose how the rest are delivered.
+              </p>
+
+              <div className="rounded-xl border border-border bg-surface-inset p-4">
+                <p className="text-body-sm font-medium text-content-primary">Email alerts</p>
+                <p className="mt-0.5 text-caption text-content-muted">
+                  Confirmed and always on:{' '}
+                  <span className="font-mono text-content-secondary">
+                    {contact.trim() || 'your account email'}
+                  </span>
                 </p>
               </div>
 
-              <div className="rounded-xl border border-border bg-surface-inset p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-caption text-content-muted">TXT RECORD</span>
-                  <span className="font-mono text-caption text-accent">qelvix-verify=6a8d9e2c</span>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-body-sm font-medium text-content-secondary">
+                  WhatsApp alerts
+                  <span className="ml-2 rounded-full bg-surface-inset px-2 py-0.5 text-caption font-normal text-content-muted">
+                    Optional
+                  </span>
+                </legend>
+                <div className="flex gap-2">
+                  <label htmlFor="ob-cc" className="sr-only">
+                    Country code
+                  </label>
+                  <select
+                    id="ob-cc"
+                    value={countryCode}
+                    disabled={emailOnly}
+                    onChange={(e) => {
+                      setCountryCode(e.target.value);
+                    }}
+                    className="h-11 rounded-lg border border-border bg-surface px-2 text-body-sm text-content-primary outline-none focus:border-accent disabled:opacity-50"
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <label htmlFor="ob-wa" className="sr-only">
+                    WhatsApp number
+                  </label>
+                  <input
+                    id="ob-wa"
+                    type="tel"
+                    inputMode="tel"
+                    value={whatsapp}
+                    disabled={emailOnly}
+                    onChange={(e) => {
+                      setWhatsapp(e.target.value);
+                    }}
+                    placeholder="98765 43210"
+                    aria-describedby="ob-wa-consent"
+                    className="h-11 flex-1 rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent disabled:opacity-50"
+                  />
                 </div>
-              </div>
 
-              {renderTimelineItems()}
+                <label className="mt-1 flex cursor-pointer items-start gap-2.5 text-caption text-content-secondary">
+                  <input
+                    type="checkbox"
+                    checked={emailOnly}
+                    onChange={(e) => {
+                      setEmailOnly(e.target.checked);
+                      if (e.target.checked) {
+                        setWhatsapp('');
+                        setWaConsent(false);
+                      }
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+                  />
+                  <span>Skip WhatsApp — send me email only</span>
+                </label>
+
+                {!emailOnly && whatsapp.trim().length > 0 && (
+                  <label className="mt-1 flex cursor-pointer items-start gap-2.5 text-caption text-content-secondary">
+                    <input
+                      type="checkbox"
+                      checked={waConsent}
+                      onChange={(e) => {
+                        setWaConsent(e.target.checked);
+                      }}
+                      className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+                    />
+                    <span id="ob-wa-consent">
+                      I consent to receiving security alerts from Qelvix on this WhatsApp number.
+                      Message rates may apply, and I can withdraw consent anytime from Settings
+                      (DPDP §6, 07 §consent).
+                    </span>
+                  </label>
+                )}
+              </fieldset>
             </div>
           )}
 
           {step === 'scan' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">FIRST SCAN</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  Scanning {domain || 'vardhmanexports.in'}
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Real checks against your real infrastructure. Three agents, roughly two minutes.
-                </p>
-              </div>
-
-              {renderTimelineItems()}
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Real checks against your real infrastructure. Four agents, roughly two minutes.
+              </p>
+              <ol className="flex flex-col gap-3 pt-2 text-left">
+                {timelineItems.map((label, idx) => {
+                  const isDone = idx < timelineDone;
+                  const isActive = idx === timelineActive;
+                  return (
+                    <li
+                      key={label}
+                      className={cn(
+                        'flex items-center gap-3 transition-opacity duration-200',
+                        isDone || isActive ? 'opacity-100' : 'opacity-50',
+                      )}
+                    >
+                      <span className="flex h-5 w-5 items-center justify-center">
+                        {isDone ? (
+                          <Check className="h-4 w-4 text-content-primary" aria-hidden />
+                        ) : isActive ? (
+                          <span className="h-2 w-2 animate-ping rounded-full bg-accent" />
+                        ) : (
+                          <span className="h-2 w-2 rounded-full border border-content-muted" />
+                        )}
+                      </span>
+                      <span className="text-body-sm text-content-primary">{label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
           )}
 
           {step === 'report' && (
-            <div className="space-y-6">
-              <div>
-                <span className="font-mono text-caption text-accent">FIRST REPORT</span>
-                <h2 className="font-heading text-heading-md font-semibold text-content-primary">
-                  Here is where you stand
-                </h2>
-                <p className="font-body text-body-sm text-content-secondary">
-                  Two issues need attention this week. Start with the expired certificate.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex flex-col rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <span className="bg-critical/10 rounded-full px-2 py-0.5 text-caption font-semibold text-critical-text">
-                      Critical
-                    </span>
-                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
-                      SSL certificate expired 4 days ago
-                    </p>
-                    <p className="font-mono text-caption text-content-muted">
-                      mail.{domain || 'vardhmanexports.in'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <span className="bg-warning/10 text-warning-text rounded-full px-2 py-0.5 text-caption font-semibold">
-                      High
-                    </span>
-                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
-                      No DMARC record — email is spoofable
-                    </p>
-                    <p className="font-mono text-caption text-content-muted">
-                      {domain || 'vardhmanexports.in'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-caption font-semibold text-accent">
-                      Medium
-                    </span>
-                    <p className="font-body mt-2 text-body-sm font-medium text-content-primary">
-                      SPF uses ~all instead of -all
-                    </p>
-                    <p className="font-mono text-caption text-content-muted">
-                      {domain || 'vardhmanexports.in'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-4">
+              <p className="text-body-sm text-content-secondary">
+                Two issues need attention this week. Start with the expired certificate.
+              </p>
+              <ul className="flex flex-col gap-3">
+                {[
+                  {
+                    sev: 'Critical',
+                    title: 'SSL certificate expired 4 days ago',
+                    asset: `mail.${effectiveDomain}`,
+                  },
+                  {
+                    sev: 'High',
+                    title: 'No DMARC record — email is spoofable',
+                    asset: effectiveDomain,
+                  },
+                  {
+                    sev: 'Medium',
+                    title: 'SPF uses ~all instead of -all',
+                    asset: effectiveDomain,
+                  },
+                ].map((f) => (
+                  <li
+                    key={f.title}
+                    className="flex flex-col gap-2 rounded-xl border border-border p-4"
+                  >
+                    <SeverityBadge severity={f.sev} />
+                    <p className="text-body-sm font-medium text-content-primary">{f.title}</p>
+                    <p className="font-mono text-caption text-content-muted">{f.asset}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between border-t border-border/60 pt-6">
+        <div className="mt-6 flex items-center justify-between gap-3 border-t border-border/60 pt-6">
           <button
             type="button"
             onClick={handleBack}
@@ -575,23 +822,78 @@ export function OnboardingWizard() {
             Back
           </button>
 
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={(step === 'verify' || step === 'scan') && !timelineComplete}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-[#0B0E16] shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
-          >
-            <span>
-              {step === 'welcome'
-                ? 'Get started'
-                : step === 'report'
-                  ? 'Go to dashboard'
-                  : 'Continue'}
-            </span>
-            <ChevronRight className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {showSkip && (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="rounded-lg px-4 py-2 text-caption font-medium text-content-muted hover:text-content-primary"
+              >
+                Skip for now
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={continueBlocked}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-[#0B0E16] shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
+            >
+              <span>{continueLabel}</span>
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+interface RadioCardsProps {
+  name: string;
+  legend: string;
+  options: readonly { label: string; note: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}
+
+/** Accessible radio group rendered as selectable cards (native inputs). */
+function RadioCards({ name, legend, options, value, onChange, className }: RadioCardsProps) {
+  return (
+    <fieldset>
+      <legend className="sr-only">{legend}</legend>
+      <div className={className}>
+        {options.map((opt) => {
+          const isSel = value === opt.label;
+          return (
+            <label
+              key={opt.label}
+              className={cn(
+                'flex cursor-pointer flex-col items-start rounded-xl border p-4 text-left transition-all focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-1 focus-within:ring-offset-surface',
+                isSel
+                  ? 'border-accent bg-surface-inset'
+                  : 'border-border/80 hover:bg-surface-inset/50',
+              )}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={opt.label}
+                checked={isSel}
+                onChange={() => {
+                  onChange(opt.label);
+                }}
+                className="sr-only"
+              />
+              <span className="flex w-full items-center justify-between gap-2">
+                <span className="text-body-sm font-medium text-content-primary">{opt.label}</span>
+                {isSel && <Check className="h-4 w-4 shrink-0 text-accent" aria-hidden />}
+              </span>
+              <span className="mt-0.5 text-caption text-content-muted">{opt.note}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
