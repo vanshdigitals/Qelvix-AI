@@ -20,8 +20,12 @@ export function ThemeToggle() {
       onClick={() => {
         setTheme(isDark ? 'light' : 'dark');
       }}
-      // The label announces the action, not the current state.
-      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      // The label announces the action, not the current state. Kept theme-neutral
+      // until mount: the server can't know the stored theme, so a state-dependent
+      // label would mismatch on hydration (same reason the icon waits for mount).
+      aria-label={
+        mounted ? (isDark ? 'Switch to light theme' : 'Switch to dark theme') : 'Toggle theme'
+      }
       className="w-control-md flex h-control-md items-center justify-center rounded-md text-content-secondary transition-colors duration-fast ease-standard hover:bg-surface-inset hover:text-content-primary"
     >
       {/* Rendered only after mount: the server has no way to know the stored
