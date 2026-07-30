@@ -10,7 +10,8 @@ import { POST_LOGIN_ROUTE } from '@/lib/supabase/config';
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? POST_LOGIN_ROUTE;
+  // Email/recovery flows pass this explicitly; OAuth does not.
+  const explicitNext = searchParams.get('next');
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);
@@ -21,10 +22,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=not_configured`);
   }
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(`${origin}/login?error=invalid_code`);
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  // Explicit next (e.g. email confirmation's next=/onboarding) is always honored.
+  if (explicitNext) {
+    return NextResponse.redirect(`${origin}${explicitNext}`);
+  }
+
+  // OAuth has no next: on a first-ever sign-in the account was just created, so
+  // created_at and last_sign_in_at are effectively equal — send those users to
+  // onboarding; everyone else goes to the dashboard.
+  const user = data.session.user;
+  const created = Date.parse(user.created_at);
+  const lastSignIn = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : NaN;
+  const isFirstSignIn =
+    Number.isFinite(created) &&
+    Number.isFinite(lastSignIn) &&
+    Math.abs(lastSignIn - created) <= 5000;
+
+  return NextResponse.redirect(`${origin}${isFirstSignIn ? '/onboarding' : POST_LOGIN_ROUTE}`);
 }
