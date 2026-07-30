@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
               onClick={() => {
                 router.push('/onboarding');
               }}
-              className="font-body mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-all duration-200 hover:shadow-xs"
+              className="font-body mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-[#0B0E16] shadow-2xs transition-all duration-200 hover:shadow-xs"
             >
               Continue
             </button>

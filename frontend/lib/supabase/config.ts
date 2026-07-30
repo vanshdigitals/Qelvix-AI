@@ -28,6 +28,8 @@ export const PROTECTED_PREFIXES = [
   '/notifications',
   '/settings',
   '/team',
+  '/billing',
+  '/audit',
   '/profile',
   '/onboarding',
 ] as const;

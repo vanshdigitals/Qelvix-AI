@@ -35,7 +35,12 @@ function toMessage(raw: string): string {
 }
 
 function siteUrl(path: string): string {
-  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+  // Prefer an explicit canonical origin so email/OAuth redirects are correct
+  // even when built server-side (no window) or behind a proxy. Falls back to the
+  // live origin in the browser. Supabase must still allowlist this URL.
+  const trimmed = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
+  const configured = trimmed ? trimmed : undefined;
+  const origin = configured ?? (typeof window === 'undefined' ? '' : window.location.origin);
   return `${origin}${path}`;
 }
 

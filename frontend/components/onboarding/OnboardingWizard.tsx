@@ -579,7 +579,7 @@ export function OnboardingWizard() {
             type="button"
             onClick={handleNext}
             disabled={(step === 'verify' || step === 'scan') && !timelineComplete}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-[#0B0E16] shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
           >
             <span>
               {step === 'welcome'

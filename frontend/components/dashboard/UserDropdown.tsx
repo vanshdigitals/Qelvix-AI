@@ -1,6 +1,7 @@
 'use client';
 
 import { LogOut, Settings, User } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -71,29 +72,27 @@ export function UserDropdown({ userName, initials }: UserDropdownProps) {
             <p className="truncate text-body-sm font-medium text-content-primary">{userName}</p>
           </div>
 
-          <button
-            type="button"
+          <Link
+            href="/profile"
             onClick={() => {
               setOpen(false);
-              // Profile logic would go here
             }}
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium text-content-secondary transition-colors duration-100 hover:bg-surface-inset hover:text-content-primary"
           >
             <User className="h-4 w-4" />
             Profile
-          </button>
+          </Link>
 
-          <button
-            type="button"
+          <Link
+            href="/settings"
             onClick={() => {
               setOpen(false);
-              // Settings logic would go here
             }}
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium text-content-secondary transition-colors duration-100 hover:bg-surface-inset hover:text-content-primary"
           >
             <Settings className="h-4 w-4" />
             Settings
-          </button>
+          </Link>
 
           <div className="my-1 border-t border-border/60" />
 

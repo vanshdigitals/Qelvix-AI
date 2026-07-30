@@ -6,8 +6,13 @@ import { createClient } from '@/lib/supabase/client';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { cn } from '@/lib/utils/cn';
 
+// NEXT_PUBLIC_* values are inlined at build time, so this must be set in the
+// deploy environment (e.g. Vercel) BEFORE the build and requires a redeploy to
+// take effect. Parsed leniently so a stray space or casing from the dashboard
+// (" true", "TRUE") still enables the provider instead of silently disabling it.
 const GOOGLE_ENABLED =
-  process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true' && isSupabaseConfigured;
+  process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED?.trim().toLowerCase() === 'true' &&
+  isSupabaseConfigured;
 
 export interface GoogleButtonProps {
   label?: string;

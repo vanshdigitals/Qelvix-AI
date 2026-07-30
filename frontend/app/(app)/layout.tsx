@@ -1,3 +1,5 @@
+import { AppShell } from '@/components/dashboard/AppShell';
+
 export default function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <>{children}</>;
+  return <AppShell>{children}</AppShell>;
 }
