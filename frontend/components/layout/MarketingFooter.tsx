@@ -14,17 +14,17 @@ const LINK_GROUPS = [
     links: [
       { label: 'How it works', href: '/#how-it-works' },
       { label: 'Sample report', href: '/#demo' },
-      { label: 'Pricing', href: '/#pricing' },
-      { label: 'Questions', href: '/#faq' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Docs', href: '/docs' },
     ],
   },
   {
-    heading: 'Platform',
+    heading: 'Company',
     links: [
-      { label: 'Rule engine', href: '/#architecture' },
-      { label: 'Agent pipeline', href: '/#architecture' },
-      { label: 'Data feeds', href: '/#architecture' },
-      { label: 'DPDP readiness', href: '/#compliance' },
+      { label: 'About', href: '/about' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Status', href: '/status' },
+      { label: 'Questions', href: '/#faq' },
     ],
   },
   {
@@ -33,6 +33,15 @@ const LINK_GROUPS = [
       { label: 'Log in', href: '/login' },
       { label: 'Create account', href: '/signup' },
       { label: 'Reset password', href: '/forgot-password' },
+    ],
+  },
+  {
+    heading: 'Legal & Trust',
+    links: [
+      { label: 'Privacy Policy', href: '/legal/privacy' },
+      { label: 'Terms of Service', href: '/legal/terms' },
+      { label: 'Scanning Policy', href: '/legal/scanning-policy' },
+      { label: 'DPA', href: '/legal/dpa' },
     ],
   },
 ] as const;
@@ -70,7 +79,7 @@ export function MarketingFooter() {
           </RevealChild>
 
           {/* Navigation Links Columns */}
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:col-span-8">
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:col-span-8">
             {LINK_GROUPS.map((group) => (
               <RevealChild key={group.heading}>
                 <h3 className="font-mono text-caption font-semibold uppercase tracking-wider text-content-primary">

@@ -5,9 +5,11 @@ import {
   FileText,
   Flag,
   History,
+  Key,
   LayoutDashboard,
   type LucideIcon,
   Radar,
+  HelpCircle,
   Settings,
   ShieldCheck,
   Users,
@@ -32,6 +34,8 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   notifications: Bell,
   billing: CreditCard,
   audit: History,
+  'api-keys': Key,
+  help: HelpCircle,
 };
 
 export interface NavItem {
@@ -86,10 +90,16 @@ export function buildNavGroups(role: UserRole): NavGroup[] {
       label: 'ACCOUNT',
       items: [
         { label: 'Billing', key: 'billing', href: '/billing' },
+        { label: 'API keys', key: 'api-keys', href: '/api-keys' },
         { label: 'Audit log', key: 'audit', href: '/audit' },
       ],
     });
   }
+
+  groups.push({
+    label: 'SUPPORT',
+    items: [{ label: 'Help center', key: 'help', href: '/help' }],
+  });
 
   return groups;
 }

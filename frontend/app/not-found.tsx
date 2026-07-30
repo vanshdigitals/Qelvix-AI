@@ -2,14 +2,21 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export default function NotFound() {
   const router = useRouter();
+  const { session, loading } = useAuth();
   const [countdown, setCountdown] = useState(12);
 
+  const targetUrl = session ? '/dashboard' : '/';
+  const targetName = session ? 'dashboard' : 'home';
+
   useEffect(() => {
+    if (loading) return;
+    
     if (countdown <= 0) {
-      router.push('/');
+      router.push(targetUrl);
       return;
     }
 
@@ -20,7 +27,7 @@ export default function NotFound() {
     return () => {
       clearInterval(timer);
     };
-  }, [countdown, router]);
+  }, [countdown, router, targetUrl, loading]);
 
   return (
     <div
@@ -35,17 +42,17 @@ export default function NotFound() {
           This page doesn&apos;t exist — or it moved.
         </p>
         <p className="font-body mt-2 text-body-sm text-content-muted">
-          Redirecting to home in {countdown}s
+          Redirecting to {targetName} in {countdown}s
         </p>
 
         <button
           type="button"
           onClick={() => {
-            router.push('/');
+            router.push(targetUrl);
           }}
           className="font-body mt-8 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-6 text-body-sm font-semibold text-[#0B0E16] transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
         >
-          Go to Homepage
+          Go to {targetName === 'dashboard' ? 'Dashboard' : 'Homepage'}
         </button>
       </div>
     </div>

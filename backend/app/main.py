@@ -45,6 +45,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Authorization", "Content-Type"],
     )
 
+    from app.routers import (
+        auth, org, members, scans, findings, compliance, dashboard, notifications, webhooks
+    )
+
+    app.include_router(auth.router)
+    app.include_router(org.router)
+    app.include_router(members.router)
+    app.include_router(scans.router)
+    app.include_router(findings.router)
+    app.include_router(compliance.router)
+    app.include_router(dashboard.router)
+    app.include_router(notifications.router)
+    app.include_router(webhooks.router)
+
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health() -> HealthResponse:
         """Liveness probe. Unauthenticated by design — it reports no tenant data."""

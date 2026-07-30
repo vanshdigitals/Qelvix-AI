@@ -18,7 +18,10 @@ const NAV_LINKS: readonly {
   { label: 'Product', href: '/#problem', id: 'problem' },
   { label: 'Features', href: '/#solution', id: 'solution' },
   { label: 'Security', href: '/#architecture', id: 'architecture' },
-  { label: 'Pricing', href: '/#pricing', id: 'pricing' },
+  { label: 'Pricing', href: '/pricing', id: 'pricing' },
+  { label: 'About', href: '/about', id: 'about' },
+  { label: 'Contact', href: '/contact', id: 'contact' },
+  { label: 'Docs', href: '/docs', id: 'docs' },
   { label: 'Resources', href: '/#faq', id: 'faq', hideOnSmallerDesktop: true },
 ];
 
