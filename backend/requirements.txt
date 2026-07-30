@@ -31,8 +31,8 @@ pydantic-settings==2.7.0
 # Auth — 03 §1 (Supabase Auth, JWT validation)
 pyjwt[crypto]==2.10.1
 
-# LLM — 03 §1, §9 (claude-sonnet-4-6, called only from claude_service.py)
-anthropic==0.42.0
+# LLM — 03 §1, §9 (deepseek-v4-flash, called only from claude_service.py)
+openai==1.42.0
 
 # External service clients — 03 §8
 httpx==0.28.1

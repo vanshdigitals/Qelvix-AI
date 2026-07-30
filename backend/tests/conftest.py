@@ -24,7 +24,7 @@ def settings() -> Settings:
     test suite (INV-29).
     """
     return Settings(
-        anthropic_api_key="test-anthropic-key",  # type: ignore[arg-type]
+        nvidia_api_key="test-nvidia-key",  # type: ignore[arg-type]
         database_url="postgresql+asyncpg://qelvix:qelvix@localhost:5432/qelvix_test",
         supabase_url="http://localhost:54321",
         supabase_service_key="test-service-key",  # type: ignore[arg-type]

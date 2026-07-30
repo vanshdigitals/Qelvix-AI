@@ -30,8 +30,8 @@ class Settings(BaseSettings):
         extra="forbid",
     )
 
-    # Anthropic — 03 §9. Consumed only by claude_service.py (INV-01).
-    anthropic_api_key: SecretStr
+    # NVIDIA NIM (DeepSeek) — 03 §9. Consumed only by claude_service.py (INV-01).
+    nvidia_api_key: SecretStr
 
     # Database — 03 §11
     database_url: str
