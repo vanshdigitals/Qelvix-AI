@@ -21,7 +21,7 @@ Qelvix is an AI-powered cybersecurity platform for Indian SMBs: a LangGraph pipe
 
 Full text and sources: `docs/impl/INVARIANTS.md`. Your task card lists which are in force.
 
-- **INV-01** Anthropic API called only from `claude_service.py`, only via its four functions.
+- **INV-01** NVIDIA NIM API called only from `claude_service.py`, only via its four functions.
 - **INV-02** Rules decide, the LLM explains. No LLM output sets existence, severity, `raw_data`, risk, or DPDP status.
 - **INV-03** Every authenticated route depends on `get_current_org`. `org_id` is never client-supplied.
 - **INV-04** Every tenant-scoped table enables RLS in the migration that creates it.
@@ -67,7 +67,7 @@ Full text and sources: `docs/impl/INVARIANTS.md`. Your task card lists which are
 | Python function/variable | snake_case | `evaluate_ssl` |
 | SQLAlchemy model | PascalCase, singular | `Finding` (table: `findings`) |
 | Alembic migration | `<timestamp>_<snake_case_description>.py` | `20260315_add_members_table.py` |
-| Environment variable | SCREAMING_SNAKE_CASE | `ANTHROPIC_API_KEY` |
+| Environment variable | SCREAMING_SNAKE_CASE | `NVIDIA_API_KEY` |
 | Celery task | snake_case, verb-first | `run_full_scan` |
 
 ## Standing rules

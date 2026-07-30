@@ -1,19 +1,19 @@
 # 04: Agent Pipeline
 
-Specifies the 13-agent LangGraph pipeline that `03_BACKEND.md` §6.1 queues via Celery and §9 names as the sole caller-boundary for `claude_service.py`. This document owns: the DAG structure, every agent's inputs/tools/rules/outputs, the deterministic rules engines, the full Claude prompt set, the IR playbook format, and the DPDP clause checklist. It does not restate the `scans`/`findings` schema (`03_BACKEND.md` §4.1), the Celery task boundary (`03_BACKEND.md` §6), or the notification delivery mechanics (`03_BACKEND.md` §7) — all referenced here only at their integration points.
+Specifies the 13-agent LangGraph pipeline that `03_BACKEND.md` §6.1 queues via Celery and §9 names as the sole caller-boundary for `claude_service.py`. This document owns: the DAG structure, every agent's inputs/tools/rules/outputs, the deterministic rules engines, the full DeepSeek prompt set, the IR playbook format, and the DPDP clause checklist. It does not restate the `scans`/`findings` schema (`03_BACKEND.md` §4.1), the Celery task boundary (`03_BACKEND.md` §6), or the notification delivery mechanics (`03_BACKEND.md` §7) — all referenced here only at their integration points.
 
 ## 1. Core Principle: Rules-before-LLM
 
-Every security decision — whether a finding exists, its severity, its `raw_data` — is produced by a deterministic Python function with no LLM call inside it. Claude is invoked exactly four times in the pipeline, always after the deciding rule has already run, always scoped to explaining or drafting language around a decision already made:
+Every security decision — whether a finding exists, its severity, its `raw_data` — is produced by a deterministic Python function with no LLM call inside it. DeepSeek is invoked exactly four times in the pipeline, always after the deciding rule has already run, always scoped to explaining or drafting language around a decision already made:
 
-| Claude call | Node | Never does |
+| DeepSeek call | Node | Never does |
 |---|---|---|
 | Executive summary | Risk Scoring (Agent 9) | Compute or adjust the score |
 | Compliance narrative | DPDP Compliance (Agent 10) | Determine clause pass/fail |
 | Remediation steps | Recovery Recommendation (Agent 12) | Invent a fix not implied by the finding's evidence |
 | WhatsApp summary | Notification (Agent 13) | Add findings not already in the report |
 
-This is the same boundary `03_BACKEND.md` §9 enforces structurally (one service module holds the Anthropic client); this document is where that boundary is specified in prompt-level detail.
+This is the same boundary `03_BACKEND.md` §9 enforces structurally (one service module holds the NVIDIA NIM client); this document is where that boundary is specified in prompt-level detail.
 
 ## 2. Orchestration Framework
 
@@ -163,10 +163,10 @@ class AgentState(TypedDict):
     all_findings: List[Finding]
     risk_score: Optional[int]
     risk_band: Optional[str]  # Low | Medium | High | Critical
-    risk_executive_summary: Optional[str]  # Claude-generated
+    risk_executive_summary: Optional[str]  # DeepSeek-generated
     dpdp_clauses: Optional[List[dict]]
     dpdp_overall_status: Optional[str]
-    dpdp_narrative: Optional[str]  # Claude-generated
+    dpdp_narrative: Optional[str]  # DeepSeek-generated
 
     # Phase 4: Action outputs
     ir_plan: Optional[dict]
@@ -347,7 +347,7 @@ Every other rules module (`dns_rules.py`, `port_rules.py`, `vuln_rules.py`, `thr
   ```
 - **Bands:** 0–30 Low | 31–59 Medium | 60–79 High | 80–100 Critical
 - **Output:** `RiskScore { score, band, findings_summary { critical, high, medium, low } }`
-- **LLM:** Claude writes a 2-sentence executive summary **after** the score is computed — see §7.1
+- **LLM:** DeepSeek writes a 2-sentence executive summary **after** the score is computed — see §7.1
 
 This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Health band rather than as the dashboard's primary framing; the four-band mapping (Good/Needs Attention/At Risk/Critical) is a presentation-layer transform of the `band` value above, computed at the API or frontend layer, not a second scoring algorithm. The underlying `0–100` score and its four TRD bands (Low/Medium/High/Critical) are unchanged and remain the number CA-firm portfolio comparisons (`01_PRODUCT_BLUEPRINT.md` §1, Future Scalability) will use.
 
@@ -355,7 +355,7 @@ This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Heal
 - **Input:** Asset inventory, DNS/SSL findings
 - **Rules:** Static clause checklist — see §8
 - **Output:** `DPDPReport { clauses[{ id, status: pass|fail|na, evidence }], overall }`
-- **LLM:** Claude generates the narrative section only — see §7.2
+- **LLM:** DeepSeek generates the narrative section only — see §7.2
 
 ### Phase 4 — Action (sequential)
 
@@ -363,23 +363,23 @@ This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Heal
 - **Input:** Top 5 critical/high findings from the Risk Report
 - **Tools:** YAML IR playbook library (local, shipped with the codebase — see §9)
 - **Output:** `IRPlan { steps[], priority_finding, estimated_effort }`
-- **LLM:** Claude selects and tailors the relevant playbook to the org's context
+- **LLM:** DeepSeek selects and tailors the relevant playbook to the org's context
 
 **Agent 12 — Recovery Recommendation** *(MVP)*
 - **Input:** Individual findings
-- **Tools:** Claude API + YAML remediation knowledge base
+- **Tools:** DeepSeek API + YAML remediation knowledge base
 - **Output:** `RemediationSteps` per finding, owner-friendly, no jargon
-- **LLM:** Claude translates the technical fix into 3–5 plain-language steps — see §7.3
+- **LLM:** DeepSeek translates the technical fix into 3–5 plain-language steps — see §7.3
 
 **Agent 13 — Notification** *(MVP)*
 - **Input:** RiskReport, IRPlan, RemediationSteps, org notification preferences
 - **Tools:** `whatsapp_service.py`, `email_service.py` (`03_BACKEND.md` §8)
 - **Output:** Notifications sent, logged to `notifications` (`03_BACKEND.md` §4.1)
-- **LLM:** Claude compresses the report into a <160-word WhatsApp message — see §7.4
+- **LLM:** DeepSeek compresses the report into a <160-word WhatsApp message — see §7.4
 
 Delivery mechanics (consent gating, the message template, the webhook reply flow) are owned by `03_BACKEND.md` §7; this node's responsibility ends at producing the compressed summary text `03_BACKEND.md`'s `whatsapp_service.py` sends.
 
-## 7. Claude Integration — Prompt Specifications
+## 7. DeepSeek Integration — Prompt Specifications
 
 `claude_service.py` (`03_BACKEND.md` §9) holds all four functions below. Each is called from exactly one agent node, after that node's rules have already run.
 
@@ -389,7 +389,7 @@ Delivery mechanics (consent gating, the message template, the webhook reply flow
 async def explain_finding(finding: dict, org_context: dict) -> str:
     """Called ONLY after deterministic rules fire. Never decides severity."""
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="deepseek-v4-flash",
         max_tokens=350,
         system=(
             "You are a cybersecurity advisor explaining findings to Indian MSME "
@@ -416,7 +416,7 @@ Do NOT add findings not in the evidence. Speak directly to the owner.
     return response.content[0].text
 ```
 
-This is the `plain_explanation` field on `findings` (`03_BACKEND.md` §4.1) and the text `01_PRODUCT_BLUEPRINT.md`'s Finding Detail screen shows before the raw evidence. Caching is keyed on `(finding_type, severity, a normalized hash of raw_data)` so two orgs with the identical SSL misconfiguration don't each pay a fresh Claude call — this is the "cheaper per-org as shared indicators are cached across tenants" data-moat goal from `01_PRODUCT_BLUEPRINT.md` §1 (Business Goals), implemented here as the cache key for this specific function.
+This is the `plain_explanation` field on `findings` (`03_BACKEND.md` §4.1) and the text `01_PRODUCT_BLUEPRINT.md`'s Finding Detail screen shows before the raw evidence. Caching is keyed on `(finding_type, severity, a normalized hash of raw_data)` so two orgs with the identical SSL misconfiguration don't each pay a fresh DeepSeek call — this is the "cheaper per-org as shared indicators are cached across tenants" data-moat goal from `01_PRODUCT_BLUEPRINT.md` §1 (Business Goals), implemented here as the cache key for this specific function.
 
 ### 7.2 Risk Scoring executive summary and DPDP narrative
 
@@ -428,7 +428,7 @@ Both follow the same pattern as `explain_finding`: a short, tightly-scoped promp
 async def generate_remediation(finding: dict) -> str:
     """Write owner-friendly fix steps for a specific finding."""
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="deepseek-v4-flash",
         max_tokens=400,
         system=(
             "You write simple, numbered fix steps for MSME owners with "
@@ -450,7 +450,7 @@ Raw Data: {finding['raw_data']}
     return response.content[0].text
 ```
 
-"If a vendor needs to be contacted, say so" is the prompt-level source of the edge case `01_PRODUCT_BLUEPRINT.md`'s Finding Detail specifies: a remediation that requires contacting a third party must say so explicitly rather than imply the user can self-serve the fix. When a matching IR playbook (§9) exists for the finding type, its steps are passed into this prompt as grounding context rather than left for Claude to reconstruct from evidence alone, keeping the output consistent with the playbook's estimated effort figures.
+"If a vendor needs to be contacted, say so" is the prompt-level source of the edge case `01_PRODUCT_BLUEPRINT.md`'s Finding Detail specifies: a remediation that requires contacting a third party must say so explicitly rather than imply the user can self-serve the fix. When a matching IR playbook (§9) exists for the finding type, its steps are passed into this prompt as grounding context rather than left for DeepSeek to reconstruct from evidence alone, keeping the output consistent with the playbook's estimated effort figures.
 
 ### 7.4 `generate_whatsapp_summary`
 
@@ -458,7 +458,7 @@ Raw Data: {finding['raw_data']}
 async def generate_whatsapp_summary(scan_result: dict, org: dict) -> str:
     """Compress full scan into <160-word WhatsApp message."""
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="deepseek-v4-flash",
         max_tokens=250,
         messages=[{
             "role": "user",
@@ -524,7 +524,7 @@ DPDP_CLAUSES = [
 ]
 ```
 
-Each `check` function is a pure predicate over already-collected agent data (or a lightweight HTTP probe for the two clauses that check for a page's existence), returning `pass | fail | na` plus the evidence that justified it. This is the `clauses` array persisted to `compliance_reports` (`03_BACKEND.md` §4.1) and read by `GET /compliance/latest`. None of these checks involve Claude; the DPDP narrative (§7.2) is generated only from the already-computed `clauses` array, never from a fresh reading of DPDP Act text — this keeps the compliance surface within the "readiness indicator, not certification" claim `01_PRODUCT_BLUEPRINT.md` requires everywhere DPDP appears, since Qelvix is asserting what its own deterministic checks found, not offering a legal opinion.
+Each `check` function is a pure predicate over already-collected agent data (or a lightweight HTTP probe for the two clauses that check for a page's existence), returning `pass | fail | na` plus the evidence that justified it. This is the `clauses` array persisted to `compliance_reports` (`03_BACKEND.md` §4.1) and read by `GET /compliance/latest`. None of these checks involve DeepSeek; the DPDP narrative (§7.2) is generated only from the already-computed `clauses` array, never from a fresh reading of DPDP Act text — this keeps the compliance surface within the "readiness indicator, not certification" claim `01_PRODUCT_BLUEPRINT.md` requires everywhere DPDP appears, since Qelvix is asserting what its own deterministic checks found, not offering a legal opinion.
 
 ## 9. IR Playbook Format
 
@@ -580,7 +580,7 @@ Matches TRD §13 exactly; agent numbers below correspond to §6 above.
 ## 13. Design Decisions
 
 - **Security Health band is a presentation transform of `RiskScore.band`, not a second scoring algorithm** (§6, Agent 9). `01_PRODUCT_BLUEPRINT.md` §8 already established this as a Beyond-the-Brief decision; stated here explicitly so a future agent implementer doesn't infer a second scoring rule is needed inside this pipeline. The rules engine output is unchanged from TRD §3.3; only the dashboard's framing of it changed, and that framing lives in the frontend/API layer, not in Agent 9 itself.
-- **`explain_finding` caching keyed by finding-shape** (§7.1). Not specified as a caching strategy in TRD v1.0; added here because `01_PRODUCT_BLUEPRINT.md` §1 (Business Goals) commits to "cheaper per-org as shared indicators are cached across tenants," and this is the mechanism that makes that true for the highest-volume Claude call in the pipeline.
+- **`explain_finding` caching keyed by finding-shape** (§7.1). Not specified as a caching strategy in TRD v1.0; added here because `01_PRODUCT_BLUEPRINT.md` §1 (Business Goals) commits to "cheaper per-org as shared indicators are cached across tenants," and this is the mechanism that makes that true for the highest-volume DeepSeek call in the pipeline.
 - **False-positive feedback loop is manual at MVP** (§10). `01_PRODUCT_BLUEPRINT.md` requires capturing the reason; TRD v1.0 never specified an automated tuning mechanism. Documented as manual-by-default rather than left ambiguous, so `06_DEVELOPMENT_GUIDE.md` doesn't need to scaffold automation that isn't actually in scope.
 
 ---

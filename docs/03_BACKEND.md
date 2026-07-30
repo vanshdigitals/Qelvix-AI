@@ -1,6 +1,6 @@
 # 03: Backend Architecture
 
-Implements the API surface, data layer, and service boundary that `02_FRONTEND.md` consumes and that `04_AGENT_PIPELINE.md` runs inside of. This document covers the FastAPI application, the persistence layer, and the non-agent services (auth, notifications, external API clients); the 13-agent LangGraph pipeline itself — node definitions, rules engines, the Rules-before-LLM boundary, and the Claude integration — is specified in full in `04_AGENT_PIPELINE.md` and only referenced here at the points where the API triggers or reads from it. Security controls (RLS policy detail, rate limiting, DPDP erasure workflow, consent lifecycle) are specified in `07_SECURITY_COMPLIANCE.md` and referenced here at their integration points, not repeated.
+Implements the API surface, data layer, and service boundary that `02_FRONTEND.md` consumes and that `04_AGENT_PIPELINE.md` runs inside of. This document covers the FastAPI application, the persistence layer, and the non-agent services (auth, notifications, external API clients); the 13-agent LangGraph pipeline itself — node definitions, rules engines, the Rules-before-LLM boundary, and the DeepSeek integration — is specified in full in `04_AGENT_PIPELINE.md` and only referenced here at the points where the API triggers or reads from it. Security controls (RLS policy detail, rate limiting, DPDP erasure workflow, consent lifecycle) are specified in `07_SECURITY_COMPLIANCE.md` and referenced here at their integration points, not repeated.
 
 ## 1. Stack
 
@@ -14,7 +14,7 @@ Implements the API surface, data layer, and service boundary that `02_FRONTEND.m
 | Database | PostgreSQL 15 (Supabase) | JSONB for findings/state, RLS for multi-tenancy |
 | Cache / broker | Redis 7 (Upstash) | Celery broker + rate-limit tracking |
 | Auth | Supabase Auth | JWT; user identity from `sub`, active `org_id` from a custom claim (see §3) |
-| LLM | Claude (claude-sonnet-4-6) | Explanation/remediation only; see `04_AGENT_PIPELINE.md` |
+| LLM | DeepSeek V4 Flash | Explanation/remediation only; see `04_AGENT_PIPELINE.md` |
 | PDF export | WeasyPrint | Reports, Phase 2 |
 
 Frontend stack, its own state/data-fetching conventions, and the exact route-to-endpoint mapping consumed by each screen are owned by `02_FRONTEND.md`; this document specifies the endpoints themselves and does not restate how the client calls them.
@@ -138,8 +138,8 @@ CREATE TABLE findings (
   severity TEXT NOT NULL, -- critical | high | medium | low
   title TEXT NOT NULL,
   raw_data JSONB NOT NULL, -- deterministic rule output (auditable)
-  plain_explanation TEXT, -- Claude-generated (after rules fire)
-  remediation_steps TEXT, -- Claude-generated
+  plain_explanation TEXT, -- DeepSeek-generated (after rules fire)
+  remediation_steps TEXT, -- DeepSeek-generated
   status TEXT DEFAULT 'open', -- open | acknowledged | resolved | false_positive
   discovered_at TIMESTAMPTZ DEFAULT NOW(),
   resolved_at TIMESTAMPTZ
@@ -152,7 +152,7 @@ CREATE TABLE compliance_reports (
   scan_id UUID REFERENCES scans(id),
   clauses JSONB NOT NULL, -- [{ id, name, status: pass|fail|na, evidence, note }]
   overall_status TEXT, -- compliant | partial | non_compliant
-  narrative TEXT, -- Claude-generated prose summary
+  narrative TEXT, -- DeepSeek-generated prose summary
   generated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -330,7 +330,7 @@ Scan completes
 Risk Score > 30  OR  any Critical finding?
      | YES
      ▼
-Claude generates ≤160-word WhatsApp summary  (see 04_AGENT_PIPELINE.md, Agent 13)
+DeepSeek generates ≤160-word WhatsApp summary  (see 04_AGENT_PIPELINE.md, Agent 13)
      |
      ▼
 Meta WhatsApp Business Cloud API → owner's WhatsApp number
@@ -397,15 +397,15 @@ Full agent-to-tool mapping (which service each of the 13 agents calls, and the e
 
 `claude_service.py` is listed separately in §9, since it's the one service module with a hard architectural constraint (never used for finding/severity decisions) rather than a plain external-data fetch.
 
-## 9. Claude Integration Boundary
+## 9. DeepSeek Integration Boundary
 
-`claude_service.py` is the single module permitted to call the Anthropic API. This is an enforced boundary, not a convention: no rules engine, no agent node other than the four specified in `04_AGENT_PIPELINE.md` (Risk Scoring's executive summary, DPDP Compliance's narrative, Recovery Recommendation, Notification's WhatsApp compression), and no router handler calls Claude directly. A finding's `severity` and `raw_data` are fully determined before `claude_service` is ever invoked for that finding — this is the Rules-before-LLM principle from the TRD Executive Summary, enforced structurally by which module owns the only Anthropic client in the codebase.
+`claude_service.py` is the single module permitted to call the NVIDIA NIM API. This is an enforced boundary, not a convention: no rules engine, no agent node other than the four specified in `04_AGENT_PIPELINE.md` (Risk Scoring's executive summary, DPDP Compliance's narrative, Recovery Recommendation, Notification's WhatsApp compression), and no router handler calls DeepSeek directly. A finding's `severity` and `raw_data` are fully determined before `claude_service` is ever invoked for that finding — this is the Rules-before-LLM principle from the TRD Executive Summary, enforced structurally by which module owns the only NVIDIA NIM client in the codebase.
 
 ```python
 # backend/app/services/claude_service.py
-import anthropic
+import openai
 
-client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
+client = openai.NVIDIA NIM()  # uses NVIDIA_API_KEY env var
 
 async def explain_finding(finding: dict, org_context: dict) -> str:
     """Called ONLY after deterministic rules fire. Never decides severity."""
@@ -420,7 +420,7 @@ async def generate_whatsapp_summary(scan_result: dict, org: dict) -> str:
     ...
 ```
 
-Full prompt text, system prompts, token limits, and the caching-by-finding-shape strategy referenced in `01`'s Finding Detail AI-interaction row are specified in `04_AGENT_PIPELINE.md`, which owns the complete Claude integration including this service module's function bodies. This section exists to state the boundary itself: which module is allowed to hold the client, and why that's the enforcement mechanism for the product's core architectural claim on the Landing Page ("Your risk score is never decided by AI guesswork").
+Full prompt text, system prompts, token limits, and the caching-by-finding-shape strategy referenced in `01`'s Finding Detail AI-interaction row are specified in `04_AGENT_PIPELINE.md`, which owns the complete DeepSeek integration including this service module's function bodies. This section exists to state the boundary itself: which module is allowed to hold the client, and why that's the enforcement mechanism for the product's core architectural claim on the Landing Page ("Your risk score is never decided by AI guesswork").
 
 ## 10. Error Handling & Logging
 
@@ -435,8 +435,8 @@ Structured logging (JSON, one line per request) captures `org_id`, route, status
 Per TRD §15, unchanged:
 
 ```env
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
+# NVIDIA NIM
+NVIDIA_API_KEY=sk-ant-...
 
 # Database
 DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/qelvix

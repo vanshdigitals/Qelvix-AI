@@ -99,7 +99,7 @@ Frontend conventions are the full table in `02_FRONTEND.md` §15. Backend, not p
 | FastAPI router file | snake_case, matches resource | `findings.py` |
 | SQLAlchemy model class | PascalCase, singular | `Finding` (table: `findings`) |
 | Alembic migration | `<timestamp>_<snake_case_description>.py` | `20260315_add_members_table.py` |
-| Environment variable | SCREAMING_SNAKE_CASE | `ANTHROPIC_API_KEY` |
+| Environment variable | SCREAMING_SNAKE_CASE | `NVIDIA_API_KEY` |
 | Celery task name | snake_case, verb-first | `run_full_scan` |
 
 A `finding_type` string value (e.g. `ssl_expired`, `no_spf`) is always snake_case and always matches exactly between the rules engine that emits it (`04_AGENT_PIPELINE.md` §5–6) and the IR playbook `triggers[].finding_type` that consumes it (`04_AGENT_PIPELINE.md` §9) — this pairing is a string contract with no compiler to catch a typo, so it's covered by the test requirement in §12.
@@ -147,8 +147,8 @@ Specific to the pattern in `04_AGENT_PIPELINE.md` §5, since an agent node has a
 2. Write the service-layer fetch function (`03_BACKEND.md` §8) second, mocked in tests against a fixture response shaped like the real API's output — never hitting the real external API in CI (rate limits, cost, and flakiness all argue against it).
 3. Write the agent node last, wiring fetch → rules → `Finding` construction, with the try/except-per-item pattern from `04_AGENT_PIPELINE.md` §5 — a new agent that raises instead of appending to `state["errors"]` breaks the partial-failure contract for the entire pipeline, not just that agent.
 4. Register the node in `pipeline.py`'s DAG (`04_AGENT_PIPELINE.md` §3) — confirm the edge placement matches the agent's phase (Discovery/Analysis/Aggregation/Action); a Phase 2 agent wired directly into Phase 4 skips the `analysis_join` merge and silently drops other parallel agents' findings from the aggregate.
-5. If the agent introduces a new `finding_type`, add or update the matching IR playbook (`04_AGENT_PIPELINE.md` §9) in the same PR — an orphaned `finding_type` with no playbook means Recovery Recommendation falls back to unguided Claude generation for that finding, a silent quality regression easy to miss without the naming-convention test in §6.
-6. Never add a Claude call anywhere in this workflow except by extending one of the four functions in `claude_service.py` (`03_BACKEND.md` §9, `04_AGENT_PIPELINE.md` §7) — a new agent that calls the Anthropic client directly breaks the Rules-before-LLM enforcement boundary and is a design-review blocker, not a style preference.
+5. If the agent introduces a new `finding_type`, add or update the matching IR playbook (`04_AGENT_PIPELINE.md` §9) in the same PR — an orphaned `finding_type` with no playbook means Recovery Recommendation falls back to unguided DeepSeek generation for that finding, a silent quality regression easy to miss without the naming-convention test in §6.
+6. Never add a DeepSeek call anywhere in this workflow except by extending one of the four functions in `claude_service.py` (`03_BACKEND.md` §9, `04_AGENT_PIPELINE.md` §7) — a new agent that calls the NVIDIA NIM client directly breaks the Rules-before-LLM enforcement boundary and is a design-review blocker, not a style preference.
 
 ## 12. Testing Strategy
 
@@ -175,9 +175,9 @@ Extends `03_BACKEND.md` §10's structured JSON logging. Log levels used consiste
 | `INFO` | Request lifecycle (route, status, latency, `org_id`), scan lifecycle transitions, notification send attempts |
 | `WARNING` | Agent-level errors appended to `state["errors"]` (per-agent failure, pipeline continues), partial scan completion |
 | `ERROR` | Application bugs — a 500, an unhandled exception, a Celery task that failed outside the pipeline's own try/except |
-| `CRITICAL` | Reserved for conditions requiring immediate human attention (e.g. the Anthropic API key is invalid and every Claude call in the pipeline is failing) |
+| `CRITICAL` | Reserved for conditions requiring immediate human attention (e.g. the NVIDIA NIM API key is invalid and every DeepSeek call in the pipeline is failing) |
 
-Every log line includes `org_id` where the context has one, so a support investigation ("why didn't org X's WhatsApp alert send") is a log-grep away rather than a code-reading exercise. Claude prompts/responses are never logged in full at `INFO` level (cost and PII exposure) — only that a call was made, its duration, and whether it succeeded; full request/response logging is a `DEBUG`-only, opt-in local setting.
+Every log line includes `org_id` where the context has one, so a support investigation ("why didn't org X's WhatsApp alert send") is a log-grep away rather than a code-reading exercise. DeepSeek prompts/responses are never logged in full at `INFO` level (cost and PII exposure) — only that a call was made, its duration, and whether it succeeded; full request/response logging is a `DEBUG`-only, opt-in local setting.
 
 ## 14. Error Handling
 
@@ -222,7 +222,7 @@ Frontend targets (LCP < 2.5s, INP < 200ms, CLS < 0.1 on Landing Page and Dashboa
 
 - Every list endpoint (`03_BACKEND.md` §5.1) is paginated by default — an unpaginated `GET /findings` for an org with thousands of findings is both a performance and a memory-pressure problem, not just a slow response.
 - N+1 query patterns are caught in review by checking that any endpoint returning joined display data (e.g. Finding Detail's asset context, per `03_BACKEND.md` §5.1) uses an explicit `joinedload`/`selectinload`, not a lazy-loaded relationship accessed inside a loop.
-- Claude calls are the single most expensive operation per request in this system; the caching strategy in `04_AGENT_PIPELINE.md` §7.1 is not optional to implement when adding a new Claude-backed feature — a new explanation-generating endpoint without cache-key consideration is a cost regression, evaluated as such in review.
+- DeepSeek calls are the single most expensive operation per request in this system; the caching strategy in `04_AGENT_PIPELINE.md` §7.1 is not optional to implement when adding a new DeepSeek-backed feature — a new explanation-generating endpoint without cache-key consideration is a cost regression, evaluated as such in review.
 - Celery task duration is monitored per-agent (`03_BACKEND.md` §10); an agent whose typical duration regresses significantly after a change is flagged before merge, not discovered after a scan-timeout complaint.
 
 ## 18. Security Best Practices
@@ -241,7 +241,7 @@ Full policy detail (RLS, consent lifecycle, rate limiting, DPDP erasure) is `07_
 - [ ] New/changed endpoint: `get_current_org` and role gating present and correct (§18).
 - [ ] Schema change: Alembic migration included, RLS enabled if a new tenant-scoped table.
 - [ ] New agent/rule: unit tests cover every severity branch; `finding_type` matches an existing or newly-added IR playbook trigger (§11).
-- [ ] New Claude call: goes through `claude_service.py` only, not a new direct client instantiation (§11, `03_BACKEND.md` §9).
+- [ ] New DeepSeek call: goes through `claude_service.py` only, not a new direct client instantiation (§11, `03_BACKEND.md` §9).
 - [ ] New UI: every state from the screen's `01_PRODUCT_BLUEPRINT.md` spec implemented; components sourced from `05_DESIGN_SYSTEM.md` §4 before a new one is introduced.
 - [ ] No secrets, no `console.log`/`print` debugging, no commented-out code.
 - [ ] Tests included and passing; CI green (§16).
@@ -253,7 +253,7 @@ A change is done when: it matches its owning spec document, ships with the test 
 
 ## 21. Common Pitfalls
 
-- **Calling Claude outside `claude_service.py`.** Breaks Rules-before-LLM structurally, not just stylistically (`03_BACKEND.md` §9). Caught in review, but cheaper to avoid than to unwind.
+- **Calling DeepSeek outside `claude_service.py`.** Breaks Rules-before-LLM structurally, not just stylistically (`03_BACKEND.md` §9). Caught in review, but cheaper to avoid than to unwind.
 - **Forgetting RLS on a new table.** Silent until a cross-tenant data leak is discovered, often much later. Always add it in the same migration.
 - **Treating `status: completed` as "no errors."** A scan can be `completed` with a non-empty `error_log` (`03_BACKEND.md` §6.2, `04_AGENT_PIPELINE.md` §11) — any new code reading scan status must check both fields, not just status.
 - **Adding a `finding_type` without a matching playbook.** Silently degrades remediation quality for that finding type; not caught by any type system, only by the workflow discipline in §11.
@@ -268,7 +268,7 @@ A change is done when: it matches its owning spec document, ships with the test 
 | Scan stuck in `running` indefinitely | Celery worker not running, or a task raised outside an agent's own try/except and the pipeline never reached `notification` | Celery worker logs; confirm `run_full_scan` task completed or check for an unhandled exception outside the per-agent pattern (`04_AGENT_PIPELINE.md` §5, §11) |
 | Frontend shows stale data after a mutation | Missing query invalidation | `02_FRONTEND.md` §5's mutation pattern — confirm the relevant list query key is invalidated on success |
 | 403 on an endpoint that should be accessible | Role/permission mismatch, or `members` row missing for the user | `03_BACKEND.md` §3's `require_role` dependency and §4.2's `members` table; confirm the user has a `members` row for the org they're calling as |
-| A finding has no `plain_explanation` | Claude call failed or is pending, which is expected to degrade gracefully | `01_PRODUCT_BLUEPRINT.md` §9's stated edge case — raw evidence and remediation should still render; if they don't, that's the actual bug, not the missing explanation |
+| A finding has no `plain_explanation` | DeepSeek call failed or is pending, which is expected to degrade gracefully | `01_PRODUCT_BLUEPRINT.md` §9's stated edge case — raw evidence and remediation should still render; if they don't, that's the actual bug, not the missing explanation |
 | WhatsApp message never arrives in local/staging testing | Consent flag not set, or Meta template not yet approved for the environment's WhatsApp Business Account | `03_BACKEND.md` §4.2 (consent storage), §17 Pre-Launch Checklist context in the TRD for template approval status |
 | RLS blocks a query that should succeed | Service-role bypass not used where the caller is a trusted backend process (e.g. Celery), or the policy predicate doesn't match the calling context | `07_SECURITY_COMPLIANCE.md`'s RLS policy definitions |
 | A new agent's findings never appear in `all_findings` | DAG edge wiring skips the `analysis_join` merge node | `04_AGENT_PIPELINE.md` §3 — confirm the new node's edges match its phase |
