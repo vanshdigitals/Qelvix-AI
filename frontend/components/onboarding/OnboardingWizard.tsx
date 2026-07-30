@@ -279,7 +279,7 @@ export function OnboardingWizard() {
                     aria-current={state === 'current' ? 'step' : undefined}
                     className={cn(
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-caption font-semibold transition-colors',
-                      state === 'current' && 'bg-accent text-[#0B0E16]',
+                      state === 'current' && 'bg-accent text-white',
                       state === 'done' && 'bg-accent/20 text-accent',
                       state === 'upcoming' && 'border border-border text-content-muted',
                     )}
@@ -836,7 +836,7 @@ export function OnboardingWizard() {
               type="button"
               onClick={handleNext}
               disabled={continueBlocked}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-[#0B0E16] shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
             >
               <span>{continueLabel}</span>
               <ChevronRight className="h-4 w-4" aria-hidden />
