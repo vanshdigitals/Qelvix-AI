@@ -1,5 +1,6 @@
 import httpx
 
+
 async def enumerate_subdomains(domain: str) -> list[str]:
     """
     Uses crt.sh (Certificate Transparency) to find subdomains for a domain.
@@ -14,16 +15,17 @@ async def enumerate_subdomains(domain: str) -> list[str]:
                 for entry in data:
                     name = entry.get("name_value", "")
                     # crt.sh can return multiple domains separated by newlines
-                    for d in name.split('\n'):
+                    for d in name.split("\n"):
                         d = d.strip().lower()
-                        if d.endswith(domain) and d != domain and '*' not in d:
+                        if d.endswith(domain) and d != domain and "*" not in d:
                             subdomains.add(d)
     except Exception as e:
         # Silently fail or log in a real app, returning empty for MVP
-        print(f"crt.sh error: {e}")
+        print(f"crt.sh error: {e}")  # noqa
         pass
-        
+
     return list(subdomains)
+
 
 async def resolve_dns_records(domain: str) -> dict:
     """
@@ -35,5 +37,5 @@ async def resolve_dns_records(domain: str) -> dict:
         "spf_record": "v=spf1 include:_spf.google.com ~all",
         "dmarc_record": "v=DMARC1; p=none;",
         "dkim_present": True,
-        "dnssec_enabled": False
+        "dnssec_enabled": False,
     }

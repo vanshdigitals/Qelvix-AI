@@ -10,7 +10,7 @@ def evaluate_vulnerabilities(vuln_data: dict) -> list[dict]:
         cvss = cve.get("cvss", 0.0)
         cve_id = cve.get("cve_id", "Unknown CVE")
         affected = cve.get("affected_version", "unknown version")
-        
+
         if cvss >= 9.0:
             severity = "critical"
         elif cvss >= 7.0:
@@ -19,12 +19,14 @@ def evaluate_vulnerabilities(vuln_data: dict) -> list[dict]:
             severity = "medium"
         else:
             severity = "low"
-            
-        results.append({
-            "type": "vulnerability",
-            "severity": severity,
-            "title": f"Vulnerability {cve_id} (CVSS {cvss}) in {affected}",
-            "evidence": cve
-        })
+
+        results.append(
+            {
+                "type": "vulnerability",
+                "severity": severity,
+                "title": f"Vulnerability {cve_id} (CVSS {cvss}) in {affected}",
+                "evidence": cve,
+            }
+        )
 
     return results

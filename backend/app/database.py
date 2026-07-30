@@ -22,6 +22,7 @@ async_session_maker = async_sessionmaker(
     autoflush=False,
 )
 
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency that yields a database session and closes it afterwards."""
     async with async_session_maker() as session:

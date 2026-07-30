@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
-from typing import Any
 
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.sql import expression, text
+from sqlalchemy.sql import text
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -18,8 +15,10 @@ convention = {
     "pk": "pk_%(table_name)s",
 }
 
+
 class Base(DeclarativeBase):
     """Declarative base for all SQLAlchemy models."""
+
     metadata = MetaData(naming_convention=convention)
 
     id: Mapped[uuid.UUID] = mapped_column(

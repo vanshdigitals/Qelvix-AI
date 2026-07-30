@@ -40,9 +40,5 @@ class Notification(Base):
     channel: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, server_default="sent")
-    sent_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("NOW()")
-    )
-    meta_: Mapped[dict[str, Any]] = mapped_column(
-        "meta", JSONB, server_default=text("'{}'::jsonb")
-    )
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("NOW()"))
+    meta_: Mapped[dict[str, Any]] = mapped_column("meta", JSONB, server_default=text("'{}'::jsonb"))

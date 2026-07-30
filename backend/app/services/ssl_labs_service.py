@@ -1,6 +1,3 @@
-import httpx
-import json
-
 async def fetch_ssl_data(domain: str) -> dict:
     """
     Fetches SSL data from SSLLabs API (mocked for simplicity here, but represents real interaction).
@@ -12,5 +9,5 @@ async def fetch_ssl_data(domain: str) -> dict:
         "days_to_expiry": 45,
         "expiry_date": "2026-12-31",
         "hsts_enabled": True,
-        "issues": []
+        "issues": [],
     }

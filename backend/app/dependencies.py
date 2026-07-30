@@ -1,8 +1,8 @@
-from typing import Annotated, Sequence
 import uuid
+from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +14,9 @@ from app.models.org import Member
 settings = get_settings()
 security = HTTPBearer()
 
+
 async def get_current_user_token(
-    credentials: Annotated[HTTPAuthorizationCredentials, Security(security)]
+    credentials: Annotated[HTTPAuthorizationCredentials, Security(security)],
 ) -> dict:
     """Verifies the JWT and returns the decoded payload."""
     try:
@@ -28,13 +29,13 @@ async def get_current_user_token(
         )
         return payload
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
+        raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.InvalidTokenError as e:
-        raise HTTPException(
+    except jwt.InvalidTokenError:
+        raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
@@ -43,7 +44,8 @@ async def get_current_user_token(
 
 class CurrentOrg:
     """Dataclass holding the authenticated context."""
-    def __init__(self, user_id: uuid.UUID, org_id: uuid.UUID):
+
+    def __init__(self, user_id: uuid.UUID, org_id: uuid.UUID):  # noqa
         self.user_id = user_id
         self.org_id = org_id
 
@@ -55,10 +57,12 @@ async def get_current_org(
     sub = token_payload.get("sub")
     app_metadata = token_payload.get("app_metadata", {})
     user_metadata = token_payload.get("user_metadata", {})
-    
+
     # Check if org_id is in app_metadata or directly on the token.
     # The TRD says "reads the active org_id from a custom JWT claim".
-    org_id_str = token_payload.get("org_id") or app_metadata.get("org_id") or user_metadata.get("org_id")
+    org_id_str = (
+        token_payload.get("org_id") or app_metadata.get("org_id") or user_metadata.get("org_id")
+    )
 
     if not sub:
         raise HTTPException(status_code=401, detail="Subject missing in token")
@@ -69,16 +73,18 @@ async def get_current_org(
         user_id = uuid.UUID(sub)
         org_id = uuid.UUID(org_id_str)
     except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid UUID format in token claims")
+        raise HTTPException(status_code=401, detail="Invalid UUID format in token claims")  # noqa
 
     return CurrentOrg(user_id=user_id, org_id=org_id)
 
 
-def require_role(*roles: str):
+def require_role(*roles: str):  # noqa
     """
     Dependency factory to enforce RBAC.
-    Returns a dependency that checks if the current user has one of the required roles in the active org.
+    Returns a dependency that checks if the current user has one of the
+    required roles in the active org.
     """
+
     async def role_checker(
         current_org: Annotated[CurrentOrg, Depends(get_current_org)],
         db: Annotated[AsyncSession, Depends(get_db_session)],

@@ -1,20 +1,18 @@
-from celery import Celery
 import asyncio
-from typing import Dict, Any
+from typing import Any
 
-from app.config import get_settings
+from celery import Celery
+
 from app.agents.pipeline import pipeline
 from app.agents.state import AgentState
+from app.config import get_settings
 
 settings = get_settings()
 
-celery_app = Celery(
-    "worker",
-    broker=settings.redis_url,
-    backend=settings.redis_url
-)
+celery_app = Celery("worker", broker=settings.redis_url, backend=settings.redis_url)
 
-def run_async(coro):
+
+def run_async(coro):  # noqa
     """Helper to run async code inside a synchronous Celery task."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -23,8 +21,9 @@ def run_async(coro):
     finally:
         loop.close()
 
+
 @celery_app.task(name="run_scan_pipeline")
-def run_scan_pipeline(org_id: str, scan_id: str, primary_domain: str) -> Dict[str, Any]:
+def run_scan_pipeline(org_id: str, scan_id: str, primary_domain: str) -> dict[str, Any]:
     """
     Executes the LangGraph agent pipeline.
     """
@@ -51,12 +50,12 @@ def run_scan_pipeline(org_id: str, scan_id: str, primary_domain: str) -> Dict[st
         ir_plan=None,
         remediation_map={},
         notifications_sent=[],
-        errors=[]
+        errors=[],
     )
-    
+
     # LangGraph pipeline execution
     final_state = run_async(pipeline.ainvoke(initial_state))
-    
+
     # We return the state to be saved (or we'd save it to Postgres here)
     # The scan results should be persisted to DB here or by whoever reads the Celery result.
     # For now we'll just return it so we can test the result.

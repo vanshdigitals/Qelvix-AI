@@ -15,9 +15,9 @@ router = APIRouter(prefix="/org/me/members", tags=["members"])
 
 
 @router.get("", response_model=PaginatedResponse[MemberResponse])
-async def list_members(
+async def list_members(  # noqa
     current_org: Annotated[CurrentOrg, Depends(get_current_org)],
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),  # noqa
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
@@ -31,24 +31,26 @@ async def list_members(
     )
     result = await db.execute(stmt)
     members = result.scalars().all()
-    
+
     from sqlalchemy import func
+
     count_stmt = select(func.count()).where(Member.org_id == current_org.org_id)
     total = await db.scalar(count_stmt) or 0
-    
+
     return PaginatedResponse(
-        items=list(members),
-        total=total,
-        page=(offset // limit) + 1,
-        size=limit
+        items=list(members), total=total, page=(offset // limit) + 1, size=limit
     )
 
 
-@router.post("/invite", response_model=MessageResponse, dependencies=[Depends(require_role("owner", "admin"))])
-async def invite_member(
+@router.post(
+    "/invite",
+    response_model=MessageResponse,
+    dependencies=[Depends(require_role("owner", "admin"))],
+)
+async def invite_member(  # noqa
     payload: InviteMemberRequest,
     current_org: Annotated[CurrentOrg, Depends(get_current_org)],
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Invite member."""
     # MVP: Logically this would integrate with Supabase Admin API to send an invite email
@@ -59,50 +61,59 @@ async def invite_member(
 
 async def _get_owner_count(org_id: uuid.UUID, db: AsyncSession) -> int:
     from sqlalchemy import func
+
     stmt = select(func.count()).where(Member.org_id == org_id, Member.role == "owner")
     return await db.scalar(stmt) or 0
 
 
-@router.put("/{member_id}/role", response_model=MemberResponse, dependencies=[Depends(require_role("owner", "admin"))])
-async def update_member_role(
+@router.put(
+    "/{member_id}/role",
+    response_model=MemberResponse,
+    dependencies=[Depends(require_role("owner", "admin"))],
+)
+async def update_member_role(  # noqa
     member_id: uuid.UUID,
     payload: UpdateRoleRequest,
     current_org: Annotated[CurrentOrg, Depends(get_current_org)],
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Update role. Cannot demote sole owner."""
     member = await db.get(Member, member_id)
     if not member or member.org_id != current_org.org_id:
         raise HTTPException(status_code=404, detail="Member not found")
-        
+
     if member.role == "owner" and payload.role != "owner":
         # Check if they are the sole owner
         owner_count = await _get_owner_count(current_org.org_id, db)
         if owner_count <= 1:
             raise HTTPException(status_code=400, detail="Cannot demote the sole owner")
-            
+
     member.role = payload.role
     await db.commit()
     await db.refresh(member)
     return member
 
 
-@router.delete("/{member_id}", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(require_role("owner", "admin"))])
-async def remove_member(
+@router.delete(
+    "/{member_id}",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(require_role("owner", "admin"))],
+)
+async def remove_member(  # noqa
     member_id: uuid.UUID,
     current_org: Annotated[CurrentOrg, Depends(get_current_org)],
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Remove member. Cannot remove sole owner."""
     member = await db.get(Member, member_id)
     if not member or member.org_id != current_org.org_id:
         raise HTTPException(status_code=404, detail="Member not found")
-        
+
     if member.role == "owner":
         owner_count = await _get_owner_count(current_org.org_id, db)
         if owner_count <= 1:
             raise HTTPException(status_code=400, detail="Cannot remove the sole owner")
-            
+
     await db.delete(member)
     await db.commit()
     return {"message": "Member removed"}

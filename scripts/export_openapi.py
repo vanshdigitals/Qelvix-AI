@@ -28,7 +28,7 @@ from app.main import create_app  # noqa: E402
 # never on the developer's environment. Two machines must produce byte-identical
 # output or the snapshot diff is meaningless.
 EXPORT_SETTINGS = Settings(
-    anthropic_api_key="contract-export",  # type: ignore[arg-type]
+    nvidia_api_key="contract-export",  # type: ignore[arg-type]
     database_url="postgresql+asyncpg://contract:contract@localhost:5432/contract",
     supabase_url="http://localhost",
     supabase_service_key="contract-export",  # type: ignore[arg-type]

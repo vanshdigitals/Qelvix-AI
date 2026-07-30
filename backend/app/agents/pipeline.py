@@ -1,11 +1,22 @@
-from langgraph.graph import StateGraph, END
-from .state import AgentState
+from langgraph.graph import END, StateGraph
+
 from . import (
-    asset_discovery, port_scanner, ssl_analyzer, dns_analyzer,
-    vuln_analysis, threat_intel, phishing_detection, fraud_detection,
-    risk_scoring, dpdp_compliance, incident_response,
-    recovery_recommendation, notification
+    asset_discovery,
+    dns_analyzer,
+    dpdp_compliance,
+    fraud_detection,
+    incident_response,
+    notification,
+    phishing_detection,
+    port_scanner,
+    recovery_recommendation,
+    risk_scoring,
+    ssl_analyzer,
+    threat_intel,
+    vuln_analysis,
 )
+from .state import AgentState
+
 
 def analysis_join_node(state: AgentState) -> dict:
     """Combines parallel outputs. LangGraph reducer pattern handles list appends automatically
@@ -13,19 +24,20 @@ def analysis_join_node(state: AgentState) -> dict:
     # Since we are using standard TypedDict without Annotated reducers (per the docs),
     # the dictionary updates merge keys. We need to manually aggregate all findings.
     all_findings = []
-    
+
     # Phase 1 findings
     all_findings.extend(state.get("port_findings", []))
     all_findings.extend(state.get("ssl_findings", []))
     all_findings.extend(state.get("dns_findings", []))
-    
+
     # Phase 2 findings
     all_findings.extend(state.get("vuln_findings", []))
     all_findings.extend(state.get("threat_intel_findings", []))
     all_findings.extend(state.get("phishing_findings", []))
     all_findings.extend(state.get("fraud_findings", []))
-    
+
     return {"all_findings": all_findings}
+
 
 def build_pipeline() -> StateGraph:
     workflow = StateGraph(AgentState)
@@ -34,14 +46,14 @@ def build_pipeline() -> StateGraph:
     workflow.add_node("port_scanner", port_scanner.run)
     workflow.add_node("ssl_analyzer", ssl_analyzer.run)
     workflow.add_node("dns_analyzer", dns_analyzer.run)
-    
+
     workflow.add_node("vuln_analysis", vuln_analysis.run)
     workflow.add_node("threat_intel", threat_intel.run)
     workflow.add_node("phishing_detection", phishing_detection.run)
     workflow.add_node("fraud_detection", fraud_detection.run)
-    
+
     workflow.add_node("analysis_join", analysis_join_node)
-    
+
     workflow.add_node("risk_scoring", risk_scoring.run)
     workflow.add_node("dpdp_compliance", dpdp_compliance.run)
     workflow.add_node("incident_response", incident_response.run)
@@ -57,7 +69,7 @@ def build_pipeline() -> StateGraph:
     workflow.add_conditional_edges(
         "dns_analyzer",
         lambda _: ["vuln_analysis", "threat_intel", "phishing_detection", "fraud_detection"],
-        ["vuln_analysis", "threat_intel", "phishing_detection", "fraud_detection"]
+        ["vuln_analysis", "threat_intel", "phishing_detection", "fraud_detection"],
     )
 
     for agent in ["vuln_analysis", "threat_intel", "phishing_detection", "fraud_detection"]:
@@ -71,5 +83,6 @@ def build_pipeline() -> StateGraph:
     workflow.add_edge("notification", END)
 
     return workflow.compile()
+
 
 pipeline = build_pipeline()

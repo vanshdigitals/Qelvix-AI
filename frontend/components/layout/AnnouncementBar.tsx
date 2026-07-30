@@ -36,7 +36,7 @@ export function AnnouncementBar({ message, linkLabel, linkHref, id }: Announceme
           initial={false}
           exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
           transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
-          className="overflow-hidden border-b border-accent/20 bg-accent/10 text-accent"
+          className="overflow-hidden border-b border-accent bg-accent text-white"
         >
           <div className="mx-auto flex max-w-marketing items-center justify-between gap-2 px-4 py-1.5 md:px-page-margin">
             <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-xs font-medium">
@@ -54,7 +54,7 @@ export function AnnouncementBar({ message, linkLabel, linkHref, id }: Announceme
               type="button"
               onClick={dismiss}
               aria-label="Dismiss announcement"
-              className="-mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded text-accent/70 transition-colors hover:text-accent"
+              className="-mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded text-white/70 transition-colors hover:text-white"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>

@@ -22,12 +22,8 @@ class Scan(Base):
     risk_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     findings_summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     langgraph_state: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     triggered_by: Mapped[str] = mapped_column(String, server_default="scheduled")
     error_log: Mapped[str | None] = mapped_column(String, nullable=True)
 
@@ -57,6 +53,4 @@ class Finding(Base):
     discovered_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("NOW()")
     )
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
