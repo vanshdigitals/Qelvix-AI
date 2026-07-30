@@ -1,0 +1,6 @@
+finding_type: "no_dmarc"
+action: "create_dns_record"
+escalation: "create_ticket"
+steps:
+  - "Log into DNS registrar."
+  - "Add a TXT record for _dmarc with value 'v=DMARC1; p=none; rua=mailto:admin@yourdomain.com;'."

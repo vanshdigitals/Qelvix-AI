@@ -27,6 +27,7 @@ greenlet==3.1.1
 # Settings — 03 §11 (pydantic-settings is the sole env entry point)
 pydantic==2.10.4
 pydantic-settings==2.7.0
+email-validator==2.3.0
 
 # Auth — 03 §1 (Supabase Auth, JWT validation)
 pyjwt[crypto]==2.10.1
@@ -42,3 +43,4 @@ weasyprint==63.1
 
 # Structured JSON logging — 03 §10, 06 §13
 python-json-logger==3.2.1
+Levenshtein==0.26.1

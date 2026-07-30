@@ -1,0 +1,7 @@
+finding_type: "open_database_port"
+action: "close_port_immediately"
+escalation: "notify_admin_whatsapp"
+steps:
+  - "Log into cloud provider dashboard."
+  - "Locate Security Group or Firewall for the affected asset."
+  - "Remove the rule allowing 0.0.0.0/0 to the database port."
