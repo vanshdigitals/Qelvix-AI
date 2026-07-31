@@ -13,6 +13,8 @@ class FindingResponse(BaseModel):
     scan_id: UUID
     asset_id: UUID | None
     finding_type: str
+    agent_source: str
+    title: str
     severity: Literal["critical", "high", "medium", "low", "info"]
     status: Literal["open", "acknowledged", "resolved", "false_positive"]
     raw_data: dict[str, Any]

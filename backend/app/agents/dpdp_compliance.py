@@ -1,6 +1,6 @@
 from app.agents.state import AgentState
 from app.rules.dpdp_rules import evaluate_dpdp_compliance
-from app.services.llm_service import generate_dpdp_narrative
+from app.services.claude_service import generate_dpdp_narrative
 
 
 async def run(state: AgentState) -> dict:

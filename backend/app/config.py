@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # NVIDIA NIM (DeepSeek) — 03 §9. Consumed only by claude_service.py (INV-01).
     nvidia_api_key: SecretStr
+    gemini_api_key: SecretStr | None = None
 
     # Database — 03 §11
     database_url: str
@@ -48,8 +49,7 @@ class Settings(BaseSettings):
     nvd_api_key: SecretStr | None = None
     google_safe_browsing_api_key: SecretStr | None = None
     abuseipdb_api_key: SecretStr | None = None
-    phishtank_api_key: SecretStr | None = None
-    security_trails_api_key: SecretStr | None = None
+
 
     # Notifications — 03 §7
     whatsapp_access_token: SecretStr | None = None

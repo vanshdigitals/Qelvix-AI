@@ -9,8 +9,22 @@ async def run(state: AgentState) -> dict:
         return {"ssl_findings": []}
 
     ssl_data = await fetch_ssl_data(domain)
-    findings = evaluate_ssl(ssl_data)
 
+    # If SSL Labs timed out or was unreachable, return an honest stub finding.
+    if ssl_data.get("stubbed"):
+        return {
+            "ssl_findings": [
+                {
+                    "agent_source": "ssl_analyzer",
+                    "finding_type": "scanner_unavailable",
+                    "severity": "low",
+                    "title": "SSL Labs scan unavailable",
+                    "raw_data": {"reason": ssl_data.get("reason", "SSL Labs unavailable")},
+                }
+            ]
+        }
+
+    findings = evaluate_ssl(ssl_data)
     for f in findings:
         f["agent_source"] = "ssl_analyzer"
         f["finding_type"] = f.pop("type")

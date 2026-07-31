@@ -3,7 +3,7 @@ from app.config import get_settings
 from app.database import get_db_session
 from app.models.org import Organization
 from app.services.email_service import send_scan_report_email
-from app.services.llm_service import generate_whatsapp_summary
+from app.services.claude_service import generate_whatsapp_summary
 
 settings = get_settings()
 

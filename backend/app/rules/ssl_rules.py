@@ -7,39 +7,41 @@ def evaluate_ssl(ssl_data: dict) -> list[dict]:
     grade = ssl_data.get("grade", "T")
     days_to_expiry = ssl_data.get("days_to_expiry", 0)
 
-    if days_to_expiry <= 0:
-        results.append(
-            {
-                "type": "ssl_expired",
-                "severity": "critical",
-                "title": f"SSL certificate EXPIRED on {ssl_data.get('domain', 'unknown')}",
-                "evidence": {"days_to_expiry": days_to_expiry, "grade": grade},
-            }
-        )
-    elif days_to_expiry <= 30:
-        results.append(
-            {
-                "type": "ssl_expiring_soon",
-                "severity": "high",
-                "title": f"SSL certificate expiring in {days_to_expiry} days",
-                "evidence": {
-                    "days_to_expiry": days_to_expiry,
-                    "expiry_date": ssl_data.get("expiry_date"),
-                },
-            }
-        )
-    elif days_to_expiry <= 60:
-        results.append(
-            {
-                "type": "ssl_expiring_soon",
-                "severity": "medium",
-                "title": f"SSL certificate expiring in {days_to_expiry} days",
-                "evidence": {
-                    "days_to_expiry": days_to_expiry,
-                    "expiry_date": ssl_data.get("expiry_date"),
-                },
-            }
-        )
+    if days_to_expiry is not None:
+        if days_to_expiry <= 0:
+            results.append(
+                {
+                    "type": "ssl_expired",
+                    "severity": "critical",
+                    "title": f"SSL certificate EXPIRED on {ssl_data.get('domain', 'unknown')}",
+                    "evidence": {"days_to_expiry": days_to_expiry, "grade": grade},
+                }
+            )
+        elif days_to_expiry <= 30:
+            results.append(
+                {
+                    "type": "ssl_expiring_soon",
+                    "severity": "high",
+                    "title": f"SSL certificate expiring in {days_to_expiry} days",
+                    "evidence": {
+                        "days_to_expiry": days_to_expiry,
+                        "expiry_date": ssl_data.get("expiry_date"),
+                    },
+                }
+            )
+        elif days_to_expiry <= 60:
+            results.append(
+                {
+                    "type": "ssl_expiring_soon",
+                    "severity": "medium",
+                    "title": f"SSL certificate expiring in {days_to_expiry} days",
+                    "evidence": {
+                        "days_to_expiry": days_to_expiry,
+                        "expiry_date": ssl_data.get("expiry_date"),
+                    },
+                }
+            )
+
 
     if grade in ["C", "D", "E", "F", "T"]:
         results.append(

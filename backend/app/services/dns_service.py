@@ -1,12 +1,28 @@
+"""
+DNS service — LIVE integrations, no API key required.
+
+  1. enumerate_subdomains() — crt.sh Certificate Transparency (already live)
+  2. resolve_dns_records()  — dnspython real DNS lookups (SPF, DMARC, DKIM, DNSSEC)
+"""
+
+from __future__ import annotations
+
+import dns.resolver
+import dns.dnssec
 import httpx
 
+
+# --------------------------------------------------------------------------- #
+# crt.sh — Subdomain Discovery (keyless, live)                                #
+# --------------------------------------------------------------------------- #
 
 async def enumerate_subdomains(domain: str) -> list[str]:
     """
     Uses crt.sh (Certificate Transparency) to find subdomains for a domain.
+    Real HTTP call — no API key required.
     """
     url = f"https://crt.sh/?q=%25.{domain}&output=json"
-    subdomains = set()
+    subdomains: set[str] = set()
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(url)
@@ -14,28 +30,90 @@ async def enumerate_subdomains(domain: str) -> list[str]:
                 data = resp.json()
                 for entry in data:
                     name = entry.get("name_value", "")
-                    # crt.sh can return multiple domains separated by newlines
                     for d in name.split("\n"):
                         d = d.strip().lower()
                         if d.endswith(domain) and d != domain and "*" not in d:
                             subdomains.add(d)
     except Exception as e:
-        # Silently fail or log in a real app, returning empty for MVP
         print(f"crt.sh error: {e}")  # noqa
-        pass
 
     return list(subdomains)
 
 
+# --------------------------------------------------------------------------- #
+# dnspython — Real DNS Lookups (keyless, live)                                #
+# --------------------------------------------------------------------------- #
+
+def _query_txt(domain: str, prefix: str = "") -> str | None:
+    """Query TXT records for a given subdomain. Returns first matching string or None."""
+    target = f"{prefix}.{domain}" if prefix else domain
+    try:
+        answers = dns.resolver.resolve(target, "TXT", lifetime=5)
+        for rdata in answers:
+            for txt_string in rdata.strings:
+                decoded = txt_string.decode("utf-8", errors="ignore")
+                if prefix == "_dmarc":
+                    if decoded.startswith("v=DMARC1"):
+                        return decoded
+                elif decoded.startswith("v=spf1"):
+                    return decoded
+        # If no SPF/DMARC prefix match found, return first TXT value
+        for rdata in answers:
+            for txt_string in rdata.strings:
+                return txt_string.decode("utf-8", errors="ignore")
+    except Exception:
+        return None
+    return None
+
+
+def _check_dkim(domain: str) -> bool:
+    """Check if a DKIM selector exists. Tries common selectors."""
+    common_selectors = ["google", "default", "mail", "dkim", "selector1", "selector2", "k1"]
+    for selector in common_selectors:
+        try:
+            target = f"{selector}._domainkey.{domain}"
+            answers = dns.resolver.resolve(target, "TXT", lifetime=5)
+            for rdata in answers:
+                for txt_string in rdata.strings:
+                    decoded = txt_string.decode("utf-8", errors="ignore")
+                    if "v=DKIM1" in decoded or "p=" in decoded:
+                        return True
+        except Exception:
+            continue
+    return False
+
+
+def _check_dnssec(domain: str) -> bool:
+    """Check if DNSSEC is enabled by looking for DNSKEY records."""
+    try:
+        answers = dns.resolver.resolve(domain, "DNSKEY", lifetime=5)
+        return len(list(answers)) > 0
+    except Exception:
+        return False
+
+
 async def resolve_dns_records(domain: str) -> dict:
     """
-    Uses dnspython to resolve SPF, DMARC, DKIM records.
-    (Mocked for simplicity).
+    Performs REAL DNS lookups using dnspython for:
+      - SPF record (TXT on apex domain)
+      - DMARC record (TXT on _dmarc.<domain>)
+      - DKIM presence (TXT on <selector>._domainkey.<domain>)
+      - DNSSEC (DNSKEY record presence)
+    No API key required.
     """
+    # Run synchronous DNS calls (dnspython's resolver is synchronous)
+    import asyncio
+    loop = asyncio.get_event_loop()
+
+    spf_record = await loop.run_in_executor(None, _query_txt, domain)
+    dmarc_record = await loop.run_in_executor(None, _query_txt, domain, "_dmarc")
+    dkim_present = await loop.run_in_executor(None, _check_dkim, domain)
+    dnssec_enabled = await loop.run_in_executor(None, _check_dnssec, domain)
+
     return {
         "domain": domain,
-        "spf_record": "v=spf1 include:_spf.google.com ~all",
-        "dmarc_record": "v=DMARC1; p=none;",
-        "dkim_present": True,
-        "dnssec_enabled": False,
+        "spf_record": spf_record,
+        "dmarc_record": dmarc_record,
+        "dkim_present": dkim_present,
+        "dnssec_enabled": dnssec_enabled,
     }

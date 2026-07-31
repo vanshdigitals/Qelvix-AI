@@ -31,6 +31,18 @@ def test_pipeline():
     scan_id = str(uuid.uuid4())
     domain = org.primary_domain
     
+    # Create scan in DB first
+    async def create_scan():
+        session_gen = get_db_session()
+        db = await anext(session_gen)
+        from app.models.scan import Scan
+        scan = Scan(id=uuid.UUID(scan_id), org_id=uuid.UUID(org_id), status="queued", scan_type="full")
+        db.add(scan)
+        await db.commit()
+        await session_gen.aclose()
+        
+    asyncio.run(create_scan())
+    
     print(f"Triggering pipeline for {org.name} ({domain}) - ID: {org_id}")
     
     try:

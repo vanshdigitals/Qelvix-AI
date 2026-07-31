@@ -5,15 +5,25 @@ def evaluate_threat_intel(threat_data: dict) -> list[dict]:
     """
     results = []
 
-    # HIBP
-    hibp_breaches = threat_data.get("hibp_breaches", [])
-    if hibp_breaches:
+    # XposedOrNot breach corpus (free, keyless)
+    breach_corpus = threat_data.get("breach_corpus", {})
+    breached_emails = breach_corpus.get("breached_emails", {})
+    breach_names = breach_corpus.get("breach_names", [])
+    total_breached = breach_corpus.get("total_breached", 0)
+
+    if total_breached > 0:
+        severity = "critical" if total_breached >= 3 else "high" if total_breached >= 2 else "medium"
         results.append(
             {
                 "type": "email_breached",
-                "severity": "critical",
-                "title": f"Email domain found in {len(hibp_breaches)} breaches (HIBP)",
-                "evidence": {"breaches": hibp_breaches},
+                "severity": severity,
+                "title": f"{total_breached} domain email address(es) found in {len(breach_names)} breach corpus(es)",
+                "evidence": {
+                    "source": "XposedOrNot",
+                    "breached_emails": breached_emails,
+                    "breach_names": breach_names[:10],  # cap to avoid DB bloat
+                    "total_breached_addresses": total_breached,
+                },
             }
         )
 

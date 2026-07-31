@@ -6,12 +6,12 @@ from app.config import get_settings
 
 settings = get_settings()
 
+from sqlalchemy.pool import NullPool
+
 engine = create_async_engine(
     settings.database_url,
     echo=settings.environment == "development",
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    poolclass=NullPool,
 )
 
 async_session_maker = async_sessionmaker(

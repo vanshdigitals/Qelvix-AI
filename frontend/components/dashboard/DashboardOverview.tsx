@@ -1,18 +1,80 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, SeverityBadge } from '@/components/dashboard/shared';
-import { ACTIVITY_FEED, RECENT_FINDINGS } from '@/lib/data/dashboard';
+import { ACTIVITY_FEED, ASSETS, SCANS, TEAM, INVOICES, AUDIT, DPDP_CLAUSES } from '@/lib/data/dashboard';
 import { cn } from '@/lib/utils/cn';
+import { createClient } from '@/lib/supabase/client';
 
 const QUICK_ACTIONS = ['Run scan now', 'Invite team member', 'Download latest report'];
 
 export function DashboardOverview() {
   const toast = useToast();
+  
+  const [summary, setSummary] = useState<any>(null);
+  const [findings, setFindings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const [summaryRes, findingsRes] = await Promise.all([
+          fetch(\\/dashboard/summary\, {
+            headers: { Authorization: \Bearer \\ }
+          }),
+          fetch(\\/findings?limit=5\, {
+            headers: { Authorization: \Bearer \\ }
+          })
+        ]);
+        
+        if (summaryRes.ok) {
+          setSummary(await summaryRes.json());
+        }
+        if (findingsRes.ok) {
+          const fData = await findingsRes.json();
+          setFindings(fData.items || []);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
+      </div>
+    );
+  }
+
+  const mappedFindings = findings.map(f => ({
+    id: f.id,
+    severity: f.severity.charAt(0).toUpperCase() + f.severity.slice(1),
+    title: f.title,
+    asset: f.agent_source === 'asset_discovery' ? 'Asset Discovery' : f.finding_type,
+    age: 'new',
+    status: f.status === 'open' ? 'Open' : (f.status === 'acknowledged' ? 'Acknowledged' : 'Resolved')
+  }));
+
+  const riskScore = summary?.risk_score ?? 100;
+  const criticalCount = summary?.open_critical_findings ?? 0;
+  const highCount = summary?.open_high_findings ?? 0;
+  const totalAssets = summary?.total_assets ?? 0;
 
   return (
     <>
@@ -20,24 +82,12 @@ export function DashboardOverview() {
         <div>
           <h1 className="font-display text-h1 tracking-tight text-content-primary">Overview</h1>
           <p className="mt-1 text-body-sm text-content-secondary">
-            Last scan today 06:04 IST Â· next scheduled scan Monday 06:00 IST
+            Live dashboard powered by /dashboard/summary API
           </p>
         </div>
       </div>
 
-      <div
-        role="alert"
-        className="border-high-text/40 flex items-start gap-3 rounded-xl border bg-high-bg p-4 text-body-sm text-content-secondary"
-      >
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-high-text" />
-        <p>
-          <span className="font-medium text-content-primary">Based on a partial scan.</span> The DNS
-          agent timed out on two subdomains and will retry automatically at 06:00. Findings below
-          exclude those hosts.
-        </p>
-      </div>
-
-      {/* Row 1: Security health Â· Action required */}
+      {/* Row 1: Security health · Action required */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Panel className="flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
@@ -50,18 +100,17 @@ export function DashboardOverview() {
 
           <div className="flex flex-col items-center gap-6 sm:flex-row">
             <div className="shrink-0">
-              <Gauge score={47} />
+              <Gauge score={riskScore} />
             </div>
             <div className="flex flex-1 flex-col gap-4">
               <p className="text-body-md leading-relaxed text-content-secondary">
-                One expired certificate on your mail host and no DMARC record. Neither is urgent
-                today, both are exploitable within a week.
+                You have {criticalCount} critical and {highCount} high findings open. Please review the findings panel.
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-caption text-content-muted">30-day trend</span>
                   <span className="font-mono text-body-sm tabular-nums text-success-text">
-                    âˆ’15 pts
+                    -0 pts
                   </span>
                 </div>
                 <div className="h-8 flex-1">
@@ -74,50 +123,52 @@ export function DashboardOverview() {
 
         <Panel className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
-            <PanelTitle>Action required</PanelTitle>
+            <PanelTitle>Action required (Live Findings)</PanelTitle>
             <Link
               href="/findings"
               className="text-body-sm font-medium text-accent transition-opacity hover:opacity-80"
             >
-              View all 9
+              View all
             </Link>
           </div>
           <div className="flex flex-col gap-2">
-            {RECENT_FINDINGS.map((f) => (
-              <div
-                key={f.title}
-                className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-surface-inset p-3"
-              >
-                <SeverityBadge severity={f.severity} />
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-body-sm font-medium text-content-primary">{f.title}</span>
-                  <span className="truncate font-mono text-caption text-content-muted">
-                    {f.asset} Â· {f.age}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast(`Acknowledged: ${f.title}`);
-                  }}
-                  className="h-7 shrink-0 rounded-lg border border-border-strong px-2.5 text-caption font-semibold text-content-secondary transition-colors hover:bg-surface hover:text-content-primary"
+            {mappedFindings.length > 0 ? (
+              mappedFindings.map((f: any) => (
+                <div
+                  key={f.id}
+                  className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-surface-inset p-3"
                 >
-                  Acknowledge
-                </button>
-              </div>
-            ))}
+                  <SeverityBadge severity={f.severity} />
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-body-sm font-medium text-content-primary">{f.title}</span>
+                    <span className="truncate font-mono text-caption text-content-muted">
+                      {f.asset} · {f.age}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast(\Acknowledged: \\);
+                    }}
+                    className="h-7 shrink-0 rounded-lg border border-border-strong px-2.5 text-caption font-semibold text-content-secondary transition-colors hover:bg-surface hover:text-content-primary"
+                  >
+                    Acknowledge
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-content-muted">No findings found.</p>
+            )}
           </div>
         </Panel>
       </div>
 
-      {/* Row 2: This week's priority Â· Findings Â· Assets */}
+      {/* Row 2: This week's priority · Findings · Assets */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel className="flex flex-col gap-3.5">
           <PanelTitle>This week&apos;s priority</PanelTitle>
           <p className="text-body-sm leading-relaxed text-content-secondary">
-            Renew the mail certificate first â€” it is the only finding that breaks something
-            customers touch. DMARC is a 20-minute DNS change and closes your biggest spoofing risk.
-            Everything else can wait for next week&apos;s scan.
+            Review the top critical findings.
           </p>
           <div className="mt-auto flex items-center gap-2 pt-2">
             <span className="rounded-md bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
@@ -147,10 +198,10 @@ export function DashboardOverview() {
           </div>
           <div className="flex flex-col gap-2">
             {[
-              { label: 'Critical', count: '2', dot: 'bg-critical-text' },
-              { label: 'High', count: '4', dot: 'bg-high-text' },
-              { label: 'Medium', count: '6', dot: 'bg-accent' },
-              { label: 'Low', count: '3', dot: 'bg-content-muted' },
+              { label: 'Critical', count: String(criticalCount), dot: 'bg-critical-text' },
+              { label: 'High', count: String(highCount), dot: 'bg-high-text' },
+              { label: 'Medium', count: '-', dot: 'bg-accent' },
+              { label: 'Low', count: '-', dot: 'bg-content-muted' },
             ].map((row) => (
               <div key={row.label} className="flex items-center gap-2.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', row.dot)} />
@@ -175,15 +226,15 @@ export function DashboardOverview() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-[32px] font-medium tabular-nums leading-none text-content-primary">
-              13
+              {totalAssets}
             </span>
             <span className="text-body-sm text-content-muted">monitored</span>
           </div>
           <div className="flex flex-col">
             {[
-              { label: 'Verified domains', val: '2', warn: false },
-              { label: 'Subdomains discovered', val: '11', warn: false },
-              { label: 'Not yet claimed', val: '1', warn: true },
+              { label: 'Verified domains', val: '-', warn: false },
+              { label: 'Subdomains discovered', val: '-', warn: false },
+              { label: 'Not yet claimed', val: '-', warn: true },
             ].map((row) => (
               <div
                 key={row.label}
@@ -204,7 +255,7 @@ export function DashboardOverview() {
         </Panel>
       </div>
 
-      {/* Row 3: Recent activity Â· DPDP + Quick actions */}
+      {/* Row 3: Recent activity · DPDP + Quick actions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel>
           <div className="flex items-center justify-between gap-3">
@@ -219,7 +270,7 @@ export function DashboardOverview() {
           <div className="mt-4 flex flex-col">
             {ACTIVITY_FEED.map((ev, idx) => (
               <div
-                key={`${ev.actor}-${String(idx)}`}
+                key={\\-\\}
                 className="flex items-start gap-3 py-2.5 text-body-sm"
               >
                 <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', ev.dot)} />
@@ -256,7 +307,7 @@ export function DashboardOverview() {
                   key={qa}
                   type="button"
                   onClick={() => {
-                    toast(`${qa} â€” coming soon.`);
+                    toast(\\ — coming soon.\);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
                 >
@@ -272,7 +323,7 @@ export function DashboardOverview() {
   );
 }
 
-// 270Â° arc gauge (05 Â§data-viz).
+// 270° arc gauge (05 §data-viz).
 function Gauge({ score }: { score: number }): ReactNode {
   const r = 54;
   const c = 66;
@@ -289,7 +340,7 @@ function Gauge({ score }: { score: number }): ReactNode {
     const [x0, y0] = pt(start);
     const [x1, y1] = pt(end);
     const largeArc = sweep * frac > 180 ? 1 : 0;
-    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${String(r)} ${String(r)} 0 ${String(largeArc)} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+    return \M \ \ A \ \ 0 \ 1 \ \\;
   };
 
   return (
@@ -336,12 +387,12 @@ function Sparkline(): ReactNode {
     h - ((v - min) / (max - min)) * (h - 6) - 3,
   ]);
   const line = coords
-    .map(([x, y], idx) => `${idx === 0 ? 'M' : 'L'}${(x ?? 0).toFixed(1)} ${(y ?? 0).toFixed(1)}`)
+    .map(([x, y], idx) => \\\ \\)
     .join(' ');
 
   return (
     <svg
-      viewBox={`0 0 ${String(w)} ${String(h)}`}
+      viewBox={\  0 \ \\}
       preserveAspectRatio="none"
       width="100%"
       height={h}
@@ -349,7 +400,7 @@ function Sparkline(): ReactNode {
       className="block overflow-visible"
     >
       <path
-        d={`${line} L ${String(w)} ${String(h)} L 0 ${String(h)} Z`}
+        d={\\ L \ \ L 0 \ Z\}
         fill="currentColor"
         className="text-accent/15"
       />

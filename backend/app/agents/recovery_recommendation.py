@@ -1,5 +1,5 @@
 from app.agents.state import AgentState
-from app.services.llm_service import generate_remediation
+from app.services.claude_service import generate_remediation
 
 
 async def run(state: AgentState) -> dict:

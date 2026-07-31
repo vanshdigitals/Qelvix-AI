@@ -43,3 +43,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 yarn-error.log*
+
+# Local diagnostic/debug scripts (not part of the product)
+scratch/
