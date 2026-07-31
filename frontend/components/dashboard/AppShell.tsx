@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, ChevronRight, Loader2, Menu, Search, X } from 'lucide-react';
+import { Bell, Loader2, Menu, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -171,32 +171,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Sidebar */}
           <aside
             className={cn(
-              'fixed inset-y-0 left-0 z-drawer flex w-[240px] flex-col gap-6 overflow-y-auto border-r border-border/60 bg-surface px-4 py-5 shadow-lg transition-transform duration-300 ease-out',
+              'modern-scrollbar fixed inset-y-0 left-0 z-drawer flex w-[260px] flex-col gap-6 overflow-y-auto border-r border-border/60 bg-surface px-4 py-5 shadow-lg transition-transform duration-300 ease-out',
               navOpen ? 'translate-x-0' : '-translate-x-full',
             )}
           >
-            <button
-              type="button"
-              onClick={() => {
-                showToast('Organisation switching — coming soon.');
-              }}
-              className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-inset px-3 py-2 text-left transition-colors hover:bg-surface-inset/80"
-            >
-              <span className="font-heading flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface text-[11px] font-bold text-content-primary shadow-2xs">
-                VE
-              </span>
-              <span className="flex-1 truncate text-body-sm font-medium text-content-primary">
-                Vardhman Exports
-              </span>
-              <ChevronRight className="h-4 w-4 text-content-muted" />
-            </button>
-
             <nav className="flex flex-1 flex-col gap-6">
               {navGroups.map((group) => (
                 <div key={group.label} className="flex flex-col gap-0.5">
-                  <span className="px-2.5 tabular-nums text-caption font-semibold uppercase tracking-wider text-content-muted">
-                    {group.label}
-                  </span>
+                  {group.label !== 'Overview' && (
+                    <span className="px-2.5 tabular-nums text-caption font-semibold uppercase tracking-wider text-content-muted">
+                      {group.label}
+                    </span>
+                  )}
                   {group.items.map((item) => {
                     const isCur = pathname === item.href || pathname.startsWith(`${item.href}/`);
                     const Icon = NAV_ICONS[item.key];
