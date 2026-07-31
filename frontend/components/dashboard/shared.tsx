@@ -237,7 +237,7 @@ export function Th({
     <th
       scope="col"
       className={cn(
-        'whitespace-nowrap px-3 py-2.5 font-mono text-[11px] font-medium uppercase tracking-wider text-content-muted',
+        'whitespace-nowrap px-3 py-2.5 tabular-nums text-[11px] font-medium uppercase tracking-wider text-content-muted',
         align === 'right' ? 'text-right' : 'text-left',
       )}
     >

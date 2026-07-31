@@ -169,7 +169,7 @@ export function NotificationsScreen() {
                 >
                   <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', d.dot)} />
                   <span className="flex-1 text-body-sm text-content-secondary">{d.text}</span>
-                  <span className="shrink-0 font-mono text-caption text-content-muted">
+                  <span className="shrink-0 tabular-nums text-caption text-content-muted">
                     {d.when}
                   </span>
                 </div>

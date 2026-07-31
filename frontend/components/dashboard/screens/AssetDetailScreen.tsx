@@ -39,7 +39,7 @@ export function AssetDetailScreen({ id }: { id: string }) {
           Assets
         </Link>
         <span>/</span>
-        <span className="font-mono text-caption">{asset.value}</span>
+        <span className="tabular-nums text-caption">{asset.value}</span>
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -100,7 +100,7 @@ export function AssetDetailScreen({ id }: { id: string }) {
                     <span className="text-body-sm font-medium text-content-primary">
                       {f.title}
                     </span>
-                    <span className="font-mono text-[11px] text-content-muted">{f.finding_type}</span>
+                    <span className="tabular-nums text-[11px] text-content-muted">{f.finding_type}</span>
                   </div>
                   <Link
                     href={`/findings/${f.id}`}

@@ -28,17 +28,17 @@ export function AuditScreen() {
           <tbody>
             {AUDIT.map((a, idx) => (
               <tr key={`${a.time}-${String(idx)}`} className="border-t border-border/60">
-                <td className="whitespace-nowrap px-3 py-3 pl-4 font-mono text-caption text-content-secondary">
+                <td className="whitespace-nowrap px-3 py-3 pl-4 tabular-nums text-caption text-content-secondary">
                   {a.time}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-content-primary">{a.actor}</td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <span className="rounded-md bg-surface-inset px-2 py-0.5 font-mono text-caption text-content-secondary">
+                  <span className="rounded-md bg-surface-inset px-2 py-0.5 tabular-nums text-caption text-content-secondary">
                     {a.action}
                   </span>
                 </td>
                 <td className="px-3 py-3 text-content-secondary">{a.target}</td>
-                <td className="whitespace-nowrap px-3 py-3 pr-4 font-mono text-caption text-content-muted">
+                <td className="whitespace-nowrap px-3 py-3 pr-4 tabular-nums text-caption text-content-muted">
                   {a.ip}
                 </td>
               </tr>

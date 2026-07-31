@@ -60,7 +60,7 @@ export function MarketingFooter() {
             </p>
 
             {/* Live Operational Status Badge */}
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface px-3 py-1 font-mono text-caption font-semibold text-content-secondary shadow-2xs">
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface px-3 py-1 tabular-nums text-caption font-semibold text-content-secondary shadow-2xs">
               <span
                 aria-hidden
                 className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success-text"
@@ -68,7 +68,7 @@ export function MarketingFooter() {
               <span>All 7 Scan Engines Operational</span>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-[11px] text-content-secondary">
+            <div className="mt-4 flex flex-wrap items-center gap-2 tabular-nums text-[11px] text-content-secondary">
               <span className="rounded border border-border/60 bg-surface-inset px-2 py-0.5">
                 DPDP Act (2023) Aligned
               </span>
@@ -82,7 +82,7 @@ export function MarketingFooter() {
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:col-span-8">
             {LINK_GROUPS.map((group) => (
               <RevealChild key={group.heading}>
-                <h3 className="font-mono text-caption font-semibold uppercase tracking-wider text-content-primary">
+                <h3 className="tabular-nums text-caption font-semibold uppercase tracking-wider text-content-primary">
                   {group.heading}
                 </h3>
                 <ul className="mt-4 flex flex-col gap-2.5">
@@ -109,7 +109,7 @@ export function MarketingFooter() {
             <span className="hidden sm:inline" aria-hidden>
               •
             </span>
-            <span className="font-mono text-content-secondary">
+            <span className="tabular-nums text-content-secondary">
               100% Deterministic Security Evaluation
             </span>
           </div>

@@ -82,35 +82,35 @@ export function InteractiveDemo() {
             {/* Quick Metrics Header Bar */}
             <div className="grid grid-cols-2 border-b border-border bg-surface-inset px-6 py-4 sm:grid-cols-4">
               <div className="border-r border-border/60 pr-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                <span className="tabular-nums text-[11px] uppercase tracking-wider text-content-muted">
                   Last Scan
                 </span>
-                <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
+                <p className="mt-1 tabular-nums text-body-md font-semibold text-content-primary">
                   {DEMO_SCAN.scannedAt}{' '}
                   <span className="text-caption font-normal text-content-muted">(42ms)</span>
                 </p>
               </div>
               <div className="border-r border-border/60 px-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                <span className="tabular-nums text-[11px] uppercase tracking-wider text-content-muted">
                   Public Assets
                 </span>
-                <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
+                <p className="mt-1 tabular-nums text-body-md font-semibold text-content-primary">
                   {DEMO_SCAN.assets.length} Monitored
                 </p>
               </div>
               <div className="border-r border-border/60 px-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                <span className="tabular-nums text-[11px] uppercase tracking-wider text-content-muted">
                   Active Findings
                 </span>
-                <p className="mt-1 font-mono text-body-md font-semibold text-content-primary">
+                <p className="mt-1 tabular-nums text-body-md font-semibold text-content-primary">
                   {DEMO_SCAN.findings.length} Flagged
                 </p>
               </div>
               <div className="pl-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-content-muted">
+                <span className="tabular-nums text-[11px] uppercase tracking-wider text-content-muted">
                   DPDP Status
                 </span>
-                <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-body-md font-semibold text-medium-text">
+                <p className="mt-1 inline-flex items-center gap-1.5 tabular-nums text-body-md font-semibold text-medium-text">
                   <span className="h-2 w-2 rounded-full bg-medium-text" />
                   Action Required
                 </p>
@@ -191,7 +191,7 @@ export function InteractiveDemo() {
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-2 text-caption text-content-muted">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success-text" />
-              <span className="font-mono">LIVE AUDIT ENGINE: 7 CONTINUOUS AGENTS ACTIVE</span>
+              <span className="tabular-nums">LIVE AUDIT ENGINE: 7 CONTINUOUS AGENTS ACTIVE</span>
             </div>
             <span>Interactive evaluation stage • Click tabs to inspect</span>
           </div>
@@ -204,14 +204,14 @@ export function InteractiveDemo() {
 function ScoreHeader() {
   return (
     <div>
-      <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+      <p className="tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-muted">
         Overall Risk Index
       </p>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="tabular font-display text-[2.75rem] font-bold leading-none text-content-primary">
           {DEMO_SCAN.riskScore}
         </span>
-        <span className="font-mono text-body-sm text-content-muted">/ 100</span>
+        <span className="tabular-nums text-body-sm text-content-muted">/ 100</span>
       </div>
       <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface px-3 py-1 text-caption font-semibold text-high-text shadow-2xs">
         <AlertTriangle className="h-3.5 w-3.5" />
@@ -229,7 +229,7 @@ function AssetsView() {
         <p className="font-display text-body-lg font-semibold text-content-primary">
           Discovered Attack Surface ({DEMO_SCAN.assets.length} Hosts)
         </p>
-        <span className="font-mono text-caption text-content-muted">Last synced: Just now</span>
+        <span className="tabular-nums text-caption text-content-muted">Last synced: Just now</span>
       </div>
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {DEMO_SCAN.assets.map((asset, index) => (
@@ -241,15 +241,15 @@ function AssetsView() {
               <div className="flex min-w-0 items-center gap-2">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-success-text" />
                 <Globe className="h-4 w-4 shrink-0 text-content-secondary" />
-                <span className="truncate font-mono text-mono-data font-semibold text-content-primary">
+                <span className="truncate tabular-nums text-mono-data font-semibold text-content-primary">
                   {asset.host}
                 </span>
               </div>
-              <span className="shrink-0 rounded border border-border/80 bg-surface-inset px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-content-secondary">
+              <span className="shrink-0 rounded border border-border/80 bg-surface-inset px-2 py-0.5 tabular-nums text-[10px] font-semibold uppercase tracking-wider text-content-secondary">
                 {asset.kind}
               </span>
             </div>
-            <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 font-mono text-caption text-content-muted">
+            <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 tabular-nums text-caption text-content-muted">
               <span>Port check</span>
               <span className="text-content-secondary">{ports[index]}</span>
             </div>
@@ -267,7 +267,7 @@ function FindingsView() {
         <p className="font-display text-body-lg font-semibold text-content-primary">
           Security Findings ({DEMO_SCAN.findings.length})
         </p>
-        <span className="font-mono text-caption text-content-muted">Sorted by severity</span>
+        <span className="tabular-nums text-caption text-content-muted">Sorted by severity</span>
       </div>
       <ul className="mt-4 flex flex-col gap-3">
         {DEMO_SCAN.findings.map((finding) => (
@@ -282,12 +282,12 @@ function FindingsView() {
                   {finding.title}
                 </p>
               </div>
-              <p className="pl-6.5 mt-1 truncate font-mono text-caption text-content-secondary">
+              <p className="pl-6.5 mt-1 truncate tabular-nums text-caption text-content-secondary">
                 {finding.asset}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-mono text-caption text-accent opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="tabular-nums text-caption text-accent opacity-0 transition-opacity group-hover:opacity-100">
                 Inspect →
               </span>
               <SeverityBadge severity={finding.severity} />
@@ -308,20 +308,20 @@ function DetailView() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
         <div className="flex items-center gap-3">
           <SeverityBadge severity={finding.severity} />
-          <span className="font-mono text-mono-data font-semibold text-content-secondary">
+          <span className="tabular-nums text-mono-data font-semibold text-content-secondary">
             {finding.findingType}
           </span>
         </div>
-        <span className="font-mono text-caption text-content-muted">Decided by rules_engine</span>
+        <span className="tabular-nums text-caption text-content-muted">Decided by rules_engine</span>
       </div>
       <h3 className="mt-4 font-display text-h3 font-semibold text-content-primary">
         {finding.title}
       </h3>
-      <p className="mt-1 font-mono text-mono-data text-content-secondary">{finding.asset}</p>
+      <p className="mt-1 tabular-nums text-mono-data text-content-secondary">{finding.asset}</p>
 
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border/80 bg-surface p-4 shadow-2xs">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-secondary">
+          <p className="tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-secondary">
             Plain Language Explanation
           </p>
           <p className="mt-2 text-body-md leading-relaxed text-content-secondary">
@@ -333,7 +333,7 @@ function DetailView() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border/80 bg-surface-inset p-4 font-mono text-caption">
+        <div className="rounded-lg border border-border/80 bg-surface-inset p-4 tabular-nums text-caption">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-content-secondary">
             Deterministic Rule Evidence
           </p>

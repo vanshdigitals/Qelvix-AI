@@ -66,7 +66,7 @@ export function Faq() {
                         className="flex min-h-[44px] w-full items-center justify-between gap-4 px-4 py-3.5 text-left md:px-5"
                       >
                         <span className="flex items-center gap-3 text-body-md font-semibold tracking-tight text-content-primary">
-                          <span className="font-mono text-caption font-semibold text-accent/80">
+                          <span className="tabular-nums text-caption font-semibold text-accent/80">
                             0{index + 1}
                           </span>
                           <span>{faq.question}</span>

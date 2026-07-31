@@ -46,16 +46,16 @@ export function Pricing() {
                 >
                   <div>
                     <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                      <span className="font-mono text-caption font-semibold uppercase tracking-wider text-accent">
+                      <span className="tabular-nums text-caption font-semibold uppercase tracking-wider text-accent">
                         Tier 0{idx + 1} {'//'} {tier.name}
                       </span>
                       {tier.recommended ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-accent">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-0.5 tabular-nums text-[10px] font-bold uppercase tracking-wider text-accent">
                           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
                           Most Chosen
                         </span>
                       ) : (
-                        <span className="font-mono text-[11px] text-content-muted">
+                        <span className="tabular-nums text-[11px] text-content-muted">
                           {tier.cadence}
                         </span>
                       )}
@@ -65,7 +65,7 @@ export function Pricing() {
                       <span className="tabular font-display text-[2.75rem] font-bold leading-none tracking-tight text-content-primary">
                         {tier.price}
                       </span>
-                      <span className="font-mono text-caption font-medium text-content-secondary">
+                      <span className="tabular-nums text-caption font-medium text-content-secondary">
                         {tier.cadence}
                       </span>
                     </div>
@@ -76,7 +76,7 @@ export function Pricing() {
 
                     <div className="my-6 h-px w-full bg-border/60" />
 
-                    <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+                    <p className="tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-muted">
                       Included Capabilities:
                     </p>
 
@@ -110,7 +110,7 @@ export function Pricing() {
                       {tier.id === 'free' ? 'Start free monitoring' : `Deploy ${tier.name} tier`}
                     </Link>
 
-                    <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 font-mono text-caption text-content-muted">
+                    <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 tabular-nums text-caption text-content-muted">
                       <span>Service Level</span>
                       <span className="text-content-secondary">{slas[idx]}</span>
                     </div>

@@ -53,7 +53,7 @@ export function ScanDetailScreen({ id }: { id: string }) {
           Scans
         </Link>
         <span>/</span>
-        <span className="font-mono text-caption">{scan.id.slice(0, 8)}</span>
+        <span className="tabular-nums text-caption">{scan.id.slice(0, 8)}</span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -107,7 +107,7 @@ export function ScanDetailScreen({ id }: { id: string }) {
                   <span
                     className={cn(
                         "text-right font-medium text-content-primary", 
-                        m.mono && 'font-mono text-caption',
+                        m.mono && 'tabular-nums text-caption',
                         m.capitalize && 'capitalize'
                     )}
                   >

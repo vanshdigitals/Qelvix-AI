@@ -51,16 +51,16 @@ export function Compliance() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-inset px-6 py-4">
                 <div className="flex items-center gap-2.5">
                   <span aria-hidden className="inline-flex h-2 w-2 rounded-full bg-accent" />
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-primary">
+                  <span className="tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-primary">
                     DPDP Compliance Trust Center
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex rounded-full border border-border/60 bg-surface px-2.5 py-0.5 font-mono text-[11px] font-semibold text-content-secondary shadow-2xs">
+                  <span className="inline-flex rounded-full border border-border/60 bg-surface px-2.5 py-0.5 tabular-nums text-[11px] font-semibold text-content-secondary shadow-2xs">
                     {COMPLIANCE_INDICATORS.filter((i) => i.state === 'success').length} /{' '}
                     {COMPLIANCE_INDICATORS.length} Ready
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-medium-bg px-2.5 py-0.5 font-mono text-[11px] font-semibold text-medium-text">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-medium-bg px-2.5 py-0.5 tabular-nums text-[11px] font-semibold text-medium-text">
                     Action Needed
                   </span>
                 </div>
@@ -82,12 +82,12 @@ export function Compliance() {
                     >
                       <div>
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-caption uppercase tracking-wider text-content-muted">
+                          <span className="tabular-nums text-caption uppercase tracking-wider text-content-muted">
                             Check 0{idx + 1} {'//'} {indicator.id}
                           </span>
                           <span
                             className={cn(
-                              'border-current/15 inline-flex shrink-0 items-center gap-1 rounded-[3px] border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase leading-none tracking-wider',
+                              'border-current/15 inline-flex shrink-0 items-center gap-1 rounded-[3px] border px-1.5 py-0.5 tabular-nums text-[10px] font-semibold uppercase leading-none tracking-wider',
                               STATE_STYLES[indicator.state],
                             )}
                           >
@@ -101,11 +101,11 @@ export function Compliance() {
                         <p className="mt-3 font-display text-body-lg font-semibold text-content-primary">
                           {indicator.label}
                         </p>
-                        <p className="mt-1 font-mono text-caption text-content-secondary">
+                        <p className="mt-1 tabular-nums text-caption text-content-secondary">
                           {methods[idx]}
                         </p>
                       </div>
-                      <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-2.5 font-mono text-caption text-content-muted">
+                      <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-2.5 tabular-nums text-caption text-content-muted">
                         <span>Check Cadence</span>
                         <span className="text-content-secondary">Continuous weekly</span>
                       </div>
@@ -115,7 +115,7 @@ export function Compliance() {
               </div>
 
               {/* Trust Center Footer */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-surface-inset px-6 py-3 font-mono text-caption text-content-muted">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-surface-inset px-6 py-3 tabular-nums text-caption text-content-muted">
                 <span>Aligned with Digital Personal Data Protection Act (2023)</span>
                 <span className="text-accent">Audit verification enabled →</span>
               </div>

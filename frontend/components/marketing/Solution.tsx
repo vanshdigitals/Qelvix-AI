@@ -36,12 +36,12 @@ export function Solution() {
                 <div className="group relative flex h-full flex-col justify-between rounded-xl border border-border/80 bg-surface p-6 shadow-2xs transition-colors duration-200 hover:border-accent/40 hover:bg-surface-inset">
                   <div>
                     <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                      <span className="font-mono text-caption font-semibold uppercase tracking-wider text-accent">
+                      <span className="tabular-nums text-caption font-semibold uppercase tracking-wider text-accent">
                         Cap. 0{index + 1}
                       </span>
                       <span
                         aria-hidden
-                        className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-accent"
+                        className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 tabular-nums text-[10px] font-medium uppercase tracking-wider text-accent"
                       >
                         Automated
                       </span>
@@ -53,7 +53,7 @@ export function Solution() {
                       {solution.detail}
                     </p>
                   </div>
-                  <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 font-mono text-caption text-content-muted">
+                  <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 tabular-nums text-caption text-content-muted">
                     <span>Outcome</span>
                     <span className="font-semibold text-content-secondary">{outcomes[index]}</span>
                   </div>

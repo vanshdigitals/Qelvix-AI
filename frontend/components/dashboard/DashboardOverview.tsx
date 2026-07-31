@@ -127,7 +127,7 @@ export function DashboardOverview() {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-caption text-content-muted">30-day trend</span>
-                  <span className="font-mono text-body-sm tabular-nums text-content-muted">—</span>
+                  <span className="tabular-nums text-body-sm tabular-nums text-content-muted">—</span>
                 </div>
                 <div className="h-8 flex-1">
                   <Sparkline />
@@ -157,7 +157,7 @@ export function DashboardOverview() {
                   <SeverityBadge severity={f.severity} />
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-body-sm font-medium text-content-primary">{f.title}</span>
-                    <span className="truncate font-mono text-caption text-content-muted">
+                    <span className="truncate tabular-nums text-caption text-content-muted">
                       {f.asset} · {f.age}
                     </span>
                   </div>
@@ -187,7 +187,7 @@ export function DashboardOverview() {
             Review the top critical findings first.
           </p>
           <div className="mt-auto flex items-center gap-2 pt-2">
-            <span className="rounded-md bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
+            <span className="rounded-md bg-surface-inset px-1.5 py-0.5 tabular-nums text-[11px] text-content-muted">
               AI EXPLANATION
             </span>
             <span className="text-caption text-content-muted">
@@ -222,7 +222,7 @@ export function DashboardOverview() {
               <div key={row.label} className="flex items-center gap-2.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', row.dot)} />
                 <span className="flex-1 text-body-sm text-content-secondary">{row.label}</span>
-                <span className="font-mono text-body-sm tabular-nums text-content-primary">
+                <span className="tabular-nums text-body-sm tabular-nums text-content-primary">
                   {row.count}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export function DashboardOverview() {
             </Link>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[32px] font-medium leading-none tabular-nums text-content-primary">
+            <span className="tabular-nums text-[32px] font-medium leading-none tabular-nums text-content-primary">
               {totalAssets}
             </span>
             <span className="text-body-sm text-content-muted">monitored</span>
@@ -259,7 +259,7 @@ export function DashboardOverview() {
                 <span className="text-content-secondary">{row.label}</span>
                 <span
                   className={cn(
-                    'font-mono tabular-nums',
+                    'tabular-nums tabular-nums',
                     row.warn ? 'text-high-text' : 'text-content-primary',
                   )}
                 >
@@ -293,7 +293,7 @@ export function DashboardOverview() {
                 <span className="flex-1 text-content-secondary">
                   <span className="font-medium text-content-primary">{ev.actor}</span> {ev.text}
                 </span>
-                <span className="shrink-0 font-mono text-caption text-content-muted">{ev.when}</span>
+                <span className="shrink-0 tabular-nums text-caption text-content-muted">{ev.when}</span>
               </div>
             ))}
           </div>
@@ -303,7 +303,7 @@ export function DashboardOverview() {
           <Panel>
             <div className="flex items-center justify-between gap-3">
               <PanelTitle>DPDP readiness</PanelTitle>
-              <span className="font-mono text-body-sm text-content-primary">4 / 6</span>
+              <span className="tabular-nums text-body-sm text-content-primary">4 / 6</span>
             </div>
             <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-inset">
               <span className="block h-full w-[67%] rounded-full bg-accent" />
@@ -379,7 +379,7 @@ function Gauge({ score }: { score: number }): ReactNode {
         x={66}
         y={70}
         textAnchor="middle"
-        className="fill-content-primary font-mono text-2xl font-semibold"
+        className="fill-content-primary tabular-nums text-2xl font-semibold"
       >
         {score}
       </text>

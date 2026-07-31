@@ -47,7 +47,7 @@ export function BillingScreen() {
                 </span>
               </div>
               <span className="flex items-baseline gap-1">
-                <span className="font-mono text-[28px] font-medium leading-none text-content-primary">
+                <span className="tabular-nums text-[28px] font-medium leading-none text-content-primary">
                   ₹2,499
                 </span>
                 <span className="text-body-sm text-content-muted">/ month</span>
@@ -61,7 +61,7 @@ export function BillingScreen() {
                     <span className="text-body-sm text-content-secondary">{u.label}</span>
                     <span
                       className={cn(
-                        'font-mono text-body-sm',
+                        'tabular-nums text-body-sm',
                         u.warn ? 'text-high-text' : 'text-content-primary',
                       )}
                     >
@@ -116,13 +116,13 @@ export function BillingScreen() {
               <tbody>
                 {INVOICES.map((iv) => (
                   <tr key={iv.id} className="border-t border-border/60">
-                    <td className="whitespace-nowrap px-3 py-3 pl-4 font-mono text-caption text-content-primary">
+                    <td className="whitespace-nowrap px-3 py-3 pl-4 tabular-nums text-caption text-content-primary">
                       {iv.id}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
                       {iv.date}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 font-mono text-content-primary">
+                    <td className="whitespace-nowrap px-3 py-3 tabular-nums text-content-primary">
                       {iv.amount}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
@@ -167,7 +167,7 @@ export function BillingScreen() {
                 HDFC
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="font-mono text-body-sm text-content-primary">
+                <span className="tabular-nums text-body-sm text-content-primary">
                   •••• •••• •••• 4821
                 </span>
                 <span className="text-caption text-content-muted">
@@ -196,7 +196,7 @@ export function BillingScreen() {
                 >
                   <span className="shrink-0 text-content-secondary">{b.label}</span>
                   <span
-                    className={`break-words text-right font-medium text-content-primary ${b.mono ? 'font-mono text-caption' : ''}`}
+                    className={`break-words text-right font-medium text-content-primary ${b.mono ? 'tabular-nums text-caption' : ''}`}
                   >
                     {b.value}
                   </span>

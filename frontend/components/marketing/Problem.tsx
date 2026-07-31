@@ -33,12 +33,12 @@ export function Problem() {
                 <div className="flex items-center justify-between">
                   <span
                     aria-hidden
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface-inset px-2.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-content-secondary"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface-inset px-2.5 py-0.5 tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-secondary"
                   >
                     <span className="h-1 w-1 rounded-full bg-accent" />
                     Blind Spot 0{index + 1}
                   </span>
-                  <span className="font-mono text-caption uppercase tracking-wider text-content-muted">
+                  <span className="tabular-nums text-caption uppercase tracking-wider text-content-muted">
                     {problem.id}
                   </span>
                 </div>
@@ -47,7 +47,7 @@ export function Problem() {
                 </p>
                 <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 text-caption font-medium text-content-muted">
                   <span>Continuous monitoring required</span>
-                  <span className="font-mono text-accent">Unverified →</span>
+                  <span className="tabular-nums text-accent">Unverified →</span>
                 </div>
               </div>
             </Reveal>

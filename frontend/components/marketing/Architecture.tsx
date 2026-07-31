@@ -80,7 +80,7 @@ export function Architecture() {
                   </div>
                   <pre
                     aria-label="Deterministic rule output"
-                    className="mt-3 overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-border/80 bg-canvas p-3.5 font-mono text-[11px] leading-relaxed text-content-primary sm:text-xs"
+                    className="mt-3 overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-border/80 bg-canvas p-3.5 tabular-nums text-[11px] leading-relaxed text-content-primary sm:text-xs"
                   >
                     <code>{RULE_EVIDENCE}</code>
                   </pre>
@@ -126,10 +126,10 @@ export function Architecture() {
                   <div className="group relative flex h-full flex-col justify-between rounded-xl border border-border/80 bg-surface p-6 shadow-2xs transition-colors duration-200 hover:border-accent/40 hover:bg-surface-inset">
                     <div>
                       <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                        <span className="font-mono text-caption font-semibold uppercase tracking-wider text-accent">
+                        <span className="tabular-nums text-caption font-semibold uppercase tracking-wider text-accent">
                           {phase.label}
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-inset px-2 py-0.5 font-mono text-[10px] font-semibold text-content-muted">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-inset px-2 py-0.5 tabular-nums text-[10px] font-semibold text-content-muted">
                           Phase 0{index + 1}
                         </span>
                       </div>
@@ -145,7 +145,7 @@ export function Architecture() {
                         ))}
                       </ul>
                     </div>
-                    <div className="mt-6 flex flex-col gap-2 border-t border-border/50 pt-3 font-mono text-caption">
+                    <div className="mt-6 flex flex-col gap-2 border-t border-border/50 pt-3 tabular-nums text-caption">
                       <div className="flex items-center justify-between text-content-muted">
                         <span>Output</span>
                         <span className="font-semibold text-content-secondary">{output}</span>
@@ -163,13 +163,13 @@ export function Architecture() {
 
           <Reveal index={1}>
             <div className="mt-10 flex flex-wrap items-center gap-2.5 border-t border-border/60 pt-6">
-              <span className="mr-2 font-mono text-caption font-semibold uppercase tracking-wider text-content-secondary">
+              <span className="mr-2 tabular-nums text-caption font-semibold uppercase tracking-wider text-content-secondary">
                 Continuous Data Feeds:
               </span>
               {DATA_SOURCES.map((source) => (
                 <span
                   key={source}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface px-3 py-1 font-mono text-caption font-semibold text-content-secondary shadow-2xs transition-all duration-200 hover:border-border-strong hover:text-content-primary"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface px-3 py-1 tabular-nums text-caption font-semibold text-content-secondary shadow-2xs transition-all duration-200 hover:border-border-strong hover:text-content-primary"
                 >
                   <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-success-text" />
                   {source}

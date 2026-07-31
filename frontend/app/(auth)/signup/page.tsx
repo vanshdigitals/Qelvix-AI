@@ -96,7 +96,7 @@ function SignupForm() {
       {!isSupabaseConfigured && (
         <p className="mb-4 rounded-lg border border-medium-text bg-medium-bg px-3 py-2 text-caption text-medium-text">
           Authentication is not configured yet. Add your Supabase keys to
-          <code className="mx-1 font-mono">frontend/.env.local</code>to enable sign-up.
+          <code className="mx-1 tabular-nums">frontend/.env.local</code>to enable sign-up.
         </p>
       )}
       <div className="mb-6">

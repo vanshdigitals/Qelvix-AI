@@ -18,7 +18,7 @@ export function DemoHelperCard({ onFill, email }: DemoHelperCardProps) {
         </div>
         <div className="flex items-center justify-between">
           <span>Password:</span>
-          <span className="font-mono text-content-primary">••••••••</span>
+          <span className="tabular-nums text-content-primary">••••••••</span>
         </div>
       </div>
       <button

@@ -155,7 +155,7 @@ export function SettingsScreen() {
               type="text"
               disabled
               value={org.primary_domain}
-              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none disabled:opacity-50"
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 tabular-nums text-body-sm text-content-primary outline-none disabled:opacity-50"
             />
             <span className="text-caption text-content-muted">
               {org.domain_verified ? 'Verified via DNS TXT' : 'Not verified'}
@@ -171,7 +171,7 @@ export function SettingsScreen() {
               type="email"
               value={notificationEmail}
               onChange={(e) => { setNotificationEmail(e.target.value); }}
-              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 tabular-nums text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
             />
             <span className="text-caption text-content-muted">Receives critical alerts</span>
           </div>
@@ -185,7 +185,7 @@ export function SettingsScreen() {
               type="tel"
               value={whatsappNumber}
               onChange={(e) => { setWhatsappNumber(e.target.value); }}
-              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 tabular-nums text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
             />
             <span className="text-caption text-content-muted">For real-time alerts</span>
           </div>

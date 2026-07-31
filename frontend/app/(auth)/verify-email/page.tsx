@@ -44,7 +44,7 @@ export default function VerifyEmailPage() {
         </p>
 
         {loading && (
-          <div className="mt-8 flex items-center gap-2 font-mono text-caption text-content-muted">
+          <div className="mt-8 flex items-center gap-2 tabular-nums text-caption text-content-muted">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-content-muted border-t-accent" />
             <span>Verifying...</span>
           </div>

@@ -278,7 +278,7 @@ export function OnboardingWizard() {
                   <span
                     aria-current={state === 'current' ? 'step' : undefined}
                     className={cn(
-                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-caption font-semibold transition-colors',
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full tabular-nums text-caption font-semibold transition-colors',
                       state === 'current' && 'bg-accent text-white',
                       state === 'done' && 'bg-accent/20 text-accent',
                       state === 'upcoming' && 'border border-border text-content-muted',
@@ -324,7 +324,7 @@ export function OnboardingWizard() {
           {/* Every step renders a consistent, focusable h1. */}
           {step !== 'welcome' && (
             <div className="mb-6">
-              <span className="font-mono text-caption text-accent">
+              <span className="tabular-nums text-caption text-accent">
                 {stepperIndex >= 0
                   ? `STEP ${String(stepperIndex + 1)} OF ${String(STEPPER.length)}`
                   : step === 'scan'
@@ -400,7 +400,7 @@ export function OnboardingWizard() {
                   }}
                   placeholder="27AAECV1234F1Z5"
                   aria-describedby="ob-gst-hint"
-                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent"
+                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent"
                 />
                 <p id="ob-gst-hint" className="text-caption text-content-muted">
                   Shown on compliance reports. Leave blank if you would rather not provide it.
@@ -475,7 +475,7 @@ export function OnboardingWizard() {
                   aria-invalid={domainError}
                   aria-describedby={domainError ? 'ob-domain-error' : 'ob-domain-hint'}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent',
+                    'h-11 w-full rounded-lg border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent',
                     domainError ? 'border-critical-text' : 'border-border',
                   )}
                 />
@@ -496,14 +496,14 @@ export function OnboardingWizard() {
             <div className="space-y-4">
               <p className="text-body-sm text-content-secondary">
                 Add one TXT record for{' '}
-                <span className="font-mono text-content-primary">{effectiveDomain}</span>. We check
+                <span className="tabular-nums text-content-primary">{effectiveDomain}</span>. We check
                 every 30 seconds and continue on our own.
               </p>
 
               <div className="rounded-xl border border-border bg-surface-inset p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-caption text-content-muted">TXT RECORD</span>
-                  <span className="font-mono text-caption text-accent">qelvix-verify=6a8d9e2c</span>
+                  <span className="tabular-nums text-caption text-content-muted">TXT RECORD</span>
+                  <span className="tabular-nums text-caption text-accent">qelvix-verify=6a8d9e2c</span>
                 </div>
               </div>
 
@@ -575,7 +575,7 @@ export function OnboardingWizard() {
                     key={`${inv.email}-${inv.role}`}
                     className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-inset px-4 py-3"
                   >
-                    <span className="min-w-0 truncate font-mono text-body-sm text-content-primary">
+                    <span className="min-w-0 truncate tabular-nums text-body-sm text-content-primary">
                       {inv.email}
                     </span>
                     <div className="flex shrink-0 items-center gap-3">
@@ -653,7 +653,7 @@ export function OnboardingWizard() {
                 <p className="text-body-sm font-medium text-content-primary">Email alerts</p>
                 <p className="mt-0.5 text-caption text-content-muted">
                   Confirmed and always on:{' '}
-                  <span className="font-mono text-content-secondary">
+                  <span className="tabular-nums text-content-secondary">
                     {contact.trim() || 'your account email'}
                   </span>
                 </p>
@@ -699,7 +699,7 @@ export function OnboardingWizard() {
                     }}
                     placeholder="98765 43210"
                     aria-describedby="ob-wa-consent"
-                    className="h-11 flex-1 rounded-lg border border-border bg-surface px-3 font-mono text-body-sm text-content-primary outline-none focus:border-accent disabled:opacity-50"
+                    className="h-11 flex-1 rounded-lg border border-border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent disabled:opacity-50"
                   />
                 </div>
 
@@ -803,7 +803,7 @@ export function OnboardingWizard() {
                   >
                     <SeverityBadge severity={f.sev} />
                     <p className="text-body-sm font-medium text-content-primary">{f.title}</p>
-                    <p className="font-mono text-caption text-content-muted">{f.asset}</p>
+                    <p className="tabular-nums text-caption text-content-muted">{f.asset}</p>
                   </li>
                 ))}
               </ul>

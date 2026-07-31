@@ -194,7 +194,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <nav className="flex flex-1 flex-col gap-6">
               {navGroups.map((group) => (
                 <div key={group.label} className="flex flex-col gap-0.5">
-                  <span className="px-2.5 font-mono text-caption font-semibold uppercase tracking-wider text-content-muted">
+                  <span className="px-2.5 tabular-nums text-caption font-semibold uppercase tracking-wider text-content-muted">
                     {group.label}
                   </span>
                   {group.items.map((item) => {
@@ -224,7 +224,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <span className="flex-1 truncate text-left">{item.label}</span>
                         {isCur && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />}
                         {item.count && (
-                          <span className="rounded-full bg-critical-bg px-1.5 py-0.5 font-mono text-[11px] font-semibold text-critical-text">
+                          <span className="rounded-full bg-critical-bg px-1.5 py-0.5 tabular-nums text-[11px] font-semibold text-critical-text">
                             {item.count}
                           </span>
                         )}
@@ -271,7 +271,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     placeholder="Search findings, assets, scans..."
                     className="font-body w-full bg-transparent text-body-sm text-content-primary outline-none placeholder:text-content-muted"
                   />
-                  <span className="rounded border border-border/60 bg-surface px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
+                  <span className="rounded border border-border/60 bg-surface px-1.5 py-0.5 tabular-nums text-[11px] text-content-muted">
                     ⌘K
                   </span>
                 </div>
@@ -290,7 +290,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className="flex items-center justify-between gap-3 rounded-md px-2.5 py-2 text-body-sm text-content-primary transition-colors hover:bg-surface-inset"
                         >
                           <span className="truncate">{result.label}</span>
-                          <span className="shrink-0 font-mono text-[11px] text-content-muted">
+                          <span className="shrink-0 tabular-nums text-[11px] text-content-muted">
                             {result.group}
                           </span>
                         </Link>

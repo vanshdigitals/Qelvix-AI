@@ -37,7 +37,7 @@ export function HowItWorks() {
                 <div className="group relative flex h-full flex-col justify-between rounded-xl border border-border/80 bg-surface p-6 shadow-2xs transition-colors duration-200 hover:border-border-strong hover:bg-surface-inset">
                   <div>
                     <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                      <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+                      <span className="tabular-nums text-[11px] font-semibold uppercase tracking-wider text-content-muted">
                         Step 0{index + 1} {'//'} {step.id}
                       </span>
                       <span className="flex h-8 w-8 items-center justify-center rounded-md border border-border/60 bg-surface-inset">
@@ -51,7 +51,7 @@ export function HowItWorks() {
                       {step.description}
                     </p>
                   </div>
-                  <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 font-mono text-caption text-content-muted">
+                  <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-3 tabular-nums text-caption text-content-muted">
                     <span>Execution</span>
                     <span className="font-semibold text-content-secondary">
                       {stepMetrics[index]}

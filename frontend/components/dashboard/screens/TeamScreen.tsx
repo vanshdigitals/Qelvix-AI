@@ -67,7 +67,7 @@ export function TeamScreen() {
                     </span>
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="font-medium text-content-primary">{m.name}</span>
-                      <span className="font-mono text-caption text-content-muted">{m.email}</span>
+                      <span className="tabular-nums text-caption text-content-muted">{m.email}</span>
                     </div>
                   </div>
                 </td>

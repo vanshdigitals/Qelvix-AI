@@ -2,23 +2,21 @@
 
 Visual and interaction foundation for every screen specified in `01_PRODUCT_BLUEPRINT.md` and structured in `02_FRONTEND.md`. This document owns tokens, typography, components, dashboard layout rules, and data visualization guidance. It does not own screen composition (which components appear on which screen — that's `01`), state/data-fetching mechanics (`02_FRONTEND.md` §4–5), or which agent/endpoint feeds a given widget (`03_BACKEND.md`, `04_AGENT_PIPELINE.md`). Component names below match the inventory in `01_PRODUCT_BLUEPRINT.md` §11 one-to-one.
 
-**Canonical typography.** DM Sans (display/headings) / Inter (UI, body, navigation, forms, tables) / JetBrains Mono (code, logs, JSON, terminal) is the single source of truth for Qelvix typography, superseding the earlier Geist Sans specification. This document, and every document from this point forward, uses this system exclusively. Non-typography brand elements — squircle logo mark, Lucide icon set, Swiss/Apple/IBM/Stripe/Linear editorial style — carry forward unchanged; the color system below replaces the earlier near-black/Signal Blue palette with a more distinctive enterprise cybersecurity identity, detailed in §3.1.
+**Canonical typography.** DM Sans (display/headings) / Inter (UI, body, navigation, forms, tables, data) is the single source of truth for Qelvix typography, superseding the earlier system. This document, and every document from this point forward, uses this system exclusively. Non-typography brand elements — squircle logo mark, Lucide icon set, Swiss/Apple/IBM/Stripe/Linear editorial style — carry forward unchanged; the color system below replaces the earlier near-black/Signal Blue palette with a more distinctive enterprise cybersecurity identity, detailed in §3.1.
 
 ## 1. Typography
 
-Three typefaces, each scoped to a content category. Never substituted, never mixed within a category.
+Two typefaces, each scoped to a content category. Never substituted, never mixed within a category.
 
 | Typeface | Scope | Never used for |
 |---|---|---|
 | **DM Sans** | Display/marketing headlines, product headings (H1–H6) | Body copy, tables, forms, code |
-| **Inter** | Body text, tables, forms, navigation, buttons, labels, helper text, captions | Headings, code/data output |
-| **JetBrains Mono** | Code, terminal, logs, API responses, JSON, raw evidence panels | Anything a business-owner persona reads as prose |
+| **Inter** | Body text, tables, forms, navigation, buttons, labels, helper text, captions, data, code | Headings |
 
 **Where each typeface belongs and doesn't:**
 
 - **DM Sans** carries identity and hierarchy. It appears exactly where `01_PRODUCT_BLUEPRINT.md` calls out a screen's single largest element — the Landing Page hero line, the Risk Score gauge's headline number pairing, Finding Detail's title, Security Health status text. It is never used at body-copy sizes; DM Sans below 18px loses the geometric character that justifies using it over Inter at all, and using it for paragraph text would blur the visual boundary between "this is a heading" and "this is content," which matters on data-dense screens like Findings List and Scans Detail where that boundary is load-bearing.
-- **Inter** is the workhorse. Everything a user reads to understand or act — plain-language explanations, remediation steps, table cells, form labels, nav items — is Inter. Inter's numeral set is used with tabular figures (`font-variant-numeric: tabular-nums`) anywhere numbers appear in a column (Findings List age, Scans History risk score, Team & Roles timestamps), so digits align vertically and a scanning eye can compare rows without the layout shifting per-row.
-- **JetBrains Mono** signals "this is raw system output, not written for you." It appears only inside `CodeBlock`, `JSONViewer`, the collapsible "Technical details" panel on Finding Detail (`01_PRODUCT_BLUEPRINT.md` §9), and the DNS TXT record value on Domain Verification. This is a deliberate typographic cue reinforcing the Rules-before-LLM trust claim: the moment text switches to monospace, the reader knows they're looking at the deterministic evidence, not Claude's explanation of it. Never used for the explanation or remediation text sitting directly above that panel — mixing the two inside one visual register would undercut the exact distinction the typeface change is meant to signal.
+- **Inter** is the workhorse. Everything a user reads to understand or act — plain-language explanations, remediation steps, table cells, form labels, nav items, and data — is Inter. Inter's numeral set is used with tabular figures (`font-variant-numeric: tabular-nums`) anywhere numbers appear in a column (Findings List age, Scans History risk score, Team & Roles timestamps), so digits align vertically and a scanning eye can compare rows without the layout shifting per-row. This includes IDs, IPs, and code outputs, which keep numbers visually aligned and "data-like" without a separate font file.
 
 ### 1.1 Type Scale
 
@@ -35,8 +33,8 @@ Three typefaces, each scoped to a content category. Never substituted, never mix
 | `body-sm` | 13px / 18px | Inter | 400 | Secondary/supporting text |
 | `label` | 13px / 16px | Inter | 500 | Form labels, filter chips |
 | `caption` | 12px / 16px | Inter | 400 | Timestamps, metadata, helper text |
-| `mono-data` | 13px / 20px | JetBrains Mono | 400 | Table/inline technical values (IDs, IPs, CVEs) |
-| `mono-block` | 13px / 22px | JetBrains Mono | 400 | CodeBlock, JSONViewer, raw evidence |
+| `mono-data` | 13px / 20px | Inter (tabular-nums) | 400 | Table/inline technical values (IDs, IPs, CVEs) |
+| `mono-block` | 13px / 22px | Inter (tabular-nums) | 400 | CodeBlock, JSONViewer, raw evidence |
 | `button` | 14px / 20px | Inter | 600 | All button labels |
 
 Line-heights are fixed per token, not computed from a global multiplier, because dense tables (Findings List, Audit Log) need predictable row height independent of font metrics changing anywhere else in the system.

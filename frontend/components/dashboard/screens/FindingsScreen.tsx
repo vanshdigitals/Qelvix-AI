@@ -90,7 +90,7 @@ export function FindingsScreen() {
               )}
             >
               {sev}
-              <span className="font-mono text-[11px] text-content-muted">{count}</span>
+              <span className="tabular-nums text-[11px] text-content-muted">{count}</span>
             </button>
           );
         })}
@@ -132,12 +132,12 @@ export function FindingsScreen() {
                 <td className="max-w-[340px] px-3 py-3">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-medium text-content-primary">{f.title}</span>
-                    <span className="font-mono text-[11px] text-content-muted">
+                    <span className="tabular-nums text-[11px] text-content-muted">
                       {f.finding_type}
                     </span>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 font-mono text-caption text-content-secondary">
+                <td className="whitespace-nowrap px-3 py-3 tabular-nums text-caption text-content-secondary">
                   {f.agent_source}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-content-secondary">

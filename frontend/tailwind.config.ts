@@ -42,7 +42,6 @@ const config: Config = {
       fontFamily: {
         display: ['var(--font-dm-sans)', 'sans-serif'],
         sans: ['var(--font-inter)', 'sans-serif'],
-        mono: ['var(--font-jetbrains-mono)', 'monospace'],
       },
       // Type scale — 05 §1.1. Line-heights are fixed per token, never computed.
       fontSize: {

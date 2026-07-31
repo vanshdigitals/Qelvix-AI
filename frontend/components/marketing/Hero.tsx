@@ -106,7 +106,7 @@ export function Hero() {
               ].map((feed) => (
                 <span
                   key={feed}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface/70 px-3 py-1 font-mono text-caption font-semibold text-content-secondary shadow-2xs transition-all duration-200 hover:border-border-strong hover:bg-surface hover:text-content-primary"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface/70 px-3 py-1 tabular-nums text-caption font-semibold text-content-secondary shadow-2xs transition-all duration-200 hover:border-border-strong hover:bg-surface hover:text-content-primary"
                 >
                   <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent/70" />
                   {feed}

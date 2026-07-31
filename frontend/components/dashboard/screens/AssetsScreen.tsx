@@ -57,7 +57,7 @@ export function AssetsScreen() {
         {stats.map((s) => (
           <Panel key={s.label} className="flex flex-col gap-1.5">
             <span className="text-body-sm text-content-secondary">{s.label}</span>
-            <span className="font-mono text-[28px] font-medium tabular-nums leading-tight text-content-primary">
+            <span className="tabular-nums text-[28px] font-medium tabular-nums leading-tight text-content-primary">
               {s.value}
             </span>
             <span className="text-caption text-content-muted">{s.note}</span>
@@ -77,7 +77,7 @@ export function AssetsScreen() {
           <tbody>
             {rows.map((a) => (
               <tr key={a.id} className="border-t border-border/60">
-                <td className="px-3 py-3 pl-4 font-mono font-medium text-content-primary">
+                <td className="px-3 py-3 pl-4 tabular-nums font-medium text-content-primary">
                   {a.value}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 capitalize text-content-secondary">

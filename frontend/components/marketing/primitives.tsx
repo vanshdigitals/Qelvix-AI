@@ -175,7 +175,7 @@ export function WindowChrome({ label }: { label: string }) {
         <span className="h-3 w-3 rounded-full bg-success-text" />
       </div>
       <div className="flex min-w-0 flex-1 justify-center">
-        <span className="inline-flex max-w-full items-center gap-2 truncate rounded-md border border-border bg-surface px-3 py-1 font-mono text-mono-data text-content-secondary">
+        <span className="inline-flex max-w-full items-center gap-2 truncate rounded-md border border-border bg-surface px-3 py-1 tabular-nums text-mono-data text-content-secondary">
           {label}
         </span>
       </div>

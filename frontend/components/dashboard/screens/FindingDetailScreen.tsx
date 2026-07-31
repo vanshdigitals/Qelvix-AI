@@ -51,14 +51,14 @@ export function FindingDetailScreen({ id }: { id: string }) {
           Findings
         </Link>
         <span>/</span>
-        <span className="font-mono text-caption">{finding.finding_type}</span>
+        <span className="tabular-nums text-caption">{finding.finding_type}</span>
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex max-w-2xl flex-col gap-2.5">
           <div className="flex items-center gap-2.5">
             <SeverityBadge severity={finding.severity} />
-            <span className="font-mono text-caption text-content-muted">
+            <span className="tabular-nums text-caption text-content-muted">
               {finding.agent_source}
             </span>
           </div>
@@ -89,7 +89,7 @@ export function FindingDetailScreen({ id }: { id: string }) {
           <Panel className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <PanelTitle>What this means</PanelTitle>
-              <span className="rounded-md bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
+              <span className="rounded-md bg-surface-inset px-1.5 py-0.5 tabular-nums text-[11px] text-content-muted">
                 AI EXPLANATION
               </span>
             </div>
@@ -120,7 +120,7 @@ export function FindingDetailScreen({ id }: { id: string }) {
           {Object.keys(finding.raw_data).length > 0 && (
             <Panel className="flex flex-col gap-3">
               <PanelTitle>Raw evidence</PanelTitle>
-              <pre className="overflow-x-auto rounded-xl border border-border bg-surface-inset p-4 font-mono text-caption text-content-secondary">
+              <pre className="overflow-x-auto rounded-xl border border-border bg-surface-inset p-4 tabular-nums text-caption text-content-secondary">
                 {JSON.stringify(finding.raw_data, null, 2)}
               </pre>
             </Panel>
@@ -138,7 +138,7 @@ export function FindingDetailScreen({ id }: { id: string }) {
                 >
                   <span className="text-content-secondary">{m.label}</span>
                   <span
-                    className={`text-right font-medium capitalize text-content-primary ${m.mono ? 'font-mono text-caption normal-case' : ''}`}
+                    className={`text-right font-medium capitalize text-content-primary ${m.mono ? 'tabular-nums text-caption normal-case' : ''}`}
                   >
                     {m.value}
                   </span>

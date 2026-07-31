@@ -25,7 +25,7 @@ export function QuickFillCard({ label, onActivate, busy = false, error }: QuickF
       </div>
 
       {demoAccountConfigured ? (
-        <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
+        <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 tabular-nums text-[11px]">
           <dt className="text-content-muted">Email</dt>
           <dd className="truncate text-content-secondary">{DEMO_EMAIL}</dd>
           <dt className="text-content-muted">Password</dt>

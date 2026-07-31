@@ -85,7 +85,7 @@ export function ComplianceScreen() {
           <Panel className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <PanelTitle>Assessment</PanelTitle>
-              <span className="rounded-md bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
+              <span className="rounded-md bg-surface-inset px-1.5 py-0.5 tabular-nums text-[11px] text-content-muted">
                 AI NARRATIVE
               </span>
             </div>

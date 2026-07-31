@@ -63,7 +63,7 @@ export function NotificationsDropdown({ findings }: NotificationsDropdownProps) 
       >
         <Bell className="h-4 w-4" aria-hidden />
         {findings.length > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 tabular-nums text-[10px] font-bold text-white">
             {findings.length}
           </span>
         )}
@@ -95,7 +95,7 @@ export function NotificationsDropdown({ findings }: NotificationsDropdownProps) 
                       <p className="truncate text-body-sm font-medium text-content-primary">
                         {finding.title}
                       </p>
-                      <p className="mt-0.5 truncate font-mono text-[11px] text-content-muted">
+                      <p className="mt-0.5 truncate tabular-nums text-[11px] text-content-muted">
                         {finding.asset} · {finding.age}
                       </p>
                     </div>

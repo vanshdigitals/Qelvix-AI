@@ -66,7 +66,7 @@ export function ScansScreen() {
           <tbody>
             {rows.map((s) => (
               <tr key={s.id} className="border-t border-border/60">
-                <td className="whitespace-nowrap px-3 py-3 pl-4 font-mono text-caption text-content-primary">
+                <td className="whitespace-nowrap px-3 py-3 pl-4 tabular-nums text-caption text-content-primary">
                   {s.id.slice(0, 8)}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
@@ -91,7 +91,7 @@ export function ScansScreen() {
                 <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
                   {s.completed_at ? new Date(s.completed_at).toLocaleString() : '—'}
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 font-mono text-caption text-content-primary">
+                <td className="whitespace-nowrap px-3 py-3 tabular-nums text-caption text-content-primary">
                   {findingCount(s.finding_summary)}
                 </td>
               </tr>

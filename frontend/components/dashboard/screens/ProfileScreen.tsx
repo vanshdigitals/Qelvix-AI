@@ -62,7 +62,7 @@ export function ProfileScreen() {
                 }}
                 className={cn(
                   'h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 text-body-md text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-60',
-                  f.mono && 'font-mono text-body-sm',
+                  f.mono && 'tabular-nums text-body-sm',
                 )}
               />
               {f.locked && (
