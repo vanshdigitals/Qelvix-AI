@@ -1,40 +1,32 @@
 import pytest
 import asyncio
 from unittest.mock import patch, AsyncMock, MagicMock
-from openai import APITimeoutError
 from app.services.claude_service import explain_finding
 
 @pytest.mark.asyncio
-async def test_explain_finding_fallback_to_gemini():
+async def test_explain_finding_fallback_to_nvidia():
     finding = {"id": "1", "type": "ssl_expiring_soon"}
     org_context = {"industry": "finance"}
     
-    # Mock the NVIDIA client to always raise a Timeout
-    mock_nvidia = AsyncMock()
-    # Create a mock request object for the timeout error
-    class MockRequest:
-        pass
-    
-    mock_nvidia.chat.completions.create.side_effect = APITimeoutError(MockRequest())
-    
-    # Mock the Gemini client to return a successful response
-    mock_gemini_message = MagicMock()
-    mock_gemini_message.content = "This is a fallback explanation from Gemini."
-    
-    mock_gemini_choice = MagicMock()
-    mock_gemini_choice.message = mock_gemini_message
-    
-    mock_gemini_response = MagicMock()
-    mock_gemini_response.choices = [mock_gemini_choice]
-    
+    # Mock Gemini to fail (primary)
     mock_gemini_client = AsyncMock()
-    mock_gemini_client.chat.completions.create.return_value = mock_gemini_response
+    mock_gemini_client.chat.completions.create.side_effect = Exception("Gemini failed")
+    
+    # Mock NVIDIA to succeed (fallback)
+    mock_nvidia = AsyncMock()
+    mock_nvidia_message = MagicMock()
+    mock_nvidia_message.content = "This is a fallback explanation from NVIDIA."
+    mock_nvidia_choice = MagicMock()
+    mock_nvidia_choice.message = mock_nvidia_message
+    mock_nvidia_response = MagicMock()
+    mock_nvidia_response.choices = [mock_nvidia_choice]
+    mock_nvidia.chat.completions.create.return_value = mock_nvidia_response
     
     with patch("app.services.claude_service.client", mock_nvidia), \
-         patch("app.services.claude_service.gemini_client", mock_gemini_client):
+         patch("app.services.claude_service.gemini_clients", [mock_gemini_client]):
         
         result = await explain_finding(finding, org_context)
         
-        assert result == "This is a fallback explanation from Gemini."
-        assert mock_nvidia.chat.completions.create.call_count == 2  # 1 initial + 1 retry
+        assert result == "This is a fallback explanation from NVIDIA."
         mock_gemini_client.chat.completions.create.assert_called_once()
+        mock_nvidia.chat.completions.create.assert_called_once()
