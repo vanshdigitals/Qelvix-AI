@@ -97,7 +97,7 @@ export function MarketingHeader() {
       >
         {/* Three equal-basis zones: the centre stays centred without overlapping
             either side, at any width. */}
-        <div className="flex shrink-0 items-center pl-1 scale-[1.03] lg:flex-1 lg:justify-start">
+        <div className="flex shrink-0 items-center lg:flex-1 lg:justify-start">
           <Logo />
         </div>
 
@@ -111,7 +111,7 @@ export function MarketingHeader() {
                     href={link.href}
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
-                      'inline-flex h-8 items-center rounded-full px-3 text-caption font-medium transition-colors duration-150 ease-out',
+                      'inline-flex h-8 items-center rounded-full px-3 text-[11px] uppercase tracking-wide font-semibold transition-colors duration-150 ease-out',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
                       isActive
                         ? 'text-content-primary bg-accent/10'
@@ -129,16 +129,14 @@ export function MarketingHeader() {
         <div className="flex shrink-0 items-center gap-1 lg:flex-1 lg:justify-end">
           <Link
             href="/#demo"
-            className="hidden h-8 items-center whitespace-nowrap rounded-full border border-accent/60 bg-transparent px-3 text-caption font-medium text-accent transition-colors duration-150 ease-out hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:inline-flex"
+            className="hidden h-8 items-center whitespace-nowrap rounded-full border border-accent/60 bg-transparent px-3 text-[11px] uppercase tracking-wide font-semibold text-accent transition-colors duration-150 ease-out hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:inline-flex"
           >
             Sample report
           </Link>
 
-          <AppearanceDropdown />
-
           <Link
             href="/login"
-            className="hidden h-8 items-center whitespace-nowrap rounded-full px-3 text-caption font-medium text-content-secondary transition-colors duration-150 ease-out hover:bg-accent/10 hover:text-content-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:inline-flex"
+            className="hidden h-8 items-center whitespace-nowrap rounded-full px-3 text-[11px] uppercase tracking-wide font-semibold text-content-secondary transition-colors duration-150 ease-out hover:bg-accent/10 hover:text-content-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:inline-flex"
           >
             Log in
           </Link>
@@ -150,6 +148,10 @@ export function MarketingHeader() {
             <span className="md:hidden">Scan</span>
             <span className="hidden md:inline">Scan my business</span>
           </Link>
+
+          <div className="ml-1.5 flex items-center">
+            <AppearanceDropdown />
+          </div>
 
           <button
             type="button"
