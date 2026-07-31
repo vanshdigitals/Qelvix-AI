@@ -171,18 +171,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Sidebar */}
           <aside
             className={cn(
-              'modern-scrollbar fixed inset-y-0 left-0 z-drawer flex w-[260px] flex-col gap-6 overflow-y-auto border-r border-border/60 bg-surface px-4 py-5 shadow-lg transition-transform duration-300 ease-out',
+              'modern-scrollbar fixed inset-y-0 left-0 z-drawer flex w-[276px] flex-col gap-6 overflow-y-auto border-r border-border/60 bg-surface px-5 py-6 shadow-lg transition-transform duration-300 ease-out',
               navOpen ? 'translate-x-0' : '-translate-x-full',
             )}
           >
-            <nav className="flex flex-1 flex-col gap-6">
+            <nav className="flex flex-1 flex-col gap-8">
               {navGroups.map((group) => (
-                <div key={group.label} className="flex flex-col gap-0.5">
-                  {group.label !== 'Overview' && (
-                    <span className="px-2.5 tabular-nums text-caption font-semibold uppercase tracking-wider text-content-muted">
-                      {group.label}
-                    </span>
-                  )}
+                <div key={group.label} className="flex flex-col gap-1">
                   {group.items.map((item) => {
                     const isCur = pathname === item.href || pathname.startsWith(`${item.href}/`);
                     const Icon = NAV_ICONS[item.key];
@@ -192,17 +187,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                         href={item.href}
                         aria-current={isCur ? 'page' : undefined}
                         className={cn(
-                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-body-md font-medium transition-all',
+                          'group flex items-center gap-3 rounded-md px-3 py-1.5 text-[14px] font-medium transition-all duration-150',
                           isCur
-                            ? 'bg-surface-inset text-content-primary'
-                            : 'text-content-secondary hover:bg-surface-inset/50 hover:text-content-primary',
+                            ? 'bg-surface-inset text-content-primary shadow-sm ring-1 ring-border/50'
+                            : 'text-content-secondary hover:bg-surface-inset hover:text-content-primary',
                         )}
                       >
                         {Icon && (
                           <Icon
                             className={cn(
-                              'h-4 w-4 shrink-0',
-                              isCur ? 'text-accent' : 'text-content-muted',
+                              'h-[18px] w-[18px] shrink-0 transition-colors',
+                              isCur ? 'text-accent' : 'text-content-muted group-hover:text-content-secondary',
                             )}
                             aria-hidden
                           />
