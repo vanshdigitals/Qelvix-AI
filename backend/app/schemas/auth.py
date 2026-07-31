@@ -23,3 +23,8 @@ class AuthResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class ProvisionResponse(BaseModel):
+    org_id: str
+    created: bool
