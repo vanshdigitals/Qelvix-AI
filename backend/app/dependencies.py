@@ -15,7 +15,7 @@ from app.models.org import Member
 settings = get_settings()
 security = HTTPBearer()
 
-jwks_client = PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json", cache_keys=True)
+jwks_client = PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json", cache_keys=True, timeout=10)
 
 
 async def get_current_user_token(
@@ -43,24 +43,27 @@ async def get_current_user_token(
             )
         return payload
     except jwt.PyJWKClientError as e:
-        print(f"DEBUG_JWT_ERROR [PyJWKClientError]: {e}")
+        import logging
+        logging.error(f"DEBUG_JWT_ERROR [PyJWKClientError]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not fetch JWKS from identity provider",
+            detail=f"Could not fetch JWKS from identity provider: {type(e).__name__} - {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.ExpiredSignatureError as e:
-        print(f"DEBUG_JWT_ERROR [ExpiredSignatureError]: {e}")
+        import logging
+        logging.error(f"DEBUG_JWT_ERROR [ExpiredSignatureError]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
+            detail=f"Token has expired: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception as e:
-        print(f"DEBUG_JWT_ERROR [InvalidTokenError or generic]: {type(e).__name__} - {e}")
+        import logging
+        logging.error(f"DEBUG_JWT_ERROR [InvalidTokenError or generic]: {type(e).__name__} - {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail=f"Invalid authentication credentials: {type(e).__name__} - {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

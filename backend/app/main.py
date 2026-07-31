@@ -78,4 +78,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             commit=os.environ.get("RENDER_GIT_COMMIT")
         )
 
+    @app.get("/debug-jwks", tags=["system"])
+    async def debug_jwks():
+        import httpx
+        url = f"{resolved.supabase_url}/auth/v1/.well-known/jwks.json"
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(url)
+                return {
+                    "status_code": resp.status_code,
+                    "url": url,
+                    "body_preview": resp.text[:200]
+                }
+        except Exception as e:
+            return {
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "url": url
+            }
+
     return app
