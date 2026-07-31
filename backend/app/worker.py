@@ -15,8 +15,9 @@ from app.models.org import Asset
 from app.models.scan import Finding, Scan
 
 settings = get_settings()
+_redis_url = settings.redis_url or "redis://localhost:6379/0"
 
-celery_app = Celery("worker", broker=settings.redis_url, backend=settings.redis_url)
+celery_app = Celery("worker", broker=_redis_url, backend=_redis_url)
 
 
 def run_async(coro):  # noqa

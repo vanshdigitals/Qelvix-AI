@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     supabase_service_key: SecretStr
 
     # Redis — 03 §11
-    redis_url: str
+    redis_url: str | None = None
 
     # External APIs — 03 §8. Optional until the service clients land (F6);
     # an absent key disables its provider rather than failing application start.

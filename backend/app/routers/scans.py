@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,10 +20,11 @@ router = APIRouter(prefix="/scans", tags=["scans"])
     dependencies=[Depends(require_role("owner", "admin", "member"))],
 )
 async def trigger_scan(  # noqa
+    background_tasks: BackgroundTasks,
     current_org: Annotated[CurrentOrg, Depends(get_current_org)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
-    """Start manual scan (queues Celery task)."""
+    """Start manual scan (BackgroundTasks)."""
     # 1. Create Scan record
     scan = Scan(org_id=current_org.org_id, status="queued", scan_type="full", triggered_by="manual")
     db.add(scan)
@@ -37,10 +38,10 @@ async def trigger_scan(  # noqa
     org = await db.get(Organization, current_org.org_id)
     primary_domain = org.domain if org else "example.com"
 
-    # 3. Queue Celery task
-    from app.worker import run_scan_pipeline
+    # 3. Queue Background Task instead of Celery
+    from app.worker import execute_and_save
 
-    run_scan_pipeline.delay(str(current_org.org_id), str(scan.id), primary_domain)
+    background_tasks.add_task(execute_and_save, str(current_org.org_id), str(scan.id), primary_domain)
 
     return ScanTriggerResponse(message="Scan triggered successfully", scan_id=scan.id)
 
