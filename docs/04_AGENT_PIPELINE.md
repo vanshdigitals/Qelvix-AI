@@ -1,10 +1,10 @@
 # 04: Agent Pipeline
 
-Specifies the 13-agent LangGraph pipeline that `03_BACKEND.md` §6.1 queues via Celery and §9 names as the sole caller-boundary for `claude_service.py`. This document owns: the DAG structure, every agent's inputs/tools/rules/outputs, the deterministic rules engines, the full DeepSeek prompt set, the IR playbook format, and the DPDP clause checklist. It does not restate the `scans`/`findings` schema (`03_BACKEND.md` §4.1), the Celery task boundary (`03_BACKEND.md` §6), or the notification delivery mechanics (`03_BACKEND.md` §7) — all referenced here only at their integration points.
+Specifies the 13-agent LangGraph pipeline that `03_BACKEND.md` §6.1 queues via Celery and §9 names as the sole caller-boundary for `claude_service.py`. This document owns: the DAG structure, every agent's inputs/tools/rules/outputs, the deterministic rules engines, the full LLM prompt set, the IR playbook format, and the DPDP clause checklist. It does not restate the `scans`/`findings` schema (`03_BACKEND.md` §4.1), the Celery task boundary (`03_BACKEND.md` §6), or the notification delivery mechanics (`03_BACKEND.md` §7) — all referenced here only at their integration points.
 
 ## 1. Core Principle: Rules-before-LLM
 
-Every security decision — whether a finding exists, its severity, its `raw_data` — is produced by a deterministic Python function with no LLM call inside it. DeepSeek is invoked exactly four times in the pipeline, always after the deciding rule has already run, always scoped to explaining or drafting language around a decision already made:
+Every security decision — whether a finding exists, its severity, its `raw_data` — is produced by a deterministic Python function with no LLM call inside it. The LLM is invoked exactly six times in the pipeline, always after the deciding rule has already run, always scoped to explaining or drafting language around a decision already made:
 
 | DeepSeek call | Node | Never does |
 |---|---|---|
@@ -347,7 +347,7 @@ Every other rules module (`dns_rules.py`, `port_rules.py`, `vuln_rules.py`, `thr
   ```
 - **Bands:** 0–30 Low | 31–59 Medium | 60–79 High | 80–100 Critical
 - **Output:** `RiskScore { score, band, findings_summary { critical, high, medium, low } }`
-- **LLM:** DeepSeek writes a 2-sentence executive summary **after** the score is computed — see §7.1
+- **LLM:** The LLM writes a 2-sentence executive summary **after** the score is computed — see §7.1
 
 This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Health band rather than as the dashboard's primary framing; the four-band mapping (Good/Needs Attention/At Risk/Critical) is a presentation-layer transform of the `band` value above, computed at the API or frontend layer, not a second scoring algorithm. The underlying `0–100` score and its four TRD bands (Low/Medium/High/Critical) are unchanged and remain the number CA-firm portfolio comparisons (`01_PRODUCT_BLUEPRINT.md` §1, Future Scalability) will use.
 
@@ -355,7 +355,7 @@ This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Heal
 - **Input:** Asset inventory, DNS/SSL findings
 - **Rules:** Static clause checklist — see §8
 - **Output:** `DPDPReport { clauses[{ id, status: pass|fail|na, evidence }], overall }`
-- **LLM:** DeepSeek generates the narrative section only — see §7.2
+- **LLM:** The LLM generates the narrative section only — see §7.2
 
 ### Phase 4 — Action (sequential)
 
@@ -363,25 +363,25 @@ This is the score `01_PRODUCT_BLUEPRINT.md` §8 presents under the Security Heal
 - **Input:** Top 5 critical/high findings from the Risk Report
 - **Tools:** YAML IR playbook library (local, shipped with the codebase — see §9)
 - **Output:** `IRPlan { steps[], priority_finding, estimated_effort }`
-- **LLM:** DeepSeek selects and tailors the relevant playbook to the org's context
+- **LLM:** The LLM selects and tailors the relevant playbook to the org's context
 
 **Agent 12 — Recovery Recommendation** *(MVP)*
 - **Input:** Individual findings
 - **Tools:** DeepSeek API + YAML remediation knowledge base
 - **Output:** `RemediationSteps` per finding, owner-friendly, no jargon
-- **LLM:** DeepSeek translates the technical fix into 3–5 plain-language steps — see §7.3
+- **LLM:** The LLM translates the technical fix into 3–5 plain-language steps — see §7.3
 
 **Agent 13 — Notification** *(MVP)*
 - **Input:** RiskReport, IRPlan, RemediationSteps, org notification preferences
 - **Tools:** `whatsapp_service.py`, `email_service.py` (`03_BACKEND.md` §8)
 - **Output:** Notifications sent, logged to `notifications` (`03_BACKEND.md` §4.1)
-- **LLM:** DeepSeek compresses the report into a <160-word WhatsApp message — see §7.4
+- **LLM:** The LLM compresses the report into a <160-word WhatsApp message — see §7.4
 
 Delivery mechanics (consent gating, the message template, the webhook reply flow) are owned by `03_BACKEND.md` §7; this node's responsibility ends at producing the compressed summary text `03_BACKEND.md`'s `whatsapp_service.py` sends.
 
 ## 7. DeepSeek Integration — Prompt Specifications
 
-`claude_service.py` (`03_BACKEND.md` §9) holds all four functions below. Each is called from exactly one agent node, after that node's rules have already run.
+`claude_service.py` (`03_BACKEND.md` §9) holds all six functions below. Each is called from exactly one agent node, after that node's rules have already run.
 
 ### 7.1 `explain_finding` — called from Recovery Recommendation context, cached by finding-shape
 

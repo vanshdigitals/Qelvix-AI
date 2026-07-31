@@ -4,7 +4,7 @@ Autonomous, plain-language cybersecurity for MSMEs. Qelvix continuously scans an
 
 ## Vision
 
-An MSME with a website and a mail server has the same public attack surface as a company with a security operations center, and none of the visibility into it. Enterprise security tooling assumes a team to operate it. Qelvix closes that gap: the triage happens in software (fixed, auditable rules — never AI guesswork), and the translation happens in language (Claude explains what the rules found). The output a business owner receives is already a decision, not a puzzle.
+An MSME with a website and a mail server has the same public attack surface as a company with a security operations center, and none of the visibility into it. Enterprise security tooling assumes a team to operate it. Qelvix closes that gap: the triage happens in software (fixed, auditable rules — never AI guesswork), and the translation happens in language (Gemini/DeepSeek explains what the rules found). The output a business owner receives is already a decision, not a puzzle.
 
 ## Key Features
 
@@ -52,8 +52,8 @@ qelvix/
 | [README.md](README.md) | Project overview, entry point, corrected data-model and stack baseline |
 | [01_PRODUCT_BLUEPRINT.md](01_PRODUCT_BLUEPRINT.md) | Product thinking, personas, full screen inventory, navigation, UX flows |
 | [02_FRONTEND.md](02_FRONTEND.md) | Frontend architecture, routing, state, data fetching, component structure |
-| [03_BACKEND.md](03_BACKEND.md) | API surface, data models, services, Claude integration boundary |
-| [04_AGENT_PIPELINE.md](04_AGENT_PIPELINE.md) | 13-agent LangGraph pipeline, rules engines, Claude prompts, DPDP rules |
+| [03_BACKEND.md](03_BACKEND.md) | API surface, data models, services, LLM integration boundary |
+| [04_AGENT_PIPELINE.md](04_AGENT_PIPELINE.md) | 13-agent LangGraph pipeline, rules engines, LLM prompts, DPDP rules |
 | [05_DESIGN_SYSTEM.md](05_DESIGN_SYSTEM.md) | Tokens, typography, components, dashboard rules, data visualization |
 | [06_DEVELOPMENT_GUIDE.md](06_DEVELOPMENT_GUIDE.md) | Setup, standards, git workflow, testing, deployment, troubleshooting |
 | [07_SECURITY_COMPLIANCE.md](07_SECURITY_COMPLIANCE.md) | Security architecture, RLS, auth, RBAC, AI security, compliance mapping |
@@ -102,7 +102,7 @@ Git-triggered, not manual. Frontend deploys via Vercel's GitHub integration (pre
 
 ## Architecture Overview
 
-Browser → Next.js (Vercel) → FastAPI (Railway/ECS) → PostgreSQL (Supabase). Scans run asynchronously: `POST /scans/trigger` enqueues a Celery task that runs the 13-agent LangGraph pipeline, which fetches from external scanning services, applies deterministic rules to decide findings and severity, computes a risk score, and only then invokes Claude to explain results and compress them into a WhatsApp summary. Claude never decides severity or takes action — the single `claude_service.py` module is the only code permitted to call the Anthropic API. Tenant isolation is enforced twice, independently: application-layer `org_id` scoping and database-layer RLS. Full detail in `03_BACKEND.md`, `04_AGENT_PIPELINE.md`, and `07_SECURITY_COMPLIANCE.md`.
+Browser → Next.js (Vercel) → FastAPI (Railway/ECS) → PostgreSQL (Supabase). Scans run asynchronously: `POST /scans/trigger` enqueues a Celery task that runs the 13-agent LangGraph pipeline, which fetches from external scanning services, applies deterministic rules to decide findings and severity, computes a risk score, and only then invokes the LLM to explain results and compress them into a WhatsApp summary. The LLM never decides severity or takes action — the single `claude_service.py` module is the only code permitted to call the Gemini/DeepSeek APIs. Tenant isolation is enforced twice, independently: application-layer `org_id` scoping and database-layer RLS. Full detail in `03_BACKEND.md`, `04_AGENT_PIPELINE.md`, and `07_SECURITY_COMPLIANCE.md`.
 
 ## Current Project Status
 
