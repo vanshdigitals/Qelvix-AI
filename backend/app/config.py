@@ -30,9 +30,14 @@ class Settings(BaseSettings):
         extra="forbid",
     )
 
-    # NVIDIA NIM (DeepSeek) — 03 §9. Consumed only by claude_service.py (INV-01).
+    # LLM providers — 03 §9. Consumed only by claude_service.py (INV-01).
     nvidia_api_key: SecretStr
     gemini_api_key: SecretStr | None = None
+    # Direct DeepSeek key (api.deepseek.com) — optional alternative to NVIDIA NIM.
+    deepseek_api_key: SecretStr | None = None
+    # Two-key Gemini fallback chain: primary is tried first, backup second.
+    gemini_primary_api_key: SecretStr | None = None
+    fallback_backup_gemini_primary_api_key: SecretStr | None = None
 
     # Database — 03 §11
     database_url: str
