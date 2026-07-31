@@ -93,11 +93,11 @@ export function MarketingHeader() {
     >
       <nav
         aria-label="Main"
-        className="mx-auto flex h-14 max-w-marketing items-center justify-between gap-6 px-5 md:px-page-margin"
+        className="mx-auto flex h-14 max-w-marketing items-center justify-between gap-6 px-4 md:px-6"
       >
         {/* Three equal-basis zones: the centre stays centred without overlapping
             either side, at any width. */}
-        <div className="flex shrink-0 items-center lg:flex-1 lg:justify-start">
+        <div className="flex shrink-0 items-center pl-1 scale-[1.03] lg:flex-1 lg:justify-start">
           <Logo />
         </div>
 
@@ -111,11 +111,11 @@ export function MarketingHeader() {
                     href={link.href}
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
-                      'inline-flex h-8 items-center rounded-md px-2.5 text-body-sm font-medium transition-colors duration-150 ease-out',
+                      'inline-flex h-8 items-center rounded-full px-3 text-caption font-medium transition-colors duration-150 ease-out',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
                       isActive
-                        ? 'text-content-primary'
-                        : 'text-content-secondary hover:text-content-primary',
+                        ? 'text-content-primary bg-accent/10'
+                        : 'text-content-secondary hover:text-content-primary hover:bg-accent/10 active:bg-accent/20',
                     )}
                   >
                     {link.label}
@@ -127,18 +127,18 @@ export function MarketingHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 lg:flex-1 lg:justify-end">
-          <AppearanceDropdown />
-
           <Link
             href="/#demo"
-            className="hidden h-8 items-center whitespace-nowrap rounded-md px-2.5 text-body-sm font-medium text-content-secondary transition-colors duration-150 ease-out hover:text-content-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:inline-flex"
+            className="hidden h-8 items-center whitespace-nowrap rounded-full border border-accent/60 bg-transparent px-3 text-caption font-medium text-accent transition-colors duration-150 ease-out hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:inline-flex"
           >
             Sample report
           </Link>
 
+          <AppearanceDropdown />
+
           <Link
             href="/login"
-            className="hidden h-8 items-center whitespace-nowrap rounded-md px-2.5 text-body-sm font-medium text-content-secondary transition-colors duration-150 ease-out hover:text-content-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:inline-flex"
+            className="hidden h-8 items-center whitespace-nowrap rounded-full px-3 text-caption font-medium text-content-secondary transition-colors duration-150 ease-out hover:bg-accent/10 hover:text-content-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus md:inline-flex"
           >
             Log in
           </Link>
