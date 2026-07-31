@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-# NVIDIA NIM primary. Kept per the 03 §9 architecture, but fail-fast: this model
-# id currently hangs on NVIDIA NIM, so a short timeout with no SDK retries lets
-# the Gemini fallback take over in seconds instead of ~70s of dead waiting.
+# NVIDIA NIM is currently timing out (deepseek-ai/deepseek-v4-flash).
+# Gemini (gemini-3.6-flash) is configured as the PRIMARY provider with a two-key fallback chain.
+# NVIDIA is relegated to the fallback position.
 client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=settings.nvidia_api_key.get_secret_value(),
@@ -22,10 +22,7 @@ MODEL_NAME = "deepseek-ai/deepseek-v4-flash"
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 # Pinned current free-tier model (ai.google.dev/gemini-api/docs/pricing).
-# "gemini-2.0-flash" was decommissioned 2026-06-01 and the whole 1.5 family now
-# 404s — that (not a quota limit) was the real cause of the old failures. The
-# pinned "gemini-2.5-flash" 404s for the backup key's newer project, so we use
-# gemini-3.6-flash, which is verified reachable by both keys.
+# gemini-3.6-flash is running as primary until NVIDIA is investigated further.
 GEMINI_MODEL_NAME = "gemini-3.6-flash"
 
 
@@ -35,8 +32,8 @@ def _gemini_clients() -> list[AsyncOpenAI]:
     ordered: list[AsyncOpenAI] = []
     seen: set[str] = set()
     for k in (
-        settings.gemini_primary_api_key,
-        settings.fallback_backup_gemini_primary_api_key,
+        settings.gemini_primary_api_key if hasattr(settings, "gemini_primary_api_key") else None,
+        settings.fallback_backup_gemini_primary_api_key if hasattr(settings, "fallback_backup_gemini_primary_api_key") else None,
         settings.gemini_api_key,
     ):
         if k:
@@ -55,13 +52,13 @@ gemini_clients = _gemini_clients()
 
 
 async def _call_gemini(messages: list) -> str:
-    """Fallback to Gemini, trying each configured key in order (primary -> backup).
+    """Try each configured Gemini key in order (primary -> backup).
 
     A key that fails for any reason (quota, auth, model access) is skipped and the
     next key is tried before giving up.
     """
     if not gemini_clients:
-        raise Exception("Gemini fallback triggered but no Gemini API key is configured.")
+        raise Exception("Gemini API key is not configured.")
 
     last_err: Exception | None = None
     for i, gc in enumerate(gemini_clients):
@@ -78,48 +75,28 @@ async def _call_gemini(messages: list) -> str:
             last_err = e
     raise Exception(f"All Gemini keys failed. Last error: {last_err}")
 
+
 async def _call_llm_with_retry(messages: list) -> str:
-    """Helper to wrap the LLM call with a simple retry loop for 529s, falling back to Gemini."""
-    max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            response = await client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=messages,
-                temperature=0.0
-            )
-            logger.info(f"LLM call served by NVIDIA (Attempt {attempt+1})")
-            return response.choices[0].message.content
-        except InternalServerError as e:
-            if e.response.status_code in (529, 500, 502, 503, 504) and attempt < max_retries - 1:
-                logger.warning(f"[NVIDIA] Server Error, retrying {attempt+1}/{max_retries}...")
-                await asyncio.sleep(2 ** attempt)
-                continue
-            logger.error(f"[NVIDIA] Exhausted retries due to Server Error. Falling back to Gemini.")
-            break
-        except APITimeoutError:
-            # A hung NVIDIA request won't recover within this call — go straight
-            # to the Gemini fallback instead of burning another timeout.
-            logger.error("[NVIDIA] Timeout. Falling back to Gemini.")
-            break
-        except Exception as e:
-            if '429' in str(e) and attempt < max_retries - 1:
-                logger.warning(f"[NVIDIA] Rate limit, retrying {attempt+1}/{max_retries}...")
-                await asyncio.sleep(2 ** attempt)
-                continue
-            logger.error(f"[NVIDIA] Unhandled error: {e}. Falling back to Gemini.")
-            break
-            
-    # Fallback to Gemini
+    """Helper to wrap the LLM call: Gemini as PRIMARY, NVIDIA as FALLBACK."""
+    # PRIMARY: Gemini
     try:
-        if not gemini_clients:
-            return "AI service temporarily unavailable (NVIDIA failed and Gemini fallback not configured)."
         response_text = await _call_gemini(messages)
-        logger.info("LLM call served by Gemini (Fallback)")
         return response_text
     except Exception as e:
-        logger.error(f"[Gemini Fallback] Failed: {e}")
-        return "AI service temporarily unavailable (both NVIDIA and fallback failed)."
+        logger.error(f"[Gemini] Primary provider failed: {e}. Falling back to NVIDIA NIM.")
+    
+    # FALLBACK: NVIDIA
+    try:
+        response = await client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            temperature=0.0
+        )
+        logger.info(f"LLM call served by NVIDIA NIM (Fallback)")
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"[NVIDIA] Fallback failed: {e}")
+        return "AI service temporarily unavailable (both primary and fallback failed)."
 
 async def explain_finding(finding: dict, org_context: dict) -> str:
     """Called ONLY after deterministic rules fire. Never decides severity."""
