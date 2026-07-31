@@ -122,7 +122,7 @@ export function DomainScanInput({
         <button
           type="submit"
           disabled={submitting}
-          className="font-body flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-body-sm font-semibold text-[#0B0E16] transition-colors duration-200 hover:bg-accent/90 disabled:opacity-40 sm:w-auto"
+          className="font-body flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-body-sm font-semibold text-white transition-colors duration-200 hover:bg-accent/90 disabled:opacity-40 sm:w-auto"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {submitLabel}

@@ -43,7 +43,7 @@ function SuccessContent() {
       <div className="mt-8 w-full">
         <Link
           href={type === 'reset' ? '/login' : '/dashboard'}
-          className="font-body flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-[#0B0E16] shadow-2xs transition-colors duration-200 hover:bg-accent/90"
+          className="font-body flex h-11 w-full items-center justify-center rounded-lg bg-accent px-4 text-body-sm font-semibold text-white shadow-2xs transition-colors duration-200 hover:bg-accent/90"
         >
           {type === 'reset' ? 'Continue to Login →' : 'Continue to Dashboard →'}
         </Link>

@@ -103,7 +103,7 @@ export function Pricing() {
                       className={cn(
                         'mt-8 flex h-10 w-full items-center justify-center rounded-lg text-body-sm font-semibold transition-colors duration-200',
                         tier.recommended
-                          ? 'bg-accent text-[#0B0E16] hover:bg-accent/90'
+                          ? 'bg-accent text-white hover:bg-accent/90'
                           : 'border border-border-strong bg-surface-inset text-content-primary hover:bg-surface',
                       )}
                     >

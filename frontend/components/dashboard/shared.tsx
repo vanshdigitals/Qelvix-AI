@@ -186,7 +186,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg bg-accent px-3.5 text-body-sm font-semibold text-[#0B0E16] shadow-2xs transition-colors hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg bg-accent px-3.5 text-body-sm font-semibold text-white shadow-2xs transition-colors hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {children}
     </button>

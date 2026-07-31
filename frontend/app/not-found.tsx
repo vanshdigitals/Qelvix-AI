@@ -50,7 +50,7 @@ export default function NotFound() {
           onClick={() => {
             router.push(targetUrl);
           }}
-          className="font-body mt-8 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-6 text-body-sm font-semibold text-[#0B0E16] transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+          className="font-body mt-8 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-6 text-body-sm font-semibold text-white transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
         >
           Go to {targetName === 'dashboard' ? 'Dashboard' : 'Homepage'}
         </button>

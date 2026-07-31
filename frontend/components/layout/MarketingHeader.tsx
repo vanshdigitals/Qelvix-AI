@@ -145,7 +145,7 @@ export function MarketingHeader() {
 
           <Link
             href="/signup"
-            className="ml-1.5 inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-accent px-3.5 text-body-sm font-semibold text-[#0B0E16] transition-colors duration-150 ease-out hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            className="ml-1.5 inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-accent px-3.5 text-body-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             <span className="md:hidden">Scan</span>
             <span className="hidden md:inline">Scan my business</span>

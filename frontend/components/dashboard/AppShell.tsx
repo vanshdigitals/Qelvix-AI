@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const searchRef = useRef<HTMLDivElement>(null);
 
   const { data: findingsData } = useApi<Paginated<ApiFinding>>('/findings?limit=5');
-  const recentFindings = findingsData?.items ?? [];
+  const recentFindings = useMemo(() => findingsData?.items ?? [], [findingsData?.items]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -311,7 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     onClick={handleRunScan}
                     disabled={scanning}
                     title="Run a new scan"
-                    className="hidden items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-[#0B0E16] shadow-2xs transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70 sm:flex"
+                    className="hidden items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-caption font-semibold text-white shadow-2xs transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70 sm:flex"
                   >
                     {scanning && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
                     {scanning ? 'Starting scan…' : 'Run scan now'}
