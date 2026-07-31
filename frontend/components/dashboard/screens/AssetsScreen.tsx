@@ -1,25 +1,41 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
+
 import { useToast } from '@/components/dashboard/AppShell';
-import {
-  OpenLink,
-  Panel,
-  PrimaryButton,
-  ScreenHeader,
-  TableWrap,
-  Th,
-} from '@/components/dashboard/shared';
-import { ASSETS } from '@/lib/data/dashboard';
+import { Panel, PrimaryButton, ScreenHeader, TableWrap, Th } from '@/components/dashboard/shared';
+import { type ApiAsset, type Paginated, useApi } from '@/lib/api/client';
 import { cn } from '@/lib/utils/cn';
 
-const STATS = [
-  { label: 'Verified domains', value: '2', note: 'Ownership confirmed via DNS' },
-  { label: 'Subdomains discovered', value: '11', note: 'Found by passive enumeration' },
-  { label: 'Not yet claimed', value: '1', note: 'Verify to include in scans', warn: true },
-];
+interface AssetCounts {
+  total_domains: number;
+  total_subdomains: number;
+  total_ips: number;
+}
 
 export function AssetsScreen() {
   const toast = useToast();
+  const assets = useApi<Paginated<ApiAsset>>('/org/assets?limit=200');
+  const counts = useApi<AssetCounts>('/dashboard/assets');
+
+  if (assets.loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
+      </div>
+    );
+  }
+
+  const rows = assets.data?.items ?? [];
+  const stats = [
+    { label: 'Domains', value: counts.data?.total_domains ?? 0, note: 'Verified primary domains' },
+    {
+      label: 'Subdomains',
+      value: counts.data?.total_subdomains ?? 0,
+      note: 'Discovered by enumeration',
+    },
+    { label: 'IPs', value: counts.data?.total_ips ?? 0, note: 'Resolved addresses' },
+  ];
 
   return (
     <div className="flex flex-col gap-5">
@@ -38,15 +54,10 @@ export function AssetsScreen() {
       />
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <Panel key={s.label} className="flex flex-col gap-1.5">
             <span className="text-body-sm text-content-secondary">{s.label}</span>
-            <span
-              className={cn(
-                'font-mono text-[28px] font-medium tabular-nums leading-tight',
-                s.warn ? 'text-high-text' : 'text-content-primary',
-              )}
-            >
+            <span className="font-mono text-[28px] font-medium tabular-nums leading-tight text-content-primary">
               {s.value}
             </span>
             <span className="text-caption text-content-muted">{s.note}</span>
@@ -55,72 +66,48 @@ export function AssetsScreen() {
       </div>
 
       <TableWrap>
-        <table className="w-full min-w-[820px] border-collapse text-body-sm">
+        <table className="w-full min-w-[560px] border-collapse text-body-sm">
           <thead>
             <tr className="bg-surface-inset">
               <Th>Host</Th>
+              <Th>Type</Th>
               <Th>Verified</Th>
-              <Th>IP</Th>
-              <Th>SSL</Th>
-              <Th>Findings</Th>
-              <Th>Last scan</Th>
-              <Th align="right" />
             </tr>
           </thead>
           <tbody>
-            {ASSETS.map((a) => (
-              <tr
-                key={a.id}
-                className="border-t border-border/60 transition-colors hover:bg-surface-inset/60"
-              >
-                <td className="px-3 py-3 pl-4">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono font-medium text-content-primary">{a.host}</span>
-                    <span className="text-caption text-content-muted">{a.kind}</span>
-                  </div>
+            {rows.map((a) => (
+              <tr key={a.id} className="border-t border-border/60">
+                <td className="px-3 py-3 pl-4 font-mono font-medium text-content-primary">
+                  {a.value}
+                </td>
+                <td className="whitespace-nowrap px-3 py-3 capitalize text-content-secondary">
+                  {a.asset_type}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <span
                     className={cn(
                       'inline-flex items-center gap-1.5',
-                      a.verified === 'Verified' ? 'text-success-text' : 'text-high-text',
+                      a.verified ? 'text-success-text' : 'text-high-text',
                     )}
                   >
                     <span
                       className={cn(
                         'h-1.5 w-1.5 rounded-full',
-                        a.verified === 'Verified' ? 'bg-success-text' : 'bg-high-text',
+                        a.verified ? 'bg-success-text' : 'bg-high-text',
                       )}
                     />
-                    {a.verified}
+                    {a.verified ? 'Verified' : 'Unclaimed'}
                   </span>
-                </td>
-                <td className="whitespace-nowrap px-3 py-3 font-mono text-caption text-content-secondary">
-                  {a.ip}
-                </td>
-                <td
-                  className={cn(
-                    'whitespace-nowrap px-3 py-3',
-                    a.ssl === 'Expired' ? 'text-critical-text' : 'text-content-secondary',
-                  )}
-                >
-                  {a.ssl}
-                </td>
-                <td className="whitespace-nowrap px-3 py-3">
-                  {a.findings > 0 ? (
-                    <span className="inline-flex items-center rounded-full bg-high-bg px-2 py-0.5 text-caption font-medium text-high-text">
-                      {a.findings} open
-                    </span>
-                  ) : (
-                    <span className="text-success-text">Clean</span>
-                  )}
-                </td>
-                <td className="whitespace-nowrap px-3 py-3 text-content-secondary">{a.lastScan}</td>
-                <td className="px-3 py-3 pr-4 text-right">
-                  <OpenLink href={`/assets/${a.id}`} />
                 </td>
               </tr>
             ))}
+            {rows.length === 0 && (
+              <tr className="border-t border-border/60">
+                <td colSpan={3} className="px-3 py-10 text-center text-body-sm text-content-muted">
+                  {assets.error ?? 'No assets yet — verify a domain to start monitoring.'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </TableWrap>

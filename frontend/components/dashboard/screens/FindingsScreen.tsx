@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -10,25 +10,38 @@ import {
   TableWrap,
   Th,
 } from '@/components/dashboard/shared';
-import { FINDINGS } from '@/lib/data/dashboard';
+import { type ApiFinding, type Paginated, useApi } from '@/lib/api/client';
 import { cn } from '@/lib/utils/cn';
 
 const STATUS_COLOR: Record<string, string> = {
-  Open: 'text-high-text',
-  Acknowledged: 'text-accent',
-  Resolved: 'text-success-text',
+  open: 'text-high-text',
+  acknowledged: 'text-accent',
+  resolved: 'text-success-text',
+  false_positive: 'text-content-muted',
 };
 
-const SEVERITIES = ['Critical', 'High', 'Medium', 'Low'] as const;
+const SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
 
 export function FindingsScreen() {
+  const { data, loading, error } = useApi<Paginated<ApiFinding>>('/findings?limit=100');
   const [query, setQuery] = useState('');
   const [active, setActive] = useState<string | null>(null);
 
-  const rows = FINDINGS.filter((f) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
+      </div>
+    );
+  }
+
+  const all = data?.items ?? [];
+  const rows = all.filter((f) => {
     const matchesQuery =
       query.trim().length === 0 ||
-      `${f.title} ${f.asset} ${f.ruleId}`.toLowerCase().includes(query.trim().toLowerCase());
+      `${f.title} ${f.finding_type} ${f.agent_source}`
+        .toLowerCase()
+        .includes(query.trim().toLowerCase());
     const matchesSev = !active || f.severity === active;
     return matchesQuery && matchesSev;
   });
@@ -37,7 +50,11 @@ export function FindingsScreen() {
     <div className="flex flex-col gap-5">
       <ScreenHeader
         title="Findings"
-        caption={`${String(FINDINGS.length)} findings across 4 assets · sorted by severity`}
+        caption={
+          error
+            ? 'Could not load findings from the backend.'
+            : `${String(all.length)} findings · sorted by severity`
+        }
       />
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface p-3">
@@ -49,14 +66,14 @@ export function FindingsScreen() {
             onChange={(e) => {
               setQuery(e.target.value);
             }}
-            placeholder="Filter by title, asset or rule id"
+            placeholder="Filter by title, type or source"
             aria-label="Filter findings"
             className="w-full bg-transparent text-body-sm text-content-primary outline-none placeholder:text-content-muted"
           />
         </div>
         {SEVERITIES.map((sev) => {
           const on = active === sev;
-          const count = FINDINGS.filter((f) => f.severity === sev).length;
+          const count = all.filter((f) => f.severity === sev).length;
           return (
             <button
               key={sev}
@@ -66,7 +83,7 @@ export function FindingsScreen() {
                 setActive(on ? null : sev);
               }}
               className={cn(
-                'inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-body-sm font-medium transition-colors',
+                'inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-body-sm font-medium capitalize transition-colors',
                 on
                   ? 'border-accent bg-accent/10 text-content-primary'
                   : 'border-border bg-surface-inset text-content-secondary hover:text-content-primary',
@@ -97,8 +114,8 @@ export function FindingsScreen() {
             <tr className="bg-surface-inset">
               <Th>Severity</Th>
               <Th>Finding</Th>
-              <Th>Asset</Th>
-              <Th>Age</Th>
+              <Th>Source</Th>
+              <Th>First seen</Th>
               <Th>Status</Th>
               <Th align="right" />
             </tr>
@@ -115,22 +132,31 @@ export function FindingsScreen() {
                 <td className="max-w-[340px] px-3 py-3">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-medium text-content-primary">{f.title}</span>
-                    <span className="font-mono text-[11px] text-content-muted">{f.ruleId}</span>
+                    <span className="font-mono text-[11px] text-content-muted">
+                      {f.finding_type}
+                    </span>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 font-mono text-caption text-content-secondary">
-                  {f.asset}
+                  {f.agent_source}
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 text-content-secondary">{f.age}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
+                  {new Date(f.created_at).toLocaleDateString()}
+                </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <span className={cn('inline-flex items-center gap-1.5', STATUS_COLOR[f.status])}>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 capitalize',
+                      STATUS_COLOR[f.status],
+                    )}
+                  >
                     <span
                       className={cn(
                         'h-1.5 w-1.5 rounded-full',
                         STATUS_COLOR[f.status]?.replace('text-', 'bg-'),
                       )}
                     />
-                    {f.status}
+                    {f.status.replace('_', ' ')}
                   </span>
                 </td>
                 <td className="px-3 py-3 text-right">
@@ -141,7 +167,9 @@ export function FindingsScreen() {
             {rows.length === 0 && (
               <tr className="border-t border-border/60">
                 <td colSpan={6} className="px-3 py-10 text-center text-body-sm text-content-muted">
-                  No findings match your filter.
+                  {all.length === 0
+                    ? 'No findings yet — run a scan to populate this.'
+                    : 'No findings match your filter.'}
                 </td>
               </tr>
             )}
