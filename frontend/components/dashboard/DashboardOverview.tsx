@@ -1,49 +1,67 @@
 'use client';
 
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, SeverityBadge } from '@/components/dashboard/shared';
-import { ACTIVITY_FEED, ASSETS, SCANS, TEAM, INVOICES, AUDIT, DPDP_CLAUSES } from '@/lib/data/dashboard';
-import { cn } from '@/lib/utils/cn';
+import { ACTIVITY_FEED } from '@/lib/data/dashboard';
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils/cn';
 
 const QUICK_ACTIONS = ['Run scan now', 'Invite team member', 'Download latest report'];
 
+interface DashboardSummary {
+  risk_score?: number;
+  open_critical_findings?: number;
+  open_high_findings?: number;
+  total_assets?: number;
+}
+
+interface ApiFinding {
+  id: string;
+  severity: string;
+  title: string;
+  finding_type: string;
+  agent_source: string;
+  status: string;
+}
+
 export function DashboardOverview() {
   const toast = useToast();
-  
-  const [summary, setSummary] = useState<any>(null);
-  const [findings, setFindings] = useState<any[]>([]);
+
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [findings, setFindings] = useState<ApiFinding[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadData(): Promise<void> {
       try {
         const supabase = createClient();
         if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const token = session?.access_token;
         if (!token) return;
-        
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
         const [summaryRes, findingsRes] = await Promise.all([
-          fetch(\\/dashboard/summary\, {
-            headers: { Authorization: \Bearer \\ }
+          fetch(`${apiUrl}/dashboard/summary`, {
+            headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(\\/findings?limit=5\, {
-            headers: { Authorization: \Bearer \\ }
-          })
+          fetch(`${apiUrl}/findings?limit=5`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
-        
+
         if (summaryRes.ok) {
-          setSummary(await summaryRes.json());
+          setSummary((await summaryRes.json()) as DashboardSummary);
         }
         if (findingsRes.ok) {
-          const fData = await findingsRes.json();
-          setFindings(fData.items || []);
+          const fData = (await findingsRes.json()) as { items?: ApiFinding[] };
+          setFindings(fData.items ?? []);
         }
       } catch (e) {
         console.error(e);
@@ -51,7 +69,7 @@ export function DashboardOverview() {
         setLoading(false);
       }
     }
-    loadData();
+    void loadData();
   }, []);
 
   if (loading) {
@@ -62,13 +80,12 @@ export function DashboardOverview() {
     );
   }
 
-  const mappedFindings = findings.map(f => ({
+  const mappedFindings = findings.map((f) => ({
     id: f.id,
     severity: f.severity.charAt(0).toUpperCase() + f.severity.slice(1),
     title: f.title,
     asset: f.agent_source === 'asset_discovery' ? 'Asset Discovery' : f.finding_type,
     age: 'new',
-    status: f.status === 'open' ? 'Open' : (f.status === 'acknowledged' ? 'Acknowledged' : 'Resolved')
   }));
 
   const riskScore = summary?.risk_score ?? 100;
@@ -82,12 +99,12 @@ export function DashboardOverview() {
         <div>
           <h1 className="font-display text-h1 tracking-tight text-content-primary">Overview</h1>
           <p className="mt-1 text-body-sm text-content-secondary">
-            Live dashboard powered by /dashboard/summary API
+            Live dashboard powered by the /dashboard/summary API
           </p>
         </div>
       </div>
 
-      {/* Row 1: Security health · Action required */}
+      {/* Row 1: Security health Â· Action required */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Panel className="flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
@@ -104,14 +121,13 @@ export function DashboardOverview() {
             </div>
             <div className="flex flex-1 flex-col gap-4">
               <p className="text-body-md leading-relaxed text-content-secondary">
-                You have {criticalCount} critical and {highCount} high findings open. Please review the findings panel.
+                You have {criticalCount} critical and {highCount} high findings open. Review the
+                findings panel to start remediation.
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-caption text-content-muted">30-day trend</span>
-                  <span className="font-mono text-body-sm tabular-nums text-success-text">
-                    -0 pts
-                  </span>
+                  <span className="font-mono text-body-sm tabular-nums text-content-muted">â€”</span>
                 </div>
                 <div className="h-8 flex-1">
                   <Sparkline />
@@ -123,7 +139,7 @@ export function DashboardOverview() {
 
         <Panel className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
-            <PanelTitle>Action required (Live Findings)</PanelTitle>
+            <PanelTitle>Action required (live findings)</PanelTitle>
             <Link
               href="/findings"
               className="text-body-sm font-medium text-accent transition-opacity hover:opacity-80"
@@ -133,7 +149,7 @@ export function DashboardOverview() {
           </div>
           <div className="flex flex-col gap-2">
             {mappedFindings.length > 0 ? (
-              mappedFindings.map((f: any) => (
+              mappedFindings.map((f) => (
                 <div
                   key={f.id}
                   className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-surface-inset p-3"
@@ -142,13 +158,13 @@ export function DashboardOverview() {
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-body-sm font-medium text-content-primary">{f.title}</span>
                     <span className="truncate font-mono text-caption text-content-muted">
-                      {f.asset} · {f.age}
+                      {f.asset} Â· {f.age}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      toast(\Acknowledged: \\);
+                      toast(`Acknowledged: ${f.title}`);
                     }}
                     className="h-7 shrink-0 rounded-lg border border-border-strong px-2.5 text-caption font-semibold text-content-secondary transition-colors hover:bg-surface hover:text-content-primary"
                   >
@@ -157,18 +173,18 @@ export function DashboardOverview() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-content-muted">No findings found.</p>
+              <p className="text-body-sm text-content-muted">No open findings.</p>
             )}
           </div>
         </Panel>
       </div>
 
-      {/* Row 2: This week's priority · Findings · Assets */}
+      {/* Row 2: This week's priority Â· Findings Â· Assets */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel className="flex flex-col gap-3.5">
           <PanelTitle>This week&apos;s priority</PanelTitle>
           <p className="text-body-sm leading-relaxed text-content-secondary">
-            Review the top critical findings.
+            Review the top critical findings first.
           </p>
           <div className="mt-auto flex items-center gap-2 pt-2">
             <span className="rounded-md bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] text-content-muted">
@@ -200,8 +216,8 @@ export function DashboardOverview() {
             {[
               { label: 'Critical', count: String(criticalCount), dot: 'bg-critical-text' },
               { label: 'High', count: String(highCount), dot: 'bg-high-text' },
-              { label: 'Medium', count: '-', dot: 'bg-accent' },
-              { label: 'Low', count: '-', dot: 'bg-content-muted' },
+              { label: 'Medium', count: 'â€”', dot: 'bg-accent' },
+              { label: 'Low', count: 'â€”', dot: 'bg-content-muted' },
             ].map((row) => (
               <div key={row.label} className="flex items-center gap-2.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', row.dot)} />
@@ -225,16 +241,16 @@ export function DashboardOverview() {
             </Link>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[32px] font-medium tabular-nums leading-none text-content-primary">
+            <span className="font-mono text-[32px] font-medium leading-none tabular-nums text-content-primary">
               {totalAssets}
             </span>
             <span className="text-body-sm text-content-muted">monitored</span>
           </div>
           <div className="flex flex-col">
             {[
-              { label: 'Verified domains', val: '-', warn: false },
-              { label: 'Subdomains discovered', val: '-', warn: false },
-              { label: 'Not yet claimed', val: '-', warn: true },
+              { label: 'Verified domains', val: 'â€”', warn: false },
+              { label: 'Subdomains discovered', val: 'â€”', warn: false },
+              { label: 'Not yet claimed', val: 'â€”', warn: true },
             ].map((row) => (
               <div
                 key={row.label}
@@ -255,7 +271,7 @@ export function DashboardOverview() {
         </Panel>
       </div>
 
-      {/* Row 3: Recent activity · DPDP + Quick actions */}
+      {/* Row 3: Recent activity Â· DPDP + Quick actions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel>
           <div className="flex items-center justify-between gap-3">
@@ -270,16 +286,14 @@ export function DashboardOverview() {
           <div className="mt-4 flex flex-col">
             {ACTIVITY_FEED.map((ev, idx) => (
               <div
-                key={\\-\\}
+                key={`${ev.actor}-${String(idx)}`}
                 className="flex items-start gap-3 py-2.5 text-body-sm"
               >
                 <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', ev.dot)} />
                 <span className="flex-1 text-content-secondary">
                   <span className="font-medium text-content-primary">{ev.actor}</span> {ev.text}
                 </span>
-                <span className="shrink-0 font-mono text-caption text-content-muted">
-                  {ev.when}
-                </span>
+                <span className="shrink-0 font-mono text-caption text-content-muted">{ev.when}</span>
               </div>
             ))}
           </div>
@@ -307,7 +321,7 @@ export function DashboardOverview() {
                   key={qa}
                   type="button"
                   onClick={() => {
-                    toast(\\ — coming soon.\);
+                    toast(`${qa} â€” coming soon.`);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
                 >
@@ -323,7 +337,7 @@ export function DashboardOverview() {
   );
 }
 
-// 270° arc gauge (05 §data-viz).
+// 270Â° arc gauge (05 Â§data-viz).
 function Gauge({ score }: { score: number }): ReactNode {
   const r = 54;
   const c = 66;
@@ -340,7 +354,7 @@ function Gauge({ score }: { score: number }): ReactNode {
     const [x0, y0] = pt(start);
     const [x1, y1] = pt(end);
     const largeArc = sweep * frac > 180 ? 1 : 0;
-    return \M \ \ A \ \ 0 \ 1 \ \\;
+    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${String(r)} ${String(r)} 0 ${String(largeArc)} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
   };
 
   return (
@@ -387,12 +401,12 @@ function Sparkline(): ReactNode {
     h - ((v - min) / (max - min)) * (h - 6) - 3,
   ]);
   const line = coords
-    .map(([x, y], idx) => \\\ \\)
+    .map(([x, y], idx) => `${idx === 0 ? 'M' : 'L'}${(x ?? 0).toFixed(1)} ${(y ?? 0).toFixed(1)}`)
     .join(' ');
 
   return (
     <svg
-      viewBox={\  0 \ \\}
+      viewBox={`0 0 ${String(w)} ${String(h)}`}
       preserveAspectRatio="none"
       width="100%"
       height={h}
@@ -400,7 +414,7 @@ function Sparkline(): ReactNode {
       className="block overflow-visible"
     >
       <path
-        d={\\ L \ \ L 0 \ Z\}
+        d={`${line} L ${String(w)} ${String(h)} L 0 ${String(h)} Z`}
         fill="currentColor"
         className="text-accent/15"
       />
