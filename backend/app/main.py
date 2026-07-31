@@ -19,6 +19,7 @@ class HealthResponse(BaseModel):
 
     status: str
     environment: str
+    commit: str | None = None
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -70,6 +71,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health() -> HealthResponse:
         """Liveness probe. Unauthenticated by design — it reports no tenant data."""
-        return HealthResponse(status="ok", environment=resolved.environment)
+        import os
+        return HealthResponse(
+            status="ok", 
+            environment=resolved.environment,
+            commit=os.environ.get("RENDER_GIT_COMMIT")
+        )
 
     return app

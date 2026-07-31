@@ -42,19 +42,22 @@ async def get_current_user_token(
                 audience="authenticated",
             )
         return payload
-    except jwt.PyJWKClientError:
+    except jwt.PyJWKClientError as e:
+        print(f"DEBUG_JWT_ERROR [PyJWKClientError]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not fetch JWKS from identity provider",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.ExpiredSignatureError:
+    except jwt.ExpiredSignatureError as e:
+        print(f"DEBUG_JWT_ERROR [ExpiredSignatureError]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.InvalidTokenError:
+    except Exception as e:
+        print(f"DEBUG_JWT_ERROR [InvalidTokenError or generic]: {type(e).__name__} - {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
