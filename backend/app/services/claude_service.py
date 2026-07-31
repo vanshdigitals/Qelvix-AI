@@ -21,11 +21,12 @@ client = AsyncOpenAI(
 MODEL_NAME = "deepseek-ai/deepseek-v4-flash"
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-# gemini-flash-latest resolves to the current Flash model and is reachable by
-# both keys' projects. The previous "gemini-2.0-flash" has zero free-tier quota
-# (HTTP 429) and "gemini-1.5-flash" is retired (HTTP 404) — that model name, not
-# the keys, was why the fallback always failed.
-GEMINI_MODEL_NAME = "gemini-flash-latest"
+# Pinned current free-tier model (ai.google.dev/gemini-api/docs/pricing).
+# "gemini-2.0-flash" was decommissioned 2026-06-01 and the whole 1.5 family now
+# 404s — that (not a quota limit) was the real cause of the old failures. The
+# pinned "gemini-2.5-flash" 404s for the backup key's newer project, so we use
+# gemini-3.6-flash, which is verified reachable by both keys.
+GEMINI_MODEL_NAME = "gemini-3.6-flash"
 
 
 def _gemini_clients() -> list[AsyncOpenAI]:
@@ -42,7 +43,11 @@ def _gemini_clients() -> list[AsyncOpenAI]:
             v = k.get_secret_value()
             if v and v not in seen:
                 seen.add(v)
-                ordered.append(AsyncOpenAI(base_url=GEMINI_BASE_URL, api_key=v, timeout=15.0))
+                # max_retries=0: on a 429 for key #1, fall straight to key #2
+                # (a different quota) instead of the SDK hammering the same key.
+                ordered.append(
+                    AsyncOpenAI(base_url=GEMINI_BASE_URL, api_key=v, timeout=15.0, max_retries=0)
+                )
     return ordered
 
 
