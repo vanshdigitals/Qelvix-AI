@@ -15,7 +15,7 @@ interface AssetCounts {
 
 export function AssetsScreen() {
   const toast = useToast();
-  const assets = useApi<Paginated<ApiAsset>>('/org/assets?limit=200');
+  const assets = useApi<Paginated<ApiAsset>>('/org/me/assets?limit=200');
   const counts = useApi<AssetCounts>('/dashboard/assets');
 
   if (assets.loading) {
