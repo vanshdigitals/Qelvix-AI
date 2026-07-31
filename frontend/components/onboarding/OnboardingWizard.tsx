@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Logo } from '@/components/layout/Logo';
 import { SeverityBadge } from '@/components/dashboard/shared';
 import { SurfaceField } from '@/components/marketing/SurfaceField';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 export type OnboardingStep =
@@ -186,6 +187,33 @@ export function OnboardingWizard() {
     }
   }, [timelineDone, timelineItems]);
 
+  async function saveBusinessDetails(): Promise<void> {
+    // The org was provisioned at signup with a default name (email domain); write
+    // the real name/contact collected here to /org/me. Non-fatal.
+    const name = org.trim();
+    if (!name && !contact.trim()) return;
+    try {
+      const supabase = createClient();
+      if (!supabase) return;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+      await fetch(`${apiUrl}/org/me`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name || undefined,
+          notification_email: contact.trim() || undefined,
+        }),
+      });
+    } catch {
+      // ignore — onboarding still completes
+    }
+  }
+
   function completeOnboarding(): void {
     try {
       localStorage.setItem('qelvix_onboarding_completed', 'true');
@@ -193,6 +221,7 @@ export function OnboardingWizard() {
     } catch {
       // ignore storage errors
     }
+    void saveBusinessDetails();
     router.push('/dashboard');
   }
 
@@ -278,7 +307,7 @@ export function OnboardingWizard() {
                   <span
                     aria-current={state === 'current' ? 'step' : undefined}
                     className={cn(
-                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full tabular-nums text-caption font-semibold transition-colors',
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-caption font-semibold tabular-nums transition-colors',
                       state === 'current' && 'bg-accent text-white',
                       state === 'done' && 'bg-accent/20 text-accent',
                       state === 'upcoming' && 'border border-border text-content-muted',
@@ -324,7 +353,7 @@ export function OnboardingWizard() {
           {/* Every step renders a consistent, focusable h1. */}
           {step !== 'welcome' && (
             <div className="mb-6">
-              <span className="tabular-nums text-caption text-accent">
+              <span className="text-caption tabular-nums text-accent">
                 {stepperIndex >= 0
                   ? `STEP ${String(stepperIndex + 1)} OF ${String(STEPPER.length)}`
                   : step === 'scan'
@@ -400,7 +429,7 @@ export function OnboardingWizard() {
                   }}
                   placeholder="27AAECV1234F1Z5"
                   aria-describedby="ob-gst-hint"
-                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent"
+                  className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-body-sm tabular-nums text-content-primary outline-none focus:border-accent"
                 />
                 <p id="ob-gst-hint" className="text-caption text-content-muted">
                   Shown on compliance reports. Leave blank if you would rather not provide it.
@@ -475,7 +504,7 @@ export function OnboardingWizard() {
                   aria-invalid={domainError}
                   aria-describedby={domainError ? 'ob-domain-error' : 'ob-domain-hint'}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent',
+                    'h-11 w-full rounded-lg border bg-surface px-3 text-body-sm tabular-nums text-content-primary outline-none focus:border-accent',
                     domainError ? 'border-critical-text' : 'border-border',
                   )}
                 />
@@ -496,14 +525,16 @@ export function OnboardingWizard() {
             <div className="space-y-4">
               <p className="text-body-sm text-content-secondary">
                 Add one TXT record for{' '}
-                <span className="tabular-nums text-content-primary">{effectiveDomain}</span>. We check
-                every 30 seconds and continue on our own.
+                <span className="tabular-nums text-content-primary">{effectiveDomain}</span>. We
+                check every 30 seconds and continue on our own.
               </p>
 
               <div className="rounded-xl border border-border bg-surface-inset p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="tabular-nums text-caption text-content-muted">TXT RECORD</span>
-                  <span className="tabular-nums text-caption text-accent">qelvix-verify=6a8d9e2c</span>
+                  <span className="text-caption tabular-nums text-content-muted">TXT RECORD</span>
+                  <span className="text-caption tabular-nums text-accent">
+                    qelvix-verify=6a8d9e2c
+                  </span>
                 </div>
               </div>
 
@@ -575,7 +606,7 @@ export function OnboardingWizard() {
                     key={`${inv.email}-${inv.role}`}
                     className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-inset px-4 py-3"
                   >
-                    <span className="min-w-0 truncate tabular-nums text-body-sm text-content-primary">
+                    <span className="min-w-0 truncate text-body-sm tabular-nums text-content-primary">
                       {inv.email}
                     </span>
                     <div className="flex shrink-0 items-center gap-3">
@@ -699,7 +730,7 @@ export function OnboardingWizard() {
                     }}
                     placeholder="98765 43210"
                     aria-describedby="ob-wa-consent"
-                    className="h-11 flex-1 rounded-lg border border-border bg-surface px-3 tabular-nums text-body-sm text-content-primary outline-none focus:border-accent disabled:opacity-50"
+                    className="h-11 flex-1 rounded-lg border border-border bg-surface px-3 text-body-sm tabular-nums text-content-primary outline-none focus:border-accent disabled:opacity-50"
                   />
                 </div>
 
@@ -803,7 +834,7 @@ export function OnboardingWizard() {
                   >
                     <SeverityBadge severity={f.sev} />
                     <p className="text-body-sm font-medium text-content-primary">{f.title}</p>
-                    <p className="tabular-nums text-caption text-content-muted">{f.asset}</p>
+                    <p className="text-caption tabular-nums text-content-muted">{f.asset}</p>
                   </li>
                 ))}
               </ul>

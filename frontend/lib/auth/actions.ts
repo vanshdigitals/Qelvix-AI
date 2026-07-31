@@ -68,9 +68,45 @@ export async function signUpWithPassword(
       data: { full_name: metadata.fullName, company_name: metadata.companyName },
     },
   });
-  return error
-    ? { ok: false, error: toMessage(error.message) }
-    : { ok: true, sessionCreated: !!data.session };
+  if (error) {
+    return { ok: false, error: toMessage(error.message) };
+  }
+  // With email confirmation off, signUp returns a session immediately — provision
+  // the org now. With confirmation on, there's no session yet; the /auth/callback
+  // route provisions after the user confirms.
+  if (data.session) {
+    await ensureOrgProvisioned();
+  }
+  return { ok: true, sessionCreated: !!data.session };
+}
+
+/**
+ * Ensures the authenticated user has an organization and refreshes the Supabase
+ * session so the new app_metadata.org_id claim lands in the JWT. Idempotent and
+ * non-fatal — safe after any signup/login that has a session.
+ */
+export async function ensureOrgProvisioned(): Promise<void> {
+  const supabase = createClient();
+  if (!supabase) return;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+  try {
+    const res = await fetch(`${apiUrl}/auth/provision-org`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      // Pick up the new org_id claim before any protected API call runs.
+      await supabase.auth.refreshSession();
+    }
+  } catch {
+    // Non-fatal: the dashboard surfaces an auth error if the claim is still missing.
+  }
 }
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {

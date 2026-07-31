@@ -27,6 +27,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=invalid_code`);
   }
 
+  // Ensure the user has an org (covers Google OAuth and email-confirmation
+  // signups, which land here rather than through actions.ts) and refresh so the
+  // session cookie carries the new app_metadata.org_id claim. Idempotent.
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+  try {
+    const res = await fetch(`${apiUrl}/auth/provision-org`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${data.session.access_token}` },
+    });
+    if (res.ok) {
+      await supabase.auth.refreshSession();
+    }
+  } catch {
+    // Non-fatal: the dashboard surfaces an auth error if the claim is still missing.
+  }
+
   // Explicit next (e.g. email confirmation's next=/onboarding) is always honored.
   if (explicitNext) {
     return NextResponse.redirect(`${origin}${explicitNext}`);
