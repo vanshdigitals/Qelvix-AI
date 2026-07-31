@@ -35,6 +35,8 @@ export function DashboardOverview() {
   const [findings, setFindings] = useState<ApiFinding[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     async function loadData(): Promise<void> {
       try {
@@ -44,7 +46,11 @@ export function DashboardOverview() {
           data: { session },
         } = await supabase.auth.getSession();
         const token = session?.access_token;
-        if (!token) return;
+        if (!token) {
+          setError('Not authenticated.');
+          setLoading(false);
+          return;
+        }
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
         const [summaryRes, findingsRes] = await Promise.all([
@@ -56,15 +62,18 @@ export function DashboardOverview() {
           }),
         ]);
 
-        if (summaryRes.ok) {
-          setSummary((await summaryRes.json()) as DashboardSummary);
+        if (!summaryRes.ok || !findingsRes.ok) {
+          setError(`API returned ${!summaryRes.ok ? summaryRes.status : findingsRes.status}`);
+          setLoading(false);
+          return;
         }
-        if (findingsRes.ok) {
-          const fData = (await findingsRes.json()) as { items?: ApiFinding[] };
-          setFindings(fData.items ?? []);
-        }
+
+        setSummary((await summaryRes.json()) as DashboardSummary);
+        const fData = (await findingsRes.json()) as { items?: ApiFinding[] };
+        setFindings(fData.items ?? []);
       } catch (e) {
         console.error(e);
+        setError('Network error');
       } finally {
         setLoading(false);
       }
@@ -76,6 +85,19 @@ export function DashboardOverview() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="text-body-md font-medium text-high-text">
+          Couldn't load your dashboard — {error}
+        </div>
+        <p className="text-body-sm text-content-secondary">
+          Please try reloading the page or check your authentication.
+        </p>
       </div>
     );
   }

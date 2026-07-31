@@ -26,6 +26,19 @@ export function AssetsScreen() {
     );
   }
 
+  if (assets.error || counts.error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="text-body-md font-medium text-high-text">
+          Couldn't load your assets — {assets.error || counts.error}
+        </div>
+        <p className="text-body-sm text-content-secondary">
+          Please try reloading the page or check your authentication.
+        </p>
+      </div>
+    );
+  }
+
   const rows = assets.data?.items ?? [];
   const stats = [
     { label: 'Domains', value: counts.data?.total_domains ?? 0, note: 'Verified primary domains' },
