@@ -125,6 +125,20 @@ async def list_assets(  # noqa
     )
 
 
+@router.get("/assets/{asset_id}", response_model=AssetResponse)
+async def get_asset(  # noqa
+    asset_id: uuid.UUID,
+    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    db: AsyncSession = Depends(get_db_session),  # noqa
+):
+    """Single asset detail."""
+    asset = await db.get(Asset, asset_id)
+    if not asset or asset.org_id != current_org.org_id:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    return asset
+
+
 @router.post(
     "/assets", response_model=AssetResponse, dependencies=[Depends(require_role("owner", "admin"))]
 )
