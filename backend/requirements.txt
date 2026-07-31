@@ -43,4 +43,4 @@ weasyprint==63.1
 
 # Structured JSON logging — 03 §10, 06 §13
 python-json-logger==3.2.1
-Levenshtein==0.26.1
+rapidfuzz==3.14.5
