@@ -1,15 +1,21 @@
 """
 DNS service — LIVE integrations, no API key required.
 
-  1. enumerate_subdomains() — crt.sh Certificate Transparency (already live)
+  1. enumerate_subdomains() — crt.sh Certificate Transparency (live, but
+     crt.sh has known uptime issues — 502/503 are common; failures are
+     logged at WARNING and result in an empty subdomain list, not fake data)
   2. resolve_dns_records()  — dnspython real DNS lookups (SPF, DMARC, DKIM, DNSSEC)
 """
 
 from __future__ import annotations
 
+import logging
+
 import dns.resolver
 import dns.dnssec
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 # --------------------------------------------------------------------------- #
@@ -20,11 +26,14 @@ async def enumerate_subdomains(domain: str) -> list[str]:
     """
     Uses crt.sh (Certificate Transparency) to find subdomains for a domain.
     Real HTTP call — no API key required.
+
+    crt.sh is a free service with known stability issues (frequent 502/503).
+    On failure we log a WARNING and return an empty list — never fake data.
     """
     url = f"https://crt.sh/?q=%25.{domain}&output=json"
     subdomains: set[str] = set()
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.get(url)
             if resp.status_code == 200:
                 data = resp.json()
@@ -34,8 +43,23 @@ async def enumerate_subdomains(domain: str) -> list[str]:
                         d = d.strip().lower()
                         if d.endswith(domain) and d != domain and "*" not in d:
                             subdomains.add(d)
+                logger.info(
+                    "crt.sh returned %d unique subdomains for %s",
+                    len(subdomains), domain,
+                )
+            else:
+                logger.warning(
+                    "crt.sh returned HTTP %d for %s — subdomain list will "
+                    "be empty (this is a known crt.sh uptime issue, not a "
+                    "code bug)",
+                    resp.status_code, domain,
+                )
+    except httpx.TimeoutException:
+        logger.warning(
+            "crt.sh timed out for %s — subdomain list will be empty", domain
+        )
     except Exception as e:
-        print(f"crt.sh error: {e}")  # noqa
+        logger.warning("crt.sh error for %s: %s", domain, e)
 
     return list(subdomains)
 
