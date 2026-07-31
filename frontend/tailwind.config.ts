@@ -74,7 +74,7 @@ const config: Config = {
         '30': '7.5rem', // 120px
       },
       maxWidth: {
-        marketing: '1200px',
+        marketing: '1280px',
         app: '1440px',
         measure: '68ch',
         'measure-centered': '56ch',
