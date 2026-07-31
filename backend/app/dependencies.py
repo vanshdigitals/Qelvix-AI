@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 import jwt
+from jwt import PyJWKClient
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -14,20 +15,39 @@ from app.models.org import Member
 settings = get_settings()
 security = HTTPBearer()
 
+jwks_client = PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json", cache_keys=True)
+
 
 async def get_current_user_token(
     credentials: Annotated[HTTPAuthorizationCredentials, Security(security)],
 ) -> dict:
     """Verifies the JWT and returns the decoded payload."""
     try:
-        # Supabase JWTs are signed with the project's secret using HS256
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.secret_key.get_secret_value(),
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
+        unverified_header = jwt.get_unverified_header(credentials.credentials)
+        if unverified_header.get("alg") == "HS256":
+            # Legacy symmetric signing
+            payload = jwt.decode(
+                credentials.credentials,
+                settings.secret_key.get_secret_value(),
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        else:
+            # Asymmetric signing (RS256, ES256, etc.)
+            signing_key = jwks_client.get_signing_key_from_jwt(credentials.credentials)
+            payload = jwt.decode(
+                credentials.credentials,
+                signing_key.key,
+                algorithms=["RS256", "ES256", "HS256"],
+                audience="authenticated",
+            )
         return payload
+    except jwt.PyJWKClientError:
+        raise HTTPException(  # noqa
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not fetch JWKS from identity provider",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except jwt.ExpiredSignatureError:
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
