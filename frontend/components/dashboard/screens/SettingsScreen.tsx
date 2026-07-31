@@ -6,9 +6,8 @@ import { useEffect, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, PrimaryButton, ScreenHeader } from '@/components/dashboard/shared';
-import { API_URL, type ApiState, useApi } from '@/lib/api/client';
+import { API_URL, useApi } from '@/lib/api/client';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils/cn';
 
 const TABS = [
   { label: 'Organisation', href: '/settings', active: true },
@@ -37,9 +36,9 @@ export function SettingsScreen() {
 
   useEffect(() => {
     if (org) {
-      setName(org.name || '');
-      setNotificationEmail(org.notification_email || '');
-      setWhatsappNumber(org.whatsapp_number || '');
+      setName(org.name);
+      setNotificationEmail(org.notification_email ?? '');
+      setWhatsappNumber(org.whatsapp_number ?? '');
     }
   }, [org]);
 
@@ -63,6 +62,10 @@ export function SettingsScreen() {
     setIsSaving(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        toast('Backend not configured.');
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
@@ -87,9 +90,9 @@ export function SettingsScreen() {
       if (res.ok) {
         toast('Organisation details saved.');
       } else {
-        toast(`Failed to save (${res.status}).`);
+        toast(`Failed to save (${String(res.status)}).`);
       }
-    } catch (e) {
+    } catch {
       toast('Failed to save settings.');
     } finally {
       setIsSaving(false);
@@ -137,7 +140,7 @@ export function SettingsScreen() {
               id="org-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); }}
               className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 text-body-md text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
             />
             <span className="text-caption text-content-muted">Shown on every shared report</span>
@@ -167,7 +170,7 @@ export function SettingsScreen() {
               id="org-email"
               type="email"
               value={notificationEmail}
-              onChange={(e) => setNotificationEmail(e.target.value)}
+              onChange={(e) => { setNotificationEmail(e.target.value); }}
               className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
             />
             <span className="text-caption text-content-muted">Receives critical alerts</span>
@@ -181,7 +184,7 @@ export function SettingsScreen() {
               id="org-phone"
               type="tel"
               value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value)}
+              onChange={(e) => { setWhatsappNumber(e.target.value); }}
               className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
             />
             <span className="text-caption text-content-muted">For real-time alerts</span>
@@ -190,7 +193,7 @@ export function SettingsScreen() {
           <div className="flex items-center gap-3">
             <PrimaryButton
               disabled={isSaving}
-              onClick={handleSave}
+              onClick={() => { void handleSave(); }}
             >
               {isSaving ? 'Saving...' : 'Save changes'}
             </PrimaryButton>

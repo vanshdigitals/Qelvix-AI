@@ -20,7 +20,7 @@ import { UserDropdown } from '@/components/dashboard/UserDropdown';
 import { AppearanceDropdown } from '@/components/layout/AppearanceDropdown';
 import { Logo } from '@/components/layout/Logo';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { RECENT_FINDINGS } from '@/lib/data/dashboard';
+import { type ApiFinding, type Paginated, useApi } from '@/lib/api/client';
 import { cn } from '@/lib/utils/cn';
 
 /** Lightweight toast, shared by every screen via context. */
@@ -30,9 +30,8 @@ export function useToast(): (message: string) => void {
   return useContext(ToastContext);
 }
 
-// Everything the header search can jump to. Kept flat and static: the real
-// search service lands with the findings API.
-const SEARCH_INDEX: { label: string; group: string; href: string }[] = [
+// Everything the header search can jump to.
+const BASE_SEARCH_INDEX: { label: string; group: string; href: string }[] = [
   { label: 'Dashboard', group: 'Overview', href: '/dashboard' },
   { label: 'Findings', group: 'Security', href: '/findings' },
   { label: 'Assets', group: 'Security', href: '/assets' },
@@ -44,7 +43,6 @@ const SEARCH_INDEX: { label: string; group: string; href: string }[] = [
   { label: 'Notifications', group: 'Organisation', href: '/notifications' },
   { label: 'Billing', group: 'Account', href: '/billing' },
   { label: 'Audit log', group: 'Account', href: '/audit' },
-  ...RECENT_FINDINGS.map((f) => ({ label: f.title, group: 'Findings', href: '/findings' })),
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -58,6 +56,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [scanning, setScanning] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const { data: findingsData } = useApi<Paginated<ApiFinding>>('/findings?limit=5');
+  const recentFindings = findingsData?.items ?? [];
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -129,12 +130,28 @@ export function AppShell({ children }: { children: ReactNode }) {
     .toUpperCase()
     .slice(0, 2);
 
+  const searchIndex = useMemo(() => {
+    return [
+      ...BASE_SEARCH_INDEX,
+      ...recentFindings.map((f) => ({ label: f.title, group: 'Findings', href: `/findings/${f.id}` }))
+    ];
+  }, [recentFindings]);
+
   const searchResults =
     search.trim().length > 0
-      ? SEARCH_INDEX.filter((e) =>
+      ? searchIndex.filter((e) =>
           e.label.toLowerCase().includes(search.trim().toLowerCase()),
         ).slice(0, 8)
       : [];
+
+  const notifications = useMemo(() => {
+    return recentFindings.map(f => ({
+      severity: f.severity,
+      title: f.title,
+      asset: f.asset_id ?? 'Unknown asset', // Just using id if not populated, real implementation might join asset
+      age: 'Just now'
+    }));
+  }, [recentFindings]);
 
   return (
     <ToastContext.Provider value={showToast}>
@@ -301,7 +318,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </button>
                 )}
                 <AppearanceDropdown />
-                <NotificationsDropdown findings={RECENT_FINDINGS} />
+                <NotificationsDropdown findings={notifications} />
                 <UserDropdown userName={userName} initials={initials} />
               </div>
             </header>
