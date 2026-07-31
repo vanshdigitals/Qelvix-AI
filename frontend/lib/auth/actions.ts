@@ -49,7 +49,12 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return error ? { ok: false, error: toMessage(error.message) } : { ok: true };
+  if (error) return { ok: false, error: toMessage(error.message) };
+  // Self-heal accounts created before org provisioning existed: if the user has
+  // no org yet, this creates one and refreshes the token with the org_id claim.
+  // Idempotent — a no-op for users who already have an org.
+  await ensureOrgProvisioned();
+  return { ok: true };
 }
 
 export async function signUpWithPassword(
