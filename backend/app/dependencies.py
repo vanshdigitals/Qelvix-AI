@@ -1,3 +1,4 @@
+import logging
 import uuid
 from typing import Annotated
 
@@ -43,27 +44,24 @@ async def get_current_user_token(
             )
         return payload
     except jwt.PyJWKClientError as e:
-        import logging
-        logging.error(f"DEBUG_JWT_ERROR [PyJWKClientError]: {e}")
+        logging.error(f"JWT auth error [PyJWKClientError]: {type(e).__name__} - {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not fetch JWKS from identity provider: {type(e).__name__} - {str(e)}",
+            detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.ExpiredSignatureError as e:
-        import logging
-        logging.error(f"DEBUG_JWT_ERROR [ExpiredSignatureError]: {e}")
+        logging.info(f"JWT auth error [ExpiredSignatureError]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token has expired: {str(e)}",
+            detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception as e:
-        import logging
-        logging.error(f"DEBUG_JWT_ERROR [InvalidTokenError or generic]: {type(e).__name__} - {e}")
+        logging.error(f"JWT auth error [{type(e).__name__}]: {e}")
         raise HTTPException(  # noqa
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication credentials: {type(e).__name__} - {str(e)}",
+            detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
