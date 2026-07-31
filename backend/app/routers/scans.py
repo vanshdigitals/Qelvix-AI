@@ -33,7 +33,7 @@ async def trigger_scan(  # noqa
 
     # 2. Get the primary domain
     # For MVP we can use a hardcoded domain or look it up from Organization model
-    from app.models.organization import Organization
+    from app.models.org import Organization
 
     org = await db.get(Organization, current_org.org_id)
     primary_domain = org.domain if org else "example.com"
