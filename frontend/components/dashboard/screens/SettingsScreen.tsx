@@ -1,10 +1,13 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, PrimaryButton, ScreenHeader } from '@/components/dashboard/shared';
+import { API_URL, type ApiState, useApi } from '@/lib/api/client';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
@@ -13,41 +16,85 @@ const TABS = [
   { label: 'Profile', href: '/profile', active: false },
 ];
 
-const FIELDS = [
-  {
-    id: 'org-name',
-    label: 'Legal name',
-    value: 'Vardhman Exports Pvt Ltd',
-    hint: 'Shown on every shared report',
-  },
-  {
-    id: 'org-site',
-    label: 'Primary domain',
-    value: 'vardhmanexports.in',
-    hint: 'Verified via DNS TXT',
-    mono: true,
-  },
-  {
-    id: 'org-contact',
-    label: 'Security contact',
-    value: 'priya@vardhmanexports.in',
-    hint: 'Receives critical alerts',
-    mono: true,
-  },
-  {
-    id: 'org-phone',
-    label: 'WhatsApp number',
-    value: '+91 98••• •••21',
-    hint: 'For real-time alerts',
-    mono: true,
-  },
-];
+export interface ApiOrgProfile {
+  id: string;
+  name: string;
+  primary_domain: string;
+  whatsapp_number: string | null;
+  notification_email: string | null;
+  domain_verified: boolean;
+  created_at: string;
+}
 
 export function SettingsScreen() {
   const toast = useToast();
-  const [values, setValues] = useState(() =>
-    Object.fromEntries(FIELDS.map((f) => [f.id, f.value])),
-  );
+  const { data: org, loading, error } = useApi<ApiOrgProfile>('/org/me');
+  
+  const [name, setName] = useState('');
+  const [notificationEmail, setNotificationEmail] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (org) {
+      setName(org.name || '');
+      setNotificationEmail(org.notification_email || '');
+      setWhatsappNumber(org.whatsapp_number || '');
+    }
+  }, [org]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
+      </div>
+    );
+  }
+
+  if (error || !org) {
+    return (
+      <div className="flex flex-col gap-5">
+        <p className="text-body-sm text-content-muted">{error ?? 'Organisation not found.'}</p>
+      </div>
+    );
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        toast('Not authenticated.');
+        return;
+      }
+      
+      const res = await fetch(`${API_URL}/org/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          notification_email: notificationEmail || null,
+          whatsapp_number: whatsappNumber || null,
+        }),
+      });
+      
+      if (res.ok) {
+        toast('Organisation details saved.');
+      } else {
+        toast(`Failed to save (${res.status}).`);
+      }
+    } catch (e) {
+      toast('Failed to save settings.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,33 +128,71 @@ export function SettingsScreen() {
       <div className="flex max-w-2xl flex-col gap-5">
         <Panel className="flex flex-col gap-5">
           <PanelTitle>Business details</PanelTitle>
-          {FIELDS.map((f) => (
-            <div key={f.id} className="flex flex-col gap-2">
-              <label htmlFor={f.id} className="text-body-sm font-medium text-content-secondary">
-                {f.label}
-              </label>
-              <input
-                id={f.id}
-                type="text"
-                value={values[f.id]}
-                onChange={(e) => {
-                  setValues((prev) => ({ ...prev, [f.id]: e.target.value }));
-                }}
-                className={cn(
-                  'h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 text-body-md text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent',
-                  f.mono && 'font-mono text-body-sm',
-                )}
-              />
-              <span className="text-caption text-content-muted">{f.hint}</span>
-            </div>
-          ))}
+          
+          <div className="flex flex-col gap-2">
+            <label htmlFor="org-name" className="text-body-sm font-medium text-content-secondary">
+              Legal name
+            </label>
+            <input
+              id="org-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 text-body-md text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+            <span className="text-caption text-content-muted">Shown on every shared report</span>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <label htmlFor="org-domain" className="text-body-sm font-medium text-content-secondary">
+              Primary domain
+            </label>
+            <input
+              id="org-domain"
+              type="text"
+              disabled
+              value={org.primary_domain}
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none disabled:opacity-50"
+            />
+            <span className="text-caption text-content-muted">
+              {org.domain_verified ? 'Verified via DNS TXT' : 'Not verified'}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="org-email" className="text-body-sm font-medium text-content-secondary">
+              Security contact
+            </label>
+            <input
+              id="org-email"
+              type="email"
+              value={notificationEmail}
+              onChange={(e) => setNotificationEmail(e.target.value)}
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+            <span className="text-caption text-content-muted">Receives critical alerts</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="org-phone" className="text-body-sm font-medium text-content-secondary">
+              WhatsApp number
+            </label>
+            <input
+              id="org-phone"
+              type="tel"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              className="h-11 w-full rounded-xl border border-border-strong bg-surface-inset px-3.5 font-mono text-body-sm text-content-primary outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+            <span className="text-caption text-content-muted">For real-time alerts</span>
+          </div>
+
           <div className="flex items-center gap-3">
             <PrimaryButton
-              onClick={() => {
-                toast('Organisation details saved.');
-              }}
+              disabled={isSaving}
+              onClick={handleSave}
             >
-              Save changes
+              {isSaving ? 'Saving...' : 'Save changes'}
             </PrimaryButton>
             <span className="text-caption text-content-muted">Changes apply to new reports</span>
           </div>
@@ -116,7 +201,7 @@ export function SettingsScreen() {
         <div className="border-critical-text/40 flex flex-col gap-4 rounded-2xl border bg-surface p-6 shadow-xs">
           <PanelTitle>Delete organisation</PanelTitle>
           <p className="text-body-sm leading-relaxed text-content-secondary">
-            Removes every asset, finding, report and audit record for Vardhman Exports. Team members
+            Removes every asset, finding, report and audit record for {org.name}. Team members
             lose access immediately. This cannot be undone and support cannot restore it.
           </p>
           <button
