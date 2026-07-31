@@ -1,5 +1,6 @@
 'use client';
 
+import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Logo } from '@/components/layout/Logo';
@@ -123,18 +124,10 @@ export function SplashScreen() {
               >
                 <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
                   {isDone && (
-                    <svg
+                    <Check
                       className="h-3.5 w-3.5 text-content-primary"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
                       aria-hidden="true"
-                    >
-                      <polyline points="4 12.5 9.5 18 20 6" />
-                    </svg>
+                    />
                   )}
                   {isActive && (
                     <>
