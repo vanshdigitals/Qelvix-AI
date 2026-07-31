@@ -23,7 +23,7 @@ export function ComplianceScreen() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="text-body-md font-medium text-high-text">
-          Couldn't load your compliance data — {error}
+          Couldn&apos;t load your compliance data — {error}
         </div>
         <p className="text-body-sm text-content-secondary">
           Please try reloading the page or check your authentication.

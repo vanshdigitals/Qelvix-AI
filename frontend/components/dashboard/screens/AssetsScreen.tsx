@@ -26,11 +26,11 @@ export function AssetsScreen() {
     );
   }
 
-  if (assets.error || counts.error) {
+  if (assets.error ?? counts.error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="text-body-md font-medium text-high-text">
-          Couldn't load your assets — {assets.error || counts.error}
+          Couldn&apos;t load your assets — {assets.error ?? counts.error}
         </div>
         <p className="text-body-sm text-content-secondary">
           Please try reloading the page or check your authentication.
@@ -117,7 +117,7 @@ export function AssetsScreen() {
             {rows.length === 0 && (
               <tr className="border-t border-border/60">
                 <td colSpan={3} className="px-3 py-10 text-center text-body-sm text-content-muted">
-                  {assets.error ?? 'No assets yet — verify a domain to start monitoring.'}
+                  No assets yet — verify a domain to start monitoring.
                 </td>
               </tr>
             )}

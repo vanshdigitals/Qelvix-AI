@@ -63,7 +63,7 @@ export function DashboardOverview() {
         ]);
 
         if (!summaryRes.ok || !findingsRes.ok) {
-          setError(`API returned ${!summaryRes.ok ? summaryRes.status : findingsRes.status}`);
+          setError(`API returned ${String(!summaryRes.ok ? summaryRes.status : findingsRes.status)}`);
           setLoading(false);
           return;
         }
@@ -93,7 +93,7 @@ export function DashboardOverview() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="text-body-md font-medium text-high-text">
-          Couldn't load your dashboard — {error}
+          Couldn&apos;t load your dashboard — {error}
         </div>
         <p className="text-body-sm text-content-secondary">
           Please try reloading the page or check your authentication.
