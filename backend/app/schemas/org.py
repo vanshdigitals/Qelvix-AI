@@ -13,6 +13,7 @@ class OrgProfileResponse(BaseModel):
     primary_domain: str
     whatsapp_number: str | None
     notification_email: str | None
+    industry: str | None
     domain_verified: bool
     created_at: datetime
 
@@ -21,6 +22,7 @@ class OrgSettingsUpdate(BaseModel):
     name: str | None = None
     whatsapp_number: str | None = None
     notification_email: str | None = None
+    industry: str | None = None
 
 
 class AssetResponse(BaseModel):

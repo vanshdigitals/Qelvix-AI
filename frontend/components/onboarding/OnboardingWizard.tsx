@@ -142,6 +142,31 @@ export function OnboardingWizard() {
   );
 
   useEffect(() => {
+    async function loadOrg() {
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/org/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { name?: string; notification_email?: string; industry?: string; primary_domain?: string };
+          if (data.name && data.name !== data.primary_domain) setOrg(data.name);
+          if (data.notification_email) setContact(data.notification_email);
+          if (data.industry) setIndustry(data.industry);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    void loadOrg();
+  }, []);
+
+  useEffect(() => {
     // Announce and focus the new step's heading for keyboard/SR users.
     const title = STEP_TITLES[step];
     if (stepperIndex >= 0) {
@@ -191,7 +216,7 @@ export function OnboardingWizard() {
     // The org was provisioned at signup with a default name (email domain); write
     // the real name/contact collected here to /org/me. Non-fatal.
     const name = org.trim();
-    if (!name && !contact.trim()) return;
+    if (!name && !contact.trim() && !industry) return;
     try {
       const supabase = createClient();
       if (!supabase) return;
@@ -207,6 +232,7 @@ export function OnboardingWizard() {
         body: JSON.stringify({
           name: name || undefined,
           notification_email: contact.trim() || undefined,
+          industry: industry || undefined,
         }),
       });
     } catch {
@@ -229,7 +255,10 @@ export function OnboardingWizard() {
     setStep(next);
   }
 
-  function handleNext(): void {
+  async function handleNext(): Promise<void> {
+    if (step === 'business' || step === 'industry') {
+      await saveBusinessDetails();
+    }
     const idx = FLOW.indexOf(step);
     if (idx < FLOW.length - 1) {
       goTo(FLOW[idx + 1] ?? 'report');
@@ -857,7 +886,7 @@ export function OnboardingWizard() {
             {showSkip && (
               <button
                 type="button"
-                onClick={handleNext}
+                onClick={() => void handleNext()}
                 className="rounded-lg px-4 py-2 text-caption font-medium text-content-muted hover:text-content-primary"
               >
                 Skip for now
@@ -865,7 +894,7 @@ export function OnboardingWizard() {
             )}
             <button
               type="button"
-              onClick={handleNext}
+              onClick={() => void handleNext()}
               disabled={continueBlocked}
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-caption font-semibold text-white shadow-2xs transition-all hover:brightness-105 disabled:opacity-50"
             >

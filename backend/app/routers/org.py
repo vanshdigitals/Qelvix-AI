@@ -40,6 +40,7 @@ async def get_org_profile(  # noqa
         primary_domain=org.primary_domain,
         whatsapp_number=org.whatsapp_number,
         notification_email=org.notification_email,
+        industry=org.settings.get("industry"),
         domain_verified=True,  # Simplified for MVP unless specified otherwise
         created_at=org.onboarded_at,
     )
@@ -64,6 +65,13 @@ async def update_org_settings(  # noqa
         org.whatsapp_number = payload.whatsapp_number
     if payload.notification_email is not None:
         org.notification_email = payload.notification_email
+    if payload.industry is not None:
+        if not isinstance(org.settings, dict):
+            org.settings = {}
+        org.settings["industry"] = payload.industry
+        # Force SQLAlchemy to detect JSONB mutation
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(org, "settings")
 
     await db.commit()
     await db.refresh(org)
@@ -74,6 +82,7 @@ async def update_org_settings(  # noqa
         primary_domain=org.primary_domain,
         whatsapp_number=org.whatsapp_number,
         notification_email=org.notification_email,
+        industry=org.settings.get("industry"),
         domain_verified=True,
         created_at=org.onboarded_at,
     )
