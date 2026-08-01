@@ -25,6 +25,8 @@ async def get_current_user_token(
     """Verifies the JWT and returns the decoded payload."""
     try:
         unverified_header = jwt.get_unverified_header(credentials.credentials)
+        # leeway tolerates small clock skew between this server and Supabase, so a
+        # freshly-issued token isn't rejected as "not yet valid" (iat/nbf).
         if unverified_header.get("alg") == "HS256":
             # Legacy symmetric signing
             payload = jwt.decode(
@@ -32,6 +34,7 @@ async def get_current_user_token(
                 settings.secret_key.get_secret_value(),
                 algorithms=["HS256"],
                 audience="authenticated",
+                leeway=30,
             )
         else:
             # Asymmetric signing (RS256, ES256, etc.)
@@ -41,6 +44,7 @@ async def get_current_user_token(
                 signing_key.key,
                 algorithms=["RS256", "ES256", "HS256"],
                 audience="authenticated",
+                leeway=30,
             )
         return payload
     except jwt.PyJWKClientError as e:
