@@ -15,7 +15,9 @@ class Organization(Base):
     __tablename__ = "organizations"
 
     name: Mapped[str] = mapped_column(String, nullable=False)
-    primary_domain: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    # Nullable until the user sets it in onboarding — provisioning must NOT invent
+    # a domain or append suffixes. Unique still holds (Postgres allows many NULLs).
+    primary_domain: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     plan: Mapped[str] = mapped_column(String, server_default="freemium")
     whatsapp_number: Mapped[str | None] = mapped_column(String, nullable=True)
     notification_email: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -23,6 +25,25 @@ class Organization(Base):
         DateTime(timezone=True), server_default=text("NOW()")
     )
     settings: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+
+    # --- Onboarding state (server-owned; drives resume + dashboard gating) ---
+    onboarding_completed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    # The step the user should resume on. See ONBOARDING_STEPS in schemas/onboarding.
+    onboarding_step: Mapped[str] = mapped_column(
+        String, nullable=False, server_default="business"
+    )
+    # Every field the wizard collects, persisted as each step is completed.
+    onboarding_data: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    domain_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    onboarding_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class Member(Base):

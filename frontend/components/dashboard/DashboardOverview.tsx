@@ -2,15 +2,14 @@
 
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, SeverityBadge } from '@/components/dashboard/shared';
-import { ACTIVITY_FEED } from '@/lib/data/dashboard';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
-const QUICK_ACTIONS = ['Run scan now', 'Invite team member', 'Download latest report'];
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 interface DashboardSummary {
   risk_score?: number;
@@ -28,58 +27,130 @@ interface ApiFinding {
   status: string;
 }
 
+interface ApiScan {
+  id: string;
+  status: string;
+  started_at: string | null;
+  completed_at: string | null;
+  findings_summary: Record<string, number> | null;
+}
+
+async function authToken(): Promise<string | null> {
+  const supabase = createClient();
+  if (!supabase) return null;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.access_token ?? null;
+}
+
 export function DashboardOverview() {
   const toast = useToast();
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [findings, setFindings] = useState<ApiFinding[]>([]);
+  const [scans, setScans] = useState<ApiScan[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadData(): Promise<void> {
-      try {
-        const supabase = createClient();
-        if (!supabase) return;
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        if (!token) {
-          setError('Not authenticated.');
-          setLoading(false);
-          return;
-        }
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-        const [summaryRes, findingsRes] = await Promise.all([
-          fetch(`${apiUrl}/dashboard/summary`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${apiUrl}/findings?limit=5`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (!summaryRes.ok || !findingsRes.ok) {
-          setError(`API returned ${String(!summaryRes.ok ? summaryRes.status : findingsRes.status)}`);
-          setLoading(false);
-          return;
-        }
-
-        setSummary((await summaryRes.json()) as DashboardSummary);
+  async function loadData(): Promise<void> {
+    try {
+      const token = await authToken();
+      if (!token) {
+        setError('Not authenticated.');
+        setLoading(false);
+        return;
+      }
+      const headers = { Authorization: `Bearer ${token}` };
+      const [summaryRes, findingsRes, scansRes] = await Promise.all([
+        fetch(`${API_URL}/dashboard/summary`, { headers }),
+        fetch(`${API_URL}/findings?limit=5`, { headers }),
+        fetch(`${API_URL}/scans?limit=5`, { headers }),
+      ]);
+      if (!summaryRes.ok) {
+        setError(`API returned ${String(summaryRes.status)}`);
+        setLoading(false);
+        return;
+      }
+      setSummary((await summaryRes.json()) as DashboardSummary);
+      if (findingsRes.ok) {
         const fData = (await findingsRes.json()) as { items?: ApiFinding[] };
         setFindings(fData.items ?? []);
-      } catch (e) {
-        console.error(e);
-        setError('Network error');
-      } finally {
-        setLoading(false);
       }
+      if (scansRes.ok) {
+        const sData = (await scansRes.json()) as { items?: ApiScan[] };
+        setScans(sData.items ?? []);
+      }
+    } catch (e) {
+      console.error(e);
+      setError('Network error');
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Real-time: while any scan is queued/running, refresh from the backend every
+  // 5s so status + findings + risk score update live (no simulated progress).
+  useEffect(() => {
+    const active = scans.some((s) => s.status === 'queued' || s.status === 'running');
+    if (!active) return undefined;
+    const id = setInterval(() => {
+      void loadData();
+    }, 5000);
+    return () => {
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scans]);
+
+  // Refetch when the tab/page regains focus or becomes visible — covers returning
+  // to the dashboard after triggering a scan from another page. Event-driven only
+  // (no interval), so there's no polling when nothing is happening.
+  const loadDataRef = useRef(loadData);
+  loadDataRef.current = loadData;
+  useEffect(() => {
+    const refresh = (): void => {
+      if (document.visibilityState === 'visible') void loadDataRef.current();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  async function runScan(): Promise<void> {
+    setScanning(true);
+    try {
+      const token = await authToken();
+      if (!token) {
+        toast('Not authenticated.');
+        return;
+      }
+      const res = await fetch(`${API_URL}/scans/trigger`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        toast('Scan started — findings will appear as it runs.');
+        await loadData();
+      } else {
+        const body = (await res.json().catch(() => ({}))) as { detail?: string };
+        toast(body.detail ?? `Could not start scan (${String(res.status)}).`);
+      }
+    } catch {
+      toast('Could not start scan. Try again.');
+    } finally {
+      setScanning(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -146,14 +217,11 @@ export function DashboardOverview() {
                 You have {criticalCount} critical and {highCount} high findings open. Review the
                 findings panel to start remediation.
               </p>
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-caption text-content-muted">30-day trend</span>
-                  <span className="tabular-nums text-body-sm tabular-nums text-content-muted">—</span>
-                </div>
-                <div className="h-8 flex-1">
-                  <Sparkline />
-                </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-caption text-content-muted">30-day trend</span>
+                <span className="tabular-nums text-body-sm text-content-muted">
+                  {scans.length > 1 ? 'See scans for history' : 'Not enough history yet'}
+                </span>
               </div>
             </div>
           </div>
@@ -306,18 +374,37 @@ export function DashboardOverview() {
             </Link>
           </div>
           <div className="mt-4 flex flex-col">
-            {ACTIVITY_FEED.map((ev, idx) => (
-              <div
-                key={`${ev.actor}-${String(idx)}`}
-                className="flex items-start gap-3 py-2.5 text-body-sm"
-              >
-                <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', ev.dot)} />
-                <span className="flex-1 text-content-secondary">
-                  <span className="font-medium text-content-primary">{ev.actor}</span> {ev.text}
-                </span>
-                <span className="shrink-0 tabular-nums text-caption text-content-muted">{ev.when}</span>
-              </div>
-            ))}
+            {scans.length > 0 ? (
+              scans.map((sc) => {
+                const total = Object.values(sc.findings_summary ?? {}).reduce((a, b) => a + b, 0);
+                const when = sc.completed_at ?? sc.started_at;
+                return (
+                  <div key={sc.id} className="flex items-start gap-3 py-2.5 text-body-sm">
+                    <span
+                      className={cn(
+                        'mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full',
+                        sc.status === 'completed'
+                          ? 'bg-accent'
+                          : sc.status === 'failed'
+                            ? 'bg-critical-text'
+                            : 'bg-content-muted',
+                      )}
+                    />
+                    <span className="flex-1 text-content-secondary">
+                      <span className="font-medium text-content-primary">Scan {sc.status}</span>
+                      {sc.status === 'completed' ? ` · ${String(total)} findings` : ''}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-caption text-content-muted">
+                      {when ? new Date(when).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="py-2 text-body-sm text-content-muted">
+                No activity yet. Run your first scan to see events here.
+              </p>
+            )}
           </div>
         </Panel>
 
@@ -325,32 +412,50 @@ export function DashboardOverview() {
           <Panel>
             <div className="flex items-center justify-between gap-3">
               <PanelTitle>DPDP readiness</PanelTitle>
-              <span className="tabular-nums text-body-sm text-content-primary">4 / 6</span>
+              <Link
+                href="/compliance"
+                className="text-body-sm font-medium text-accent transition-opacity hover:opacity-80"
+              >
+                View
+              </Link>
             </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-inset">
-              <span className="block h-full w-[67%] rounded-full bg-accent" />
-            </div>
-            <p className="mt-2 text-caption text-content-muted">
-              Readiness indicator, not certification. Two clauses need evidence.
+            <p className="mt-3 text-body-sm text-content-muted">
+              {scans.some((s) => s.status === 'completed')
+                ? 'Open DPDP readiness for your latest assessment.'
+                : 'Not assessed yet — run a scan to evaluate DPDP readiness.'}
             </p>
           </Panel>
 
           <Panel>
             <PanelTitle>Quick actions</PanelTitle>
             <div className="mt-2 flex flex-col">
-              {QUICK_ACTIONS.map((qa) => (
-                <button
-                  key={qa}
-                  type="button"
-                  onClick={() => {
-                    toast(`${qa} — coming soon.`);
-                  }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
-                >
+              <button
+                type="button"
+                onClick={() => void runScan()}
+                disabled={scanning}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary disabled:opacity-50"
+              >
+                {scanning ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                ) : (
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  <span>{qa}</span>
-                </button>
-              ))}
+                )}
+                <span>{scanning ? 'Starting scan…' : 'Run scan now'}</span>
+              </button>
+              <Link
+                href="/findings"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <span>View findings</span>
+              </Link>
+              <Link
+                href="/team"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-body-sm font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content-primary"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <span>Invite team member</span>
+              </Link>
             </div>
           </Panel>
         </div>
@@ -412,43 +517,3 @@ function Gauge({ score }: { score: number }): ReactNode {
   );
 }
 
-function Sparkline(): ReactNode {
-  const pts = [62, 60, 58, 59, 55, 52, 54, 50, 48, 47];
-  const w = 180;
-  const h = 32;
-  const min = 44;
-  const max = 64;
-  const coords = pts.map((v, idx) => [
-    idx * (w / (pts.length - 1)),
-    h - ((v - min) / (max - min)) * (h - 6) - 3,
-  ]);
-  const line = coords
-    .map(([x, y], idx) => `${idx === 0 ? 'M' : 'L'}${(x ?? 0).toFixed(1)} ${(y ?? 0).toFixed(1)}`)
-    .join(' ');
-
-  return (
-    <svg
-      viewBox={`0 0 ${String(w)} ${String(h)}`}
-      preserveAspectRatio="none"
-      width="100%"
-      height={h}
-      aria-hidden="true"
-      className="block overflow-visible"
-    >
-      <path
-        d={`${line} L ${String(w)} ${String(h)} L 0 ${String(h)} Z`}
-        fill="currentColor"
-        className="text-accent/15"
-      />
-      <path
-        d={line}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-accent"
-      />
-    </svg>
-  );
-}

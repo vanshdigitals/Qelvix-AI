@@ -1,13 +1,17 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
 import { PrimaryButton, ScreenHeader, TableWrap, Th } from '@/components/dashboard/shared';
-import { type ApiScan, type Paginated, useApi } from '@/lib/api/client';
+import { API_URL, type ApiScan, type Paginated, useApi } from '@/lib/api/client';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 const STATUS_COLOR: Record<string, string> = {
+  queued: 'text-content-muted',
   running: 'text-accent',
   completed: 'text-success-text',
   failed: 'text-critical-text',
@@ -24,7 +28,35 @@ function findingCount(fs: Record<string, unknown> | null): string {
 
 export function ScansScreen() {
   const toast = useToast();
+  const router = useRouter();
+  const [scanning, setScanning] = useState(false);
   const { data, loading, error } = useApi<Paginated<ApiScan>>('/scans?limit=50');
+
+  async function runScan(): Promise<void> {
+    setScanning(true);
+    try {
+      const supabase = createClient();
+      const token = supabase
+        ? (await supabase.auth.getSession()).data.session?.access_token
+        : null;
+      if (!token) {
+        toast('Not authenticated.');
+        return;
+      }
+      const res = await fetch(`${API_URL}/scans/trigger`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await res.json().catch(() => ({}))) as { detail?: string; scan_id?: string };
+      if (res.ok && body.scan_id) {
+        router.push(`/scans/${body.scan_id}`);
+      } else {
+        toast(body.detail ?? `Could not start scan (${String(res.status)}).`);
+      }
+    } finally {
+      setScanning(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -55,12 +87,8 @@ export function ScansScreen() {
         title="Scans"
         caption="Weekly schedule · Mondays 06:00 IST"
         actions={
-          <PrimaryButton
-            onClick={() => {
-              toast('Scan trigger — coming soon.');
-            }}
-          >
-            Run scan now
+          <PrimaryButton onClick={() => void runScan()} disabled={scanning}>
+            {scanning ? 'Starting…' : 'Run scan now'}
           </PrimaryButton>
         }
       />
@@ -83,7 +111,7 @@ export function ScansScreen() {
                   {s.id.slice(0, 8)}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
-                  {new Date(s.started_at).toLocaleString()}
+                  {s.started_at ? new Date(s.started_at).toLocaleString() : '—'}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <span
@@ -105,7 +133,7 @@ export function ScansScreen() {
                   {s.completed_at ? new Date(s.completed_at).toLocaleString() : '—'}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 tabular-nums text-caption text-content-primary">
-                  {findingCount(s.finding_summary)}
+                  {findingCount(s.findings_summary)}
                 </td>
               </tr>
             ))}

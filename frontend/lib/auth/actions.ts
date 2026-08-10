@@ -148,6 +148,13 @@ export async function signOut(): Promise<AuthResult> {
   const supabase = createClient();
   if (!supabase) return { ok: false, error: SUPABASE_NOT_CONFIGURED_MESSAGE };
 
+  // Drop the onboarding gate cache so the next user in this tab is re-checked.
+  try {
+    sessionStorage.removeItem('qelvix_onboarded');
+  } catch {
+    // ignore storage errors
+  }
+
   const { error } = await supabase.auth.signOut();
   return error ? { ok: false, error: toMessage(error.message) } : { ok: true };
 }

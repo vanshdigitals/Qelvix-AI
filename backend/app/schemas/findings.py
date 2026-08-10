@@ -10,7 +10,7 @@ class FindingResponse(BaseModel):
 
     id: UUID
     org_id: UUID
-    scan_id: UUID
+    scan_id: UUID | None
     asset_id: UUID | None
     finding_type: str
     agent_source: str
@@ -21,8 +21,8 @@ class FindingResponse(BaseModel):
     plain_explanation: str | None
     remediation_steps: str | None
     false_positive_reason: str | None
-    created_at: datetime
-    updated_at: datetime
+    discovered_at: datetime
+    resolved_at: datetime | None = None
 
 
 class FindingStatusUpdate(BaseModel):

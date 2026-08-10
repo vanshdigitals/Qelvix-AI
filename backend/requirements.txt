@@ -32,11 +32,19 @@ email-validator==2.3.0
 # Auth — 03 §1 (Supabase Auth, JWT validation)
 pyjwt[crypto]==2.10.1
 
-# LLM — 03 §1, §9 (deepseek-v4-flash, called only from claude_service.py)
-openai==1.42.0
+# LLM — 03 §1, §9 (Gemini/DeepSeek via OpenAI-compatible client, claude_service.py)
+# Must be >=1.55 to be compatible with httpx 0.28 (1.42 passed the removed
+# `proxies=` kwarg and crashed the whole agent-pipeline import).
+openai==1.109.1
 
 # External service clients — 03 §8
 httpx==0.28.1
+
+# DNS resolution — domain verification (org.py) + dns_analyzer / dns_service
+dnspython==2.8.0
+
+# Transactional email — services/email_service.py (scan report delivery)
+resend==2.35.0
 
 # PDF export — 03 §1 (Phase 2 reports)
 weasyprint==63.1

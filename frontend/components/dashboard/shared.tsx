@@ -60,7 +60,7 @@ export function buildNavGroups(role: UserRole): NavGroup[] {
     {
       label: 'SECURITY',
       items: [
-        { label: 'Findings', key: 'findings', count: '9', href: '/findings' },
+        { label: 'Findings', key: 'findings', href: '/findings' },
         { label: 'Assets', key: 'assets', href: '/assets' },
         { label: 'Scans', key: 'scans', href: '/scans' },
       ],

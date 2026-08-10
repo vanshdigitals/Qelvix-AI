@@ -46,3 +46,10 @@ yarn-error.log*
 
 # Local diagnostic/debug scripts (not part of the product)
 scratch/
+
+# Local Test and Debug Files
+backend/run_case_*.py
+backend/fix_db.py
+frontend/*test*.js
+frontend/test_context.json
+frontend/error.png

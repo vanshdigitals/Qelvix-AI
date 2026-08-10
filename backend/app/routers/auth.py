@@ -155,19 +155,13 @@ async def provision_org(  # noqa
     if existing:
         return ProvisionResponse(org_id=str(existing.org_id), created=False)
 
-    base_domain = email.split("@", 1)[1] if "@" in email else "my-business"
-    name = base_domain.split(".", 1)[0].replace("-", " ").title() or "My Business"
+    # Provisioning creates the org shell only. The real business name and the
+    # primary_domain are collected during onboarding — never invent a domain or
+    # append a suffix (that is exactly what broke DNS verification before).
+    local = email.split("@", 1)[0] if "@" in email else ""
+    name = local.replace(".", " ").replace("-", " ").title() or "My organization"
 
-    # primary_domain is unique — suffix with a short user id if it's already taken
-    # (e.g. multiple gmail.com signups) so provisioning never collides.
-    primary_domain = base_domain
-    taken = await db.scalar(
-        select(Organization.id).where(Organization.primary_domain == primary_domain)
-    )
-    if taken:
-        primary_domain = f"{base_domain}-{str(user_id)[:8]}"
-
-    org = Organization(name=name, primary_domain=primary_domain)
+    org = Organization(name=name, primary_domain=None)
     db.add(org)
     try:
         await db.flush()

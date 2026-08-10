@@ -154,7 +154,7 @@ export function FindingsScreen() {
                   {f.agent_source}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-content-secondary">
-                  {new Date(f.created_at).toLocaleDateString()}
+                  {new Date(f.discovered_at).toLocaleDateString()}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <span

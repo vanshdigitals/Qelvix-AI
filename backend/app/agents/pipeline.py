@@ -1,3 +1,7 @@
+import asyncio
+import logging
+from collections.abc import Awaitable, Callable
+
 from langgraph.graph import END, StateGraph
 
 from . import (
@@ -16,6 +20,39 @@ from . import (
     vuln_analysis,
 )
 from .state import AgentState
+
+logger = logging.getLogger(__name__)
+
+# Hard cap per agent so a hung free-tier provider (a request that never returns)
+# can't wedge the whole scan. Generous vs. real agent runtime (DNS/SSL are quick;
+# LLM services already carry 15–20s client timeouts).
+AGENT_TIMEOUT_SECONDS = 90
+
+
+def resilient(name: str, fn: Callable[[AgentState], Awaitable[dict]]):
+    """Isolate an agent so its failure degrades gracefully instead of aborting
+    the whole scan (MVP critical rule: a scan always completes). Exceptions AND
+    hangs (timeout) are recorded in `errors` and return an empty partial update;
+    downstream nodes (risk scoring, notification) still run on whatever findings
+    did succeed. Findings are never fabricated on timeout.
+    """
+
+    async def wrapped(state: AgentState) -> dict:
+        try:
+            return await asyncio.wait_for(fn(state), timeout=AGENT_TIMEOUT_SECONDS)
+        except asyncio.TimeoutError:
+            logger.error("Agent '%s' timed out after %ss", name, AGENT_TIMEOUT_SECONDS)
+            errors = list(state.get("errors") or [])
+            errors.append(f"{name}: unavailable (timeout after {AGENT_TIMEOUT_SECONDS}s)")
+            return {"errors": errors}
+        except Exception as e:  # noqa: BLE001 — provider/agent isolation boundary
+            logger.error("Agent '%s' degraded: %s: %s", name, type(e).__name__, e)
+            errors = list(state.get("errors") or [])
+            errors.append(f"{name}: unavailable ({type(e).__name__})")
+            return {"errors": errors}
+
+    wrapped.__name__ = name
+    return wrapped
 
 
 def analysis_join_node(state: AgentState) -> dict:
@@ -42,23 +79,25 @@ def analysis_join_node(state: AgentState) -> dict:
 def build_pipeline() -> StateGraph:
     workflow = StateGraph(AgentState)
 
-    workflow.add_node("asset_discovery", asset_discovery.run)
-    workflow.add_node("port_scanner", port_scanner.run)
-    workflow.add_node("ssl_analyzer", ssl_analyzer.run)
-    workflow.add_node("dns_analyzer", dns_analyzer.run)
+    workflow.add_node("asset_discovery", resilient("asset_discovery", asset_discovery.run))
+    workflow.add_node("port_scanner", resilient("port_scanner", port_scanner.run))
+    workflow.add_node("ssl_analyzer", resilient("ssl_analyzer", ssl_analyzer.run))
+    workflow.add_node("dns_analyzer", resilient("dns_analyzer", dns_analyzer.run))
 
-    workflow.add_node("vuln_analysis", vuln_analysis.run)
-    workflow.add_node("threat_intel", threat_intel.run)
-    workflow.add_node("phishing_detection", phishing_detection.run)
-    workflow.add_node("fraud_detection", fraud_detection.run)
+    workflow.add_node("vuln_analysis", resilient("vuln_analysis", vuln_analysis.run))
+    workflow.add_node("threat_intel", resilient("threat_intel", threat_intel.run))
+    workflow.add_node("phishing_detection", resilient("phishing_detection", phishing_detection.run))
+    workflow.add_node("fraud_detection", resilient("fraud_detection", fraud_detection.run))
 
     workflow.add_node("analysis_join", analysis_join_node)
 
-    workflow.add_node("risk_scoring", risk_scoring.run)
-    workflow.add_node("dpdp_compliance", dpdp_compliance.run)
-    workflow.add_node("incident_response", incident_response.run)
-    workflow.add_node("recovery_recommendation", recovery_recommendation.run)
-    workflow.add_node("notification", notification.run)
+    workflow.add_node("risk_scoring", resilient("risk_scoring", risk_scoring.run))
+    workflow.add_node("dpdp_compliance", resilient("dpdp_compliance", dpdp_compliance.run))
+    workflow.add_node("incident_response", resilient("incident_response", incident_response.run))
+    workflow.add_node(
+        "recovery_recommendation", resilient("recovery_recommendation", recovery_recommendation.run)
+    )
+    workflow.add_node("notification", resilient("notification", notification.run))
 
     workflow.set_entry_point("asset_discovery")
     workflow.add_edge("asset_discovery", "port_scanner")

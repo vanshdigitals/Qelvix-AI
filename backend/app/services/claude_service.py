@@ -8,17 +8,20 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-# NVIDIA NIM is currently timing out (deepseek-ai/deepseek-v4-flash).
-# Gemini (gemini-3.6-flash) is configured as the PRIMARY provider with a two-key fallback chain.
-# NVIDIA is relegated to the fallback position.
+# Gemini (gemini-3.6-flash) is the PRIMARY provider (two-key fallback chain);
+# NVIDIA NIM is the secondary fallback. The previous fallback model
+# deepseek-ai/deepseek-v4-flash reached end-of-life (410 Gone) on 2026-08-07 and
+# was replaced with meta/llama-3.1-8b-instruct — a currently-supported NVIDIA NIM
+# free-tier model verified live. Both providers are free-tier; swapping to a paid
+# model later is a config change (base_url/api_key/MODEL_NAME) with no code change.
 client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=settings.nvidia_api_key.get_secret_value(),
-    timeout=8.0,
+    timeout=20.0,
     max_retries=0,
 )
 
-MODEL_NAME = "deepseek-ai/deepseek-v4-flash"
+MODEL_NAME = "meta/llama-3.1-8b-instruct"
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 # Pinned current free-tier model (ai.google.dev/gemini-api/docs/pricing).

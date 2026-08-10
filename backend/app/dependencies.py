@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.database import get_db_session
-from app.models.org import Member
+from app.models.org import Member, Organization
 
 settings = get_settings()
 security = HTTPBearer()
@@ -104,6 +104,27 @@ async def get_current_org(
         raise HTTPException(status_code=401, detail="Invalid UUID format in token claims")  # noqa
 
     return CurrentOrg(user_id=user_id, org_id=org_id)
+
+
+async def get_onboarded_org(
+    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> CurrentOrg:
+    """Gate for tenant-data endpoints: 403 until onboarding is complete.
+
+    Returns a machine-readable detail the frontend keys on to redirect to
+    /onboarding. Kept separate from get_current_org so onboarding endpoints
+    themselves (and provisioning) remain reachable pre-completion.
+    """
+    completed = await db.scalar(
+        select(Organization.onboarding_completed).where(Organization.id == current_org.org_id)
+    )
+    if not completed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="onboarding_incomplete",
+        )
+    return current_org
 
 
 def require_role(*roles: str):  # noqa

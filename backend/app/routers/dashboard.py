@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db_session
-from app.dependencies import CurrentOrg, get_current_org
+from app.dependencies import CurrentOrg, get_onboarded_org
 from app.models.org import Asset
 from app.models.scan import Finding, Scan
 from app.schemas.dashboard import DashboardAssetsResponse, DashboardSummaryResponse
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/summary", response_model=DashboardSummaryResponse)
 async def get_dashboard_summary(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    current_org: Annotated[CurrentOrg, Depends(get_onboarded_org)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Security health band + risk score, counts, trend."""
@@ -81,7 +81,7 @@ async def get_dashboard_summary(  # noqa
 
 @router.get("/assets", response_model=DashboardAssetsResponse)
 async def get_dashboard_assets(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    current_org: Annotated[CurrentOrg, Depends(get_onboarded_org)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Full asset inventory summary."""

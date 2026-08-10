@@ -2,7 +2,7 @@
 
 import { Bell, Loader2, Menu, Search, X } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   createContext,
   type ReactNode,
@@ -20,7 +20,8 @@ import { UserDropdown } from '@/components/dashboard/UserDropdown';
 import { AppearanceDropdown } from '@/components/layout/AppearanceDropdown';
 import { Logo } from '@/components/layout/Logo';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { type ApiFinding, type Paginated, useApi } from '@/lib/api/client';
+import { API_URL, type ApiFinding, type Paginated, useApi } from '@/lib/api/client';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 /** Lightweight toast, shared by every screen via context. */
@@ -48,6 +49,7 @@ const BASE_SEARCH_INDEX: { label: string; group: string; href: string }[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [role] = useState<UserRole>('owner');
 
   const [navOpen, setNavOpen] = useState(false);
@@ -111,10 +113,33 @@ export function AppShell({ children }: { children: ReactNode }) {
   const handleRunScan = (): void => {
     if (scanning) return;
     setScanning(true);
-    window.setTimeout(() => {
-      setScanning(false);
-      showToast('Scan started — results in about 2 minutes.');
-    }, 1200);
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const token = supabase
+          ? (await supabase.auth.getSession()).data.session?.access_token
+          : null;
+        if (!token) {
+          showToast('Not authenticated.');
+          return;
+        }
+        const res = await fetch(`${API_URL}/scans/trigger`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const body = (await res.json().catch(() => ({}))) as { detail?: string; scan_id?: string };
+        if (res.ok && body.scan_id) {
+          showToast('Scan started.');
+          router.push(`/scans/${body.scan_id}`);
+        } else {
+          showToast(body.detail ?? `Could not start scan (${String(res.status)}).`);
+        }
+      } catch {
+        showToast('Could not start scan. Try again.');
+      } finally {
+        setScanning(false);
+      }
+    })();
   };
 
   const navGroups = useMemo(() => buildNavGroups(role), [role]);
@@ -122,7 +147,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const metaName = auth.user
     ? (auth.user.user_metadata.full_name as string | undefined)
     : undefined;
-  const userName = metaName ?? auth.user?.email?.split('@')[0] ?? 'Priya Sharma';
+  const userName = metaName ?? auth.user?.email?.split('@')[0] ?? 'Account';
   const initials = userName
     .split(' ')
     .map((n) => n[0])

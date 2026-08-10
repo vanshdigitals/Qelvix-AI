@@ -41,7 +41,7 @@ export function FindingDetailScreen({ id }: { id: string }) {
     { label: 'Source', value: finding.agent_source, mono: true },
     { label: 'Severity', value: finding.severity },
     { label: 'Status', value: finding.status.replace('_', ' ') },
-    { label: 'First seen', value: new Date(finding.created_at).toLocaleDateString() },
+    { label: 'First seen', value: new Date(finding.discovered_at).toLocaleDateString() },
   ];
 
   return (

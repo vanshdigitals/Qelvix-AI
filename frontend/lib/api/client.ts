@@ -15,7 +15,7 @@ export interface Paginated<T> {
 
 export interface ApiFinding {
   id: string;
-  scan_id: string;
+  scan_id: string | null;
   asset_id: string | null;
   finding_type: string;
   agent_source: string;
@@ -26,17 +26,42 @@ export interface ApiFinding {
   plain_explanation: string | null;
   remediation_steps: string | null;
   false_positive_reason: string | null;
-  created_at: string;
-  updated_at: string;
+  discovered_at: string;
+  resolved_at: string | null;
 }
+
+export type ScanStatus = 'queued' | 'pending' | 'running' | 'completed' | 'failed';
 
 export interface ApiScan {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  started_at: string;
+  status: ScanStatus;
+  risk_score: number | null;
+  started_at: string | null;
   completed_at: string | null;
-  error_log: Record<string, unknown> | null;
-  finding_summary: Record<string, unknown> | null;
+  error_log: string | null;
+  findings_summary: Record<string, number> | null;
+}
+
+export interface ScanRecommendation {
+  finding_type: string;
+  severity: string;
+  title: string;
+  action: string;
+}
+
+export interface ScanReport {
+  scan_id: string;
+  status: ScanStatus;
+  risk_score: number | null;
+  risk_band: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  summary: { critical: number; high: number; medium: number; low: number };
+  executive_summary: string | null;
+  findings: ApiFinding[];
+  recommendations: ScanRecommendation[];
+  compliance: { status: string | null; clauses: Record<string, unknown>[] | null; narrative: string | null };
+  degraded_providers: string[];
 }
 
 export interface ApiAsset {

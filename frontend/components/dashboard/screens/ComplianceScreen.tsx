@@ -1,15 +1,64 @@
 'use client';
 
 import { Info, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 
-import { useToast } from '@/components/dashboard/AppShell';
-import { GhostButton, Panel, PanelTitle, ScreenHeader } from '@/components/dashboard/shared';
-import { type ApiCompliance, useApi } from '@/lib/api/client';
+import { Panel, PanelTitle, ScreenHeader } from '@/components/dashboard/shared';
+import { API_URL, type ApiScan, type ScanReport } from '@/lib/api/client';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 export function ComplianceScreen() {
-  const toast = useToast();
-  const { data, loading, error } = useApi<ApiCompliance>('/compliance/latest');
+  const [report, setReport] = useState<ScanReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (): Promise<void> => {
+    try {
+      const supabase = createClient();
+      if (!supabase) {
+        setError('Backend not configured.');
+        return;
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setError('Not authenticated.');
+        return;
+      }
+      const headers = { Authorization: `Bearer ${token}` };
+      const scansRes = await fetch(`${API_URL}/scans?limit=20`, { headers });
+      if (!scansRes.ok) {
+        setError(`Request failed (${String(scansRes.status)}).`);
+        return;
+      }
+      const items = ((await scansRes.json()) as { items?: ApiScan[] }).items ?? [];
+      const done = items.find((s) => s.status === 'completed');
+      if (!done) {
+        setReport(null);
+        setError(null);
+        return;
+      }
+      const rr = await fetch(`${API_URL}/scans/${done.id}/report`, { headers });
+      if (!rr.ok) {
+        setError(`Request failed (${String(rr.status)}).`);
+        return;
+      }
+      setReport((await rr.json()) as ScanReport);
+      setError(null);
+    } catch {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -19,34 +68,12 @@ export function ComplianceScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <div className="text-body-md font-medium text-high-text">
-          Couldn&apos;t load your compliance data — {error}
-        </div>
-        <p className="text-body-sm text-content-secondary">
-          Please try reloading the page or check your authentication.
-        </p>
-      </div>
-    );
-  }
+  const compliance = report?.compliance;
+  const status = compliance?.status ?? null;
 
   return (
     <div className="flex flex-col gap-5">
-      <ScreenHeader
-        title="DPDP readiness"
-        caption="Digital Personal Data Protection Act 2023"
-        actions={
-          <GhostButton
-            onClick={() => {
-              toast('Evidence pack export — coming soon.');
-            }}
-          >
-            Export evidence pack
-          </GhostButton>
-        }
-      />
+      <ScreenHeader title="DPDP readiness" caption="Digital Personal Data Protection Act 2023" />
 
       <div
         role="note"
@@ -57,41 +84,56 @@ export function ComplianceScreen() {
           <span className="font-medium text-content-primary">
             This is a readiness indicator, not certification.
           </span>{' '}
-          Qelvix maps externally observable signals to DPDP obligations.
+          Derived from externally observable signals in your latest completed scan.
         </p>
       </div>
 
-      {!data || error ? (
+      {error ? (
         <Panel>
-          <PanelTitle>No compliance report yet</PanelTitle>
+          <PanelTitle>Couldn&apos;t load compliance</PanelTitle>
+          <p className="mt-2 text-body-sm text-content-secondary">{error}</p>
+        </Panel>
+      ) : !report ? (
+        <Panel>
+          <PanelTitle>No assessment yet</PanelTitle>
           <p className="mt-2 text-body-sm text-content-secondary">
-            {error ?? 'Run a scan to generate a DPDP readiness report for your organisation.'}
+            Run a scan to generate a DPDP readiness assessment from real findings.
           </p>
         </Panel>
       ) : (
         <div className="flex flex-col gap-5">
           <Panel className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <PanelTitle>{data.framework} readiness</PanelTitle>
+              <PanelTitle>DPDP readiness</PanelTitle>
               <span
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-caption font-medium',
-                  data.is_compliant
+                  'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-caption font-medium capitalize',
+                  status === 'compliant'
                     ? 'bg-success-bg text-success-text'
-                    : 'bg-high-bg text-high-text',
+                    : status
+                      ? 'bg-high-bg text-high-text'
+                      : 'bg-surface-inset text-content-muted',
                 )}
               >
                 <span
                   className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    data.is_compliant ? 'bg-success-text' : 'bg-high-text',
+                    status === 'compliant'
+                      ? 'bg-success-text'
+                      : status
+                        ? 'bg-high-text'
+                        : 'bg-content-muted',
                   )}
                 />
-                {data.is_compliant ? 'On track' : 'Action needed'}
+                {status ? status.replace('_', ' ') : 'Not assessed'}
               </span>
             </div>
             <p className="text-caption text-content-muted">
-              Generated {new Date(data.created_at).toLocaleString()}
+              From scan{' '}
+              <Link href={`/scans/${report.scan_id}`} className="text-accent">
+                {report.scan_id.slice(0, 8)}
+              </Link>
+              {report.completed_at ? ` · ${new Date(report.completed_at).toLocaleString()}` : ''}
             </p>
           </Panel>
 
@@ -102,16 +144,28 @@ export function ComplianceScreen() {
                 AI NARRATIVE
               </span>
             </div>
-            {data.dpdp_narrative ? (
+            {compliance?.narrative ? (
               <p className="whitespace-pre-line text-body-md leading-relaxed text-content-secondary">
-                {data.dpdp_narrative}
+                {compliance.narrative}
               </p>
             ) : (
               <p className="text-body-md text-content-muted">
-                The narrative for this report is not available yet.
+                The AI narrative is unavailable for this scan (free-tier provider limit) — the
+                status above is from deterministic checks.
               </p>
             )}
           </Panel>
+
+          {report.degraded_providers.length > 0 && (
+            <Panel className="flex flex-col gap-2">
+              <PanelTitle>Providers unavailable</PanelTitle>
+              {report.degraded_providers.map((p) => (
+                <span key={p} className="text-caption text-content-muted">
+                  {p}
+                </span>
+              ))}
+            </Panel>
+          )}
         </div>
       )}
     </div>

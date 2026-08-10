@@ -17,6 +17,12 @@ from app.models.scan import Finding, Scan
 settings = get_settings()
 _redis_url = settings.redis_url or "redis://localhost:6379/0"
 
+# Whole-pipeline cap. Real scans run ~3 min; this gives generous headroom while
+# guaranteeing a hung provider can't keep a scan "running" indefinitely. Must be
+# below the stale-scan reaper window (scans.SCAN_MAX_RUNTIME_SECONDS) so the
+# worker fails cleanly (with completed_at) before the reaper has to step in.
+PIPELINE_TIMEOUT_SECONDS = 480
+
 celery_app = Celery("worker", broker=_redis_url, backend=_redis_url)
 
 
@@ -62,8 +68,40 @@ async def execute_and_save(org_id: str, scan_id: str, primary_domain: str) -> di
         errors=[],
     )
 
-    # LangGraph pipeline execution
-    final_state = await pipeline.ainvoke(initial_state)
+    # Mark running so the UI shows progress and a crash never leaves it "queued".
+    async with async_session_maker() as session:
+        scan = await session.get(Scan, uuid.UUID(scan_id))
+        if scan:
+            scan.status = "running"
+            scan.started_at = datetime.now(timezone.utc)
+            await session.commit()
+
+    # LangGraph pipeline execution — bounded so a hung provider can't run forever.
+    try:
+        final_state = await asyncio.wait_for(
+            pipeline.ainvoke(initial_state), timeout=PIPELINE_TIMEOUT_SECONDS
+        )
+    except asyncio.TimeoutError:
+        async with async_session_maker() as session:
+            scan = await session.get(Scan, uuid.UUID(scan_id))
+            if scan:
+                scan.status = "failed"
+                scan.completed_at = datetime.now(timezone.utc)
+                scan.error_log = (
+                    f"Scan exceeded the maximum runtime of {PIPELINE_TIMEOUT_SECONDS}s "
+                    "and was stopped. Some checks may not have completed."
+                )
+                await session.commit()
+        return {"error": "pipeline_timeout"}
+    except Exception as e:  # noqa: BLE001 — any agent failure must fail the scan cleanly
+        async with async_session_maker() as session:
+            scan = await session.get(Scan, uuid.UUID(scan_id))
+            if scan:
+                scan.status = "failed"
+                scan.completed_at = datetime.now(timezone.utc)
+                scan.error_log = str(e)[:2000]
+                await session.commit()
+        return {"error": str(e)}
 
     # Persist to Postgres
     async with async_session_maker() as session:
