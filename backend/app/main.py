@@ -38,12 +38,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json",
     )
 
+    # Collect allowed origins: support comma-separated list in FRONTEND_URL
+    # and explicitly permit verified production and preview domains (qelvix.aivon.io, vercel.app)
+    allowed_origins = {
+        origin.strip()
+        for origin in resolved.frontend_url.split(",")
+        if origin.strip()
+    }
+    allowed_origins.add("https://qelvix.aivon.io")
+    allowed_origins.add("https://qelvix-ai.vercel.app")
+    if not resolved.is_production:
+        allowed_origins.add("http://localhost:3000")
+        allowed_origins.add("http://127.0.0.1:3000")
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[resolved.frontend_url],
+        allow_origins=sorted(list(allowed_origins)),
+        allow_origin_regex=r"^https://([a-zA-Z0-9_-]+\.)*(aivon\.io|vercel\.app)$",
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
     )
 
     from app.routers import (

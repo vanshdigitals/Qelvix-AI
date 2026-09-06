@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { getApiUrl } from '@/lib/api/client';
 import { createClient } from '@/lib/supabase/server';
 import { POST_LOGIN_ROUTE } from '@/lib/supabase/config';
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
   // Ensure the user has an org (covers Google OAuth and email-confirmation
   // signups, which land here rather than through actions.ts) and refresh so the
   // session cookie carries the new app_metadata.org_id claim. Idempotent.
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+  const apiUrl = getApiUrl();
   try {
     const res = await fetch(`${apiUrl}/auth/provision-org`, {
       method: 'POST',

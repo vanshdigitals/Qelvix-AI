@@ -4,7 +4,31 @@ import { useEffect, useState } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+/**
+ * Resolves the backend API base URL with production-safe fallback.
+ * If NEXT_PUBLIC_API_URL is unset, empty, or set to localhost while running
+ * in a browser on a remote domain (e.g. qelvix.aivon.io or vercel.app),
+ * automatically falls back to the live backend (https://qelvix-ai.onrender.com).
+ */
+export function getApiUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (!isLocal && (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return 'https://qelvix-ai.onrender.com';
+    }
+  } else {
+    // Server-side / SSR / Route handlers in production
+    const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+    if (isProd && (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return 'https://qelvix-ai.onrender.com';
+    }
+  }
+  return envUrl !== undefined && envUrl !== '' ? envUrl : 'http://localhost:8000';
+}
+
+export const API_URL = getApiUrl();
 
 // ---- Backend response shapes (mirror backend/app/schemas) ----
 
@@ -124,7 +148,8 @@ export function useApi<T>(path: string | null): ApiState<T> {
           if (active) setState({ data: null, loading: false, error: 'Not authenticated.' });
           return;
         }
-        const res = await fetch(`${API_URL}${reqPath}`, {
+        const baseUrl = getApiUrl();
+        const res = await fetch(`${baseUrl}${reqPath}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {

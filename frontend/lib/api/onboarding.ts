@@ -1,8 +1,8 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+import { API_URL, getApiUrl } from './client';
+export { API_URL };
 
 /** Mirrors backend app/schemas/onboarding.py OnboardingState. */
 export interface OnboardingState {
@@ -38,7 +38,8 @@ async function authToken(): Promise<string | null> {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await authToken();
   if (!token) throw new OnboardingError('Not authenticated.', 401);
-  const res = await fetch(`${API_URL}${path}`, {
+  const baseUrl = getApiUrl();
+  const res = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,

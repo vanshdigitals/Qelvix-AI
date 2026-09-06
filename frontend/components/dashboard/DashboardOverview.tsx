@@ -8,8 +8,7 @@ import { useToast } from '@/components/dashboard/AppShell';
 import { Panel, PanelTitle, SeverityBadge } from '@/components/dashboard/shared';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+import { getApiUrl } from '@/lib/api/client';
 
 interface DashboardSummary {
   risk_score?: number;
@@ -63,10 +62,11 @@ export function DashboardOverview() {
         return;
       }
       const headers = { Authorization: `Bearer ${token}` };
+      const baseUrl = getApiUrl();
       const [summaryRes, findingsRes, scansRes] = await Promise.all([
-        fetch(`${API_URL}/dashboard/summary`, { headers }),
-        fetch(`${API_URL}/findings?limit=5`, { headers }),
-        fetch(`${API_URL}/scans?limit=5`, { headers }),
+        fetch(`${baseUrl}/dashboard/summary`, { headers }),
+        fetch(`${baseUrl}/findings?limit=5`, { headers }),
+        fetch(`${baseUrl}/scans?limit=5`, { headers }),
       ]);
       if (!summaryRes.ok) {
         setError(`API returned ${String(summaryRes.status)}`);
@@ -134,7 +134,8 @@ export function DashboardOverview() {
         toast('Not authenticated.');
         return;
       }
-      const res = await fetch(`${API_URL}/scans/trigger`, {
+      const baseUrl = getApiUrl();
+      const res = await fetch(`${baseUrl}/scans/trigger`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

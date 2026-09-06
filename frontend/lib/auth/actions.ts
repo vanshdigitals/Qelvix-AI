@@ -1,5 +1,6 @@
 'use client';
 
+import { getApiUrl } from '@/lib/api/client';
 import { createClient } from '@/lib/supabase/client';
 import { SUPABASE_NOT_CONFIGURED_MESSAGE } from '@/lib/supabase/config';
 
@@ -99,7 +100,7 @@ export async function ensureOrgProvisioned(): Promise<void> {
   const token = session?.access_token;
   if (!token) return;
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+  const apiUrl = getApiUrl();
   try {
     const res = await fetch(`${apiUrl}/auth/provision-org`, {
       method: 'POST',
