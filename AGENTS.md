@@ -51,6 +51,7 @@ Full text and sources: `docs/impl/INVARIANTS.md`. Your task card lists which are
 - **INV-28** WCAG 2.1 AA. Severity never signalled by colour alone. Every route passes `axe-core`.
 - **INV-29** No secret is committed. Config only from `03` §11's variables. Webhooks verify signatures.
 - **INV-30** Logs are structured JSON carrying `org_id`. Claude prompts/responses never logged above `DEBUG`.
+- **INV-31** REAL DATA ONLY. Never fabricate, simulate, or hardcode data as production data. Truthful empty states or "Under Development" markers when unready. REAL DATA > COMPLETE-LOOKING UI.
 
 ## Naming
 

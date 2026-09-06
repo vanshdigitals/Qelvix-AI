@@ -7,6 +7,8 @@ class DashboardSummaryResponse(BaseModel):
     total_assets: int
     open_critical_findings: int
     open_high_findings: int
+    open_medium_findings: int = 0
+    open_low_findings: int = 0
 
 
 class DashboardAssetsResponse(BaseModel):

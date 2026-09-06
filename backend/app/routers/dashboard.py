@@ -48,27 +48,18 @@ async def get_dashboard_summary(  # noqa
         await db.scalar(select(func.count()).where(Asset.org_id == current_org.org_id)) or 0
     )
 
-    # Get open critical findings
-    critical_findings = (
-        await db.scalar(
-            select(func.count())
-            .where(Finding.org_id == current_org.org_id)
-            .where(Finding.status == "open")
-            .where(Finding.severity == "critical")
-        )
-        or 0
+    # Get open findings counts grouped by severity
+    findings_stmt = (
+        select(Finding.severity, func.count(Finding.id))
+        .where(Finding.org_id == current_org.org_id)
+        .where(Finding.status == "open")
+        .group_by(Finding.severity)
     )
-
-    # Get open high findings
-    high_findings = (
-        await db.scalar(
-            select(func.count())
-            .where(Finding.org_id == current_org.org_id)
-            .where(Finding.status == "open")
-            .where(Finding.severity == "high")
-        )
-        or 0
-    )
+    findings_counts = dict((await db.execute(findings_stmt)).all())
+    critical_findings = int(findings_counts.get("critical", 0))
+    high_findings = int(findings_counts.get("high", 0))
+    medium_findings = int(findings_counts.get("medium", 0))
+    low_findings = int(findings_counts.get("low", 0))
 
     return DashboardSummaryResponse(
         security_health_band=band,
@@ -76,6 +67,8 @@ async def get_dashboard_summary(  # noqa
         total_assets=total_assets,
         open_critical_findings=critical_findings,
         open_high_findings=high_findings,
+        open_medium_findings=medium_findings,
+        open_low_findings=low_findings,
     )
 
 

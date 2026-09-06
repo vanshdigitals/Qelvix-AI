@@ -14,7 +14,15 @@ interface DashboardSummary {
   risk_score?: number;
   open_critical_findings?: number;
   open_high_findings?: number;
+  open_medium_findings?: number;
+  open_low_findings?: number;
   total_assets?: number;
+}
+
+interface DashboardAssets {
+  total_domains: number;
+  total_subdomains: number;
+  total_ips: number;
 }
 
 interface ApiFinding {
@@ -47,6 +55,7 @@ export function DashboardOverview() {
   const toast = useToast();
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [assets, setAssets] = useState<DashboardAssets | null>(null);
   const [findings, setFindings] = useState<ApiFinding[]>([]);
   const [scans, setScans] = useState<ApiScan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,10 +72,11 @@ export function DashboardOverview() {
       }
       const headers = { Authorization: `Bearer ${token}` };
       const baseUrl = getApiUrl();
-      const [summaryRes, findingsRes, scansRes] = await Promise.all([
+      const [summaryRes, findingsRes, scansRes, assetsRes] = await Promise.all([
         fetch(`${baseUrl}/dashboard/summary`, { headers }),
         fetch(`${baseUrl}/findings?limit=5`, { headers }),
         fetch(`${baseUrl}/scans?limit=5`, { headers }),
+        fetch(`${baseUrl}/dashboard/assets`, { headers }),
       ]);
       if (!summaryRes.ok) {
         setError(`API returned ${String(summaryRes.status)}`);
@@ -81,6 +91,9 @@ export function DashboardOverview() {
       if (scansRes.ok) {
         const sData = (await scansRes.json()) as { items?: ApiScan[] };
         setScans(sData.items ?? []);
+      }
+      if (assetsRes.ok) {
+        setAssets((await assetsRes.json()) as DashboardAssets);
       }
     } catch (e) {
       console.error(e);
@@ -185,7 +198,10 @@ export function DashboardOverview() {
   const riskScore = summary?.risk_score ?? 100;
   const criticalCount = summary?.open_critical_findings ?? 0;
   const highCount = summary?.open_high_findings ?? 0;
+  const mediumCount = summary?.open_medium_findings ?? 0;
+  const lowCount = summary?.open_low_findings ?? 0;
   const totalAssets = summary?.total_assets ?? 0;
+  const totalFindings = criticalCount + highCount + mediumCount + lowCount;
 
   return (
     <>
@@ -297,23 +313,47 @@ export function DashboardOverview() {
               Triage
             </Link>
           </div>
-          <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
-            <span className="w-[13%] rounded-full bg-critical-text" />
-            <span className="w-[27%] rounded-full bg-high-text" />
-            <span className="w-[40%] rounded-full bg-accent" />
-            <span className="w-[20%] rounded-full bg-content-muted" />
-          </div>
+          {totalFindings > 0 ? (
+            <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
+              {criticalCount > 0 && (
+                <span
+                  style={{ width: `${String((criticalCount / totalFindings) * 100)}%` }}
+                  className="rounded-full bg-critical-text"
+                />
+              )}
+              {highCount > 0 && (
+                <span
+                  style={{ width: `${String((highCount / totalFindings) * 100)}%` }}
+                  className="rounded-full bg-high-text"
+                />
+              )}
+              {mediumCount > 0 && (
+                <span
+                  style={{ width: `${String((mediumCount / totalFindings) * 100)}%` }}
+                  className="rounded-full bg-accent"
+                />
+              )}
+              {lowCount > 0 && (
+                <span
+                  style={{ width: `${String((lowCount / totalFindings) * 100)}%` }}
+                  className="rounded-full bg-content-muted"
+                />
+              )}
+            </div>
+          ) : (
+            <div className="h-2 rounded-full bg-surface-inset border border-border/40" />
+          )}
           <div className="flex flex-col gap-2">
             {[
               { label: 'Critical', count: String(criticalCount), dot: 'bg-critical-text' },
               { label: 'High', count: String(highCount), dot: 'bg-high-text' },
-              { label: 'Medium', count: '—', dot: 'bg-accent' },
-              { label: 'Low', count: '—', dot: 'bg-content-muted' },
+              { label: 'Medium', count: String(mediumCount), dot: 'bg-accent' },
+              { label: 'Low', count: String(lowCount), dot: 'bg-content-muted' },
             ].map((row) => (
               <div key={row.label} className="flex items-center gap-2.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', row.dot)} />
                 <span className="flex-1 text-body-sm text-content-secondary">{row.label}</span>
-                <span className="tabular-nums text-body-sm tabular-nums text-content-primary">
+                <span className="tabular-nums text-body-sm text-content-primary">
                   {row.count}
                 </span>
               </div>
@@ -332,16 +372,16 @@ export function DashboardOverview() {
             </Link>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="tabular-nums text-[32px] font-medium leading-none tabular-nums text-content-primary">
+            <span className="tabular-nums text-[32px] font-medium leading-none text-content-primary">
               {totalAssets}
             </span>
             <span className="text-body-sm text-content-muted">monitored</span>
           </div>
           <div className="flex flex-col">
             {[
-              { label: 'Verified domains', val: '—', warn: false },
-              { label: 'Subdomains discovered', val: '—', warn: false },
-              { label: 'Not yet claimed', val: '—', warn: true },
+              { label: 'Verified domains', val: assets ? String(assets.total_domains) : '—', warn: false },
+              { label: 'Subdomains discovered', val: assets ? String(assets.total_subdomains) : '—', warn: false },
+              { label: 'IP addresses', val: assets ? String(assets.total_ips) : '—', warn: false },
             ].map((row) => (
               <div
                 key={row.label}
@@ -350,7 +390,7 @@ export function DashboardOverview() {
                 <span className="text-content-secondary">{row.label}</span>
                 <span
                   className={cn(
-                    'tabular-nums tabular-nums',
+                    'tabular-nums',
                     row.warn ? 'text-high-text' : 'text-content-primary',
                   )}
                 >
