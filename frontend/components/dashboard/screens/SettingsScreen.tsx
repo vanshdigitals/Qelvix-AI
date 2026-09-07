@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { useToast } from '@/components/dashboard/AppShell';
+import { DeleteAccountModal } from '@/components/dashboard/DeleteAccountModal';
 import { Panel, PanelTitle, PrimaryButton, ScreenHeader } from '@/components/dashboard/shared';
 import { API_URL, useApi } from '@/lib/api/client';
 import { createClient } from '@/lib/supabase/client';
@@ -33,6 +34,7 @@ export function SettingsScreen() {
   const [notificationEmail, setNotificationEmail] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (org) {
@@ -215,22 +217,29 @@ export function SettingsScreen() {
         </Panel>
 
         <div className="border-critical-text/40 flex flex-col gap-4 rounded-2xl border bg-surface p-6 shadow-xs">
-          <PanelTitle>Delete organisation</PanelTitle>
+          <PanelTitle>Delete account</PanelTitle>
           <p className="text-body-sm leading-relaxed text-content-secondary">
-            Removes every asset, finding, report and audit record for {org.name}. Team members
-            lose access immediately. This cannot be undone and support cannot restore it.
+            Permanently deletes your Qelvix account, your organisation ({org.name}), all monitored domains,
+            scans, findings, DPDP reports, and authentication credentials. This action cannot be undone.
           </p>
           <button
             type="button"
             onClick={() => {
-              toast('Deleting the organisation requires email confirmation.');
+              setShowDeleteModal(true);
             }}
             className="border-critical-text/40 inline-flex h-10 items-center justify-center self-start rounded-lg border px-4 text-body-sm font-semibold text-critical-text transition-colors hover:bg-critical-bg"
           >
-            Delete organisation
+            Delete account
           </button>
         </div>
       </div>
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+        }}
+      />
     </div>
   );
 }

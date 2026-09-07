@@ -61,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     from app.routers import (
+        account,
         auth,
         compliance,
         dashboard,
@@ -72,6 +73,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         webhooks,
     )
 
+    app.include_router(account.router)
     app.include_router(auth.router)
     app.include_router(org.router)
     app.include_router(members.router)
