@@ -6,6 +6,7 @@ export { API_URL };
 
 /** Mirrors backend app/schemas/onboarding.py OnboardingState. */
 export interface OnboardingState {
+  org_id?: string | null;
   onboarding_completed: boolean;
   onboarding_step: string;
   onboarding_data: Record<string, unknown>;
@@ -15,6 +16,13 @@ export interface OnboardingState {
   industry: string | null;
   notification_email: string | null;
   whatsapp_number: string | null;
+}
+
+export interface BootstrapOrgPayload {
+  name: string;
+  notification_email?: string;
+  gst?: string;
+  data?: Record<string, unknown>;
 }
 
 export class OnboardingError extends Error {
@@ -61,6 +69,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const getOnboarding = (): Promise<OnboardingState> => request('/org/me/onboarding');
+
+export const bootstrapOrganization = (payload: BootstrapOrgPayload): Promise<OnboardingState> =>
+  request('/org/me/bootstrap', { method: 'POST', body: JSON.stringify(payload) });
 
 export const saveOnboardingStep = (
   step: string,

@@ -59,6 +59,9 @@ export async function GET(request: NextRequest) {
     Number.isFinite(created) &&
     Number.isFinite(lastSignIn) &&
     Math.abs(lastSignIn - created) <= 5000;
+  const hasOrg = Boolean(user.app_metadata.org_id);
 
-  return NextResponse.redirect(`${origin}${isFirstSignIn ? '/onboarding' : POST_LOGIN_ROUTE}`);
+  return NextResponse.redirect(
+    `${origin}${isFirstSignIn || !hasOrg ? '/onboarding' : POST_LOGIN_ROUTE}`,
+  );
 }

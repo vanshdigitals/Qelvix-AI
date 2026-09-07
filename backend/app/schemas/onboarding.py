@@ -56,6 +56,7 @@ def next_step(step: str) -> str:
 class OnboardingState(BaseModel):
     """Everything the frontend needs to resume onboarding from where it stopped."""
 
+    org_id: str | None = None
     onboarding_completed: bool
     onboarding_step: str
     onboarding_data: dict[str, Any]
@@ -65,6 +66,15 @@ class OnboardingState(BaseModel):
     industry: str | None
     notification_email: str | None
     whatsapp_number: str | None
+
+
+class OrgBootstrapRequest(BaseModel):
+    """Payload to bootstrap/create the initial organization during Step 1."""
+
+    name: str
+    notification_email: str | None = None
+    gst: str | None = None
+    data: dict[str, Any] = Field(default_factory=dict)
 
 
 class OnboardingStepUpdate(BaseModel):

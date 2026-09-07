@@ -9,6 +9,7 @@ import { FloatingInput } from '@/components/auth/FloatingInput';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { DemoHelperCard } from '@/components/auth/DemoHelperCard';
 import { signInWithPassword } from '@/lib/auth/actions';
+import { createClient } from '@/lib/supabase/client';
 import { POST_LOGIN_ROUTE, isSupabaseConfigured } from '@/lib/supabase/config';
 
 function LoginForm() {
@@ -46,6 +47,19 @@ function LoginForm() {
     if (redirectTo === '/login' || redirectTo === '/signup' || redirectTo === '/success') {
       redirectTo = POST_LOGIN_ROUTE;
     }
+
+    // Direct users who do not have an active organization yet to onboarding
+    const supabase = createClient();
+    if (supabase && redirectTo === POST_LOGIN_ROUTE) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const hasOrg = Boolean(session?.user.app_metadata.org_id);
+      if (!hasOrg) {
+        redirectTo = '/onboarding';
+      }
+    }
+
     router.replace(redirectTo);
     router.refresh();
   }

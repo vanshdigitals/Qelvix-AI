@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/layout/Logo';
 import { SurfaceField } from '@/components/marketing/SurfaceField';
 import {
+  bootstrapOrganization,
   finishOnboarding,
   generateVerifyToken,
   getOnboarding,
@@ -25,6 +26,7 @@ import {
   verifyDomain,
   type OnboardingState,
 } from '@/lib/api/onboarding';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 export type OnboardingStep =
@@ -252,11 +254,17 @@ export function OnboardingWizard() {
     setSaveError(null);
     try {
       if (step === 'business') {
-        await saveOnboardingStep('business', {
-          name: orgName.trim() || undefined,
+        const state = await bootstrapOrganization({
+          name: orgName.trim() || 'My organization',
           notification_email: contact.trim() || undefined,
           gst: gst.trim() || undefined,
         });
+        // Immediately refresh the Supabase session so subsequent API calls carry app_metadata.org_id
+        const supabase = createClient();
+        if (supabase) {
+          await supabase.auth.refreshSession();
+        }
+        hydrate(state);
       } else if (step === 'industry') {
         await saveOnboardingStep('industry', { industry });
       } else if (step === 'domain') {

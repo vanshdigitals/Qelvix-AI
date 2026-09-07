@@ -4,26 +4,31 @@ import uuid
 from datetime import datetime, timezone
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from app.config import get_settings
 from app.database import get_db_session
 import dns.asyncresolver
 import dns.resolver
 
-from app.dependencies import CurrentOrg, get_current_org, require_role
-from app.models.org import Asset, Organization
+from app.dependencies import CurrentOrg, get_current_org, get_current_user_token, require_role
+from app.models.org import Asset, Member, Organization
 from app.rate_limit import org_rate_limit
 from app.schemas.common import MessageResponse, PaginatedResponse
 from app.schemas.onboarding import (
+    DomainUpdate,
     OnboardingState,
     OnboardingStepUpdate,
-    DomainUpdate,
+    OrgBootstrapRequest,
     next_step,
 )
+
+logger = logging.getLogger(__name__)
 from app.schemas.org import (
     AssetCreate,
     AssetResponse,
@@ -187,19 +192,141 @@ async def add_asset(  # noqa
     return asset
 
 
+# ---------------------------------------------------------------------------
+# Onboarding context & organization bootstrap helpers
+# ---------------------------------------------------------------------------
+
+async def set_supabase_user_org_claim(user_id: uuid.UUID, org_id: uuid.UUID) -> bool:
+    """Updates user's app_metadata in Supabase GoTrue Auth to include org_id."""
+    settings = get_settings()
+    admin_url = f"{settings.supabase_url.rstrip('/')}/auth/v1/admin/users/{str(user_id)}"
+    headers = {
+        "apikey": settings.supabase_service_key.get_secret_value(),
+        "Authorization": f"Bearer {settings.supabase_service_key.get_secret_value()}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.put(
+                admin_url, headers=headers, json={"app_metadata": {"org_id": str(org_id)}}
+            )
+            if resp.status_code < 400:
+                logger.info(
+                    "Successfully updated Supabase app_metadata for user %s to org %s",
+                    user_id,
+                    org_id,
+                )
+                return True
+            logger.error(
+                "Failed to update GoTrue app_metadata for user %s: %s - %s",
+                user_id,
+                resp.status_code,
+                resp.text,
+            )
+            return False
+    except Exception as exc:
+        logger.error("Exception updating GoTrue app_metadata for user %s: %s", user_id, exc)
+        return False
+
+
+class OnboardingContext:
+    def __init__(
+        self,
+        user_id: uuid.UUID,
+        org: Organization | None,
+        role: str | None,
+        token_payload: dict,
+    ):
+        self.user_id = user_id
+        self.org = org
+        self.role = role
+        self.token_payload = token_payload
+
+
+async def get_onboarding_context(
+    token_payload: Annotated[dict, Depends(get_current_user_token)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> OnboardingContext:
+    """Narrowly-scoped onboarding context dependency.
+
+    Extracts user_id from verified JWT sub. Resolves organization from token
+    claims if present, or by inspecting member records for the user. Allows
+    un-onboarded users with NO org yet to access initial onboarding state and
+    bootstrap their organization safely.
+    """
+    sub = token_payload.get("sub")
+    if not sub:
+        raise HTTPException(status_code=401, detail="Subject missing in token")
+    try:
+        user_id = uuid.UUID(sub)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid user ID in token")
+
+    app_metadata = token_payload.get("app_metadata", {})
+    user_metadata = token_payload.get("user_metadata", {})
+    org_id_str = (
+        token_payload.get("org_id") or app_metadata.get("org_id") or user_metadata.get("org_id")
+    )
+
+    org: Organization | None = None
+    role: str | None = None
+
+    if org_id_str:
+        try:
+            target_org_id = uuid.UUID(org_id_str)
+            member = await db.scalar(
+                select(Member)
+                .where(Member.user_id == user_id, Member.org_id == target_org_id)
+                .limit(1)
+            )
+            if member:
+                org = await db.get(Organization, target_org_id)
+                role = member.role
+        except ValueError:
+            pass
+
+    if not org:
+        member = await db.scalar(
+            select(Member).where(Member.user_id == user_id).limit(1)
+        )
+        if member:
+            org = await db.get(Organization, member.org_id)
+            role = member.role
+
+    return OnboardingContext(user_id=user_id, org=org, role=role, token_payload=token_payload)
+
+
+def _onboarding_state(org: Organization) -> OnboardingState:
+    return OnboardingState(
+        org_id=str(org.id),
+        onboarding_completed=org.onboarding_completed,
+        onboarding_step=org.onboarding_step,
+        onboarding_data=org.onboarding_data or {},
+        primary_domain=org.primary_domain,
+        domain_verified=org.domain_verified,
+        name=org.name,
+        industry=(org.settings or {}).get("industry"),
+        notification_email=org.notification_email,
+        whatsapp_number=org.whatsapp_number,
+    )
+
+
 @router.post(
     "/domain/verify-token",
     response_model=VerifyTokenResponse,
-    dependencies=[Depends(require_role("owner", "admin"))],
 )
 async def get_verify_token(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Issues a DNS TXT verification token for the org's real primary domain."""
-    org = await db.get(Organization, current_org.org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    if not ctx.org:
+        raise HTTPException(status_code=400, detail="Set up your organization first.")
+    if ctx.role not in ("owner", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
+    org = ctx.org
     if not org.primary_domain:
         raise HTTPException(
             status_code=400, detail="Set your primary domain before generating a token."
@@ -222,17 +349,20 @@ async def get_verify_token(  # noqa
     response_model=MessageResponse,
     dependencies=[
         Depends(org_rate_limit("verify_check", max_calls=30, window_seconds=300)),
-        Depends(require_role("owner", "admin")),
     ],
 )
 async def check_domain_verification(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Polled by the Domain Verification screen: does the real TXT record exist?"""
-    org = await db.get(Organization, current_org.org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    if not ctx.org:
+        raise HTTPException(status_code=400, detail="Set up your organization first.")
+    if ctx.role not in ("owner", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
+    org = ctx.org
 
     expected_txt = (org.onboarding_data or {}).get("verification_token")
     if not expected_txt:
@@ -272,11 +402,8 @@ async def check_domain_verification(  # noqa
     except dns.resolver.LifetimeTimeout as e:
         raise HTTPException(status_code=400, detail=f"DNS resolution timed out. Hostname: {domain}. Raw error: {str(e)}")
     except HTTPException:
-        # The "token not found" 400 is raised inside the try; let it propagate
-        # cleanly instead of being re-wrapped as a 500 by the catch-all below.
         raise
     except Exception as e:
-        # Don't leak resolver/stack internals to the client.
         logging.error(f"verify-check DNS lookup failed for {domain}: {type(e).__name__}: {e}")
         raise HTTPException(  # noqa
             status_code=502,
@@ -284,58 +411,128 @@ async def check_domain_verification(  # noqa
         )
 
 
-# ---------------------------------------------------------------------------
-# Onboarding: server-owned state so the wizard resumes and gates the dashboard.
-# ---------------------------------------------------------------------------
-
-def _onboarding_state(org: Organization) -> OnboardingState:
-    return OnboardingState(
-        onboarding_completed=org.onboarding_completed,
-        onboarding_step=org.onboarding_step,
-        onboarding_data=org.onboarding_data or {},
-        primary_domain=org.primary_domain,
-        domain_verified=org.domain_verified,
-        name=org.name,
-        industry=(org.settings or {}).get("industry"),
-        notification_email=org.notification_email,
-        whatsapp_number=org.whatsapp_number,
-    )
-
-
 @router.get("/onboarding", response_model=OnboardingState)
 async def get_onboarding(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
-    db: AsyncSession = Depends(get_db_session),  # noqa
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
 ):
-    """Auto-resume payload: completion, current step, and everything saved so far."""
-    org = await db.get(Organization, current_org.org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    """Auto-resume payload: completion, current step, and everything saved so far.
+
+    Returns clean initial onboarding state for newly authenticated users who
+    have not yet created an organization.
+    """
+    if not ctx.org:
+        user_email = ctx.token_payload.get("email")
+        return OnboardingState(
+            org_id=None,
+            onboarding_completed=False,
+            onboarding_step="business",
+            onboarding_data={},
+            primary_domain=None,
+            domain_verified=False,
+            name=None,
+            industry=None,
+            notification_email=user_email,
+            whatsapp_number=None,
+        )
+    return _onboarding_state(ctx.org)
+
+
+@router.post("/bootstrap", response_model=OnboardingState)
+async def bootstrap_organization(
+    payload: OrgBootstrapRequest,
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
+    db: AsyncSession = Depends(get_db_session),
+) -> OnboardingState:
+    """Initial organization creation endpoint for freshly authenticated users.
+
+    Derives user_id solely from verified JWT sub. Transactionally creates
+    Organization + Member(role="owner") and syncs active org_id into Supabase
+    GoTrue app_metadata.
+    """
+    user_id = ctx.user_id
+    org_name = payload.name.strip() if payload.name and payload.name.strip() else "My organization"
+    notification_email = (
+        payload.notification_email.strip()
+        if payload.notification_email and payload.notification_email.strip()
+        else ctx.token_payload.get("email")
+    )
+
+    onboarding_data = {**(payload.data or {})}
+    if payload.gst and payload.gst.strip():
+        onboarding_data["gst"] = payload.gst.strip()
+    if notification_email:
+        onboarding_data["notification_email"] = notification_email
+    if org_name:
+        onboarding_data["name"] = org_name
+
+    org = ctx.org
+    if org:
+        org.name = org_name
+        org.notification_email = notification_email
+        org.onboarding_data = {**(org.onboarding_data or {}), **onboarding_data}
+        flag_modified(org, "onboarding_data")
+        if org.onboarding_step in ("business", "welcome"):
+            org.onboarding_step = next_step("business")
+        org.onboarding_updated_at = datetime.now(timezone.utc)
+        await db.commit()
+        await db.refresh(org)
+    else:
+        org = Organization(
+            name=org_name,
+            primary_domain=None,
+            notification_email=notification_email,
+            onboarding_step=next_step("business"),
+            onboarding_data=onboarding_data,
+            onboarding_completed=False,
+        )
+        db.add(org)
+        await db.flush()
+
+        member = Member(org_id=org.id, user_id=user_id, role="owner")
+        db.add(member)
+        await db.commit()
+        await db.refresh(org)
+
+    await set_supabase_user_org_claim(user_id=user_id, org_id=org.id)
     return _onboarding_state(org)
 
 
-@router.patch(
-    "/onboarding",
-    response_model=OnboardingState,
-    dependencies=[Depends(require_role("owner", "admin"))],
-)
+@router.patch("/onboarding", response_model=OnboardingState)
 async def save_onboarding_step(  # noqa
     payload: OnboardingStepUpdate,
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Persist one step immediately, then advance the resume pointer.
 
     Known fields are mirrored onto real columns (name/email/whatsapp/industry);
     everything is also merged into onboarding_data so nothing is ever lost.
+    Handles seamless initial bootstrap if step == 'business' and user has no org yet.
     """
-    org = await db.get(Organization, current_org.org_id)
+    org = ctx.org
+    data = payload.data or {}
+
     if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+        if payload.step == "business":
+            bootstrap_req = OrgBootstrapRequest(
+                name=str(data.get("name") or "My organization"),
+                notification_email=data.get("notification_email"),
+                gst=data.get("gst"),
+                data=data,
+            )
+            return await bootstrap_organization(payload=bootstrap_req, ctx=ctx, db=db)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization must be set up before saving this step.",
+        )
+
+    if ctx.role not in ("owner", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
+
     if org.onboarding_completed:
         return _onboarding_state(org)
-
-    data = payload.data or {}
 
     # Mirror recognised fields onto first-class columns / settings.
     if isinstance(data.get("name"), str) and data["name"].strip():
@@ -368,17 +565,20 @@ async def save_onboarding_step(  # noqa
 @router.put(
     "/domain",
     response_model=OnboardingState,
-    dependencies=[Depends(require_role("owner", "admin"))],
 )
 async def set_primary_domain(  # noqa
     payload: DomainUpdate,
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Persist the real domain to verify. No suffixes, no fake values."""
-    org = await db.get(Organization, current_org.org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    if not ctx.org:
+        raise HTTPException(status_code=400, detail="Set up your organization first.")
+    if ctx.role not in ("owner", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
+    org = ctx.org
 
     # Changing the domain invalidates any prior verification.
     if org.primary_domain != payload.domain:
@@ -407,16 +607,19 @@ async def set_primary_domain(  # noqa
 @router.post(
     "/onboarding/complete",
     response_model=OnboardingState,
-    dependencies=[Depends(require_role("owner", "admin"))],
 )
 async def complete_onboarding(  # noqa
-    current_org: Annotated[CurrentOrg, Depends(get_current_org)],
+    ctx: Annotated[OnboardingContext, Depends(get_onboarding_context)],
     db: AsyncSession = Depends(get_db_session),  # noqa
 ):
     """Finalize onboarding. Hard-gated on real domain verification."""
-    org = await db.get(Organization, current_org.org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    if not ctx.org:
+        raise HTTPException(status_code=400, detail="Set up your organization first.")
+    if ctx.role not in ("owner", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
+    org = ctx.org
 
     missing = []
     if not org.name:

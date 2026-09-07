@@ -150,45 +150,24 @@ async def provision_org(  # noqa
     if not user_id:
         raise HTTPException(status_code=401, detail="Subject missing in token")
 
-    # Already provisioned? Return the existing org (idempotent).
+    # Already provisioned? Return the existing org and ensure claim is set.
     existing = await db.scalar(select(Member).where(Member.user_id == user_id).limit(1))
     if existing:
+        headers = {
+            "apikey": settings.supabase_service_key.get_secret_value(),
+            "Authorization": f"Bearer {settings.supabase_service_key.get_secret_value()}",
+            "Content-Type": "application/json",
+        }
+        admin_url = f"{settings.supabase_url.rstrip('/')}/auth/v1/admin/users/{user_id}"
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            await client.put(
+                admin_url, headers=headers, json={"app_metadata": {"org_id": str(existing.org_id)}}
+            )
         return ProvisionResponse(org_id=str(existing.org_id), created=False)
 
-    # Provisioning creates the org shell only. The real business name and the
-    # primary_domain are collected during onboarding — never invent a domain or
-    # append a suffix (that is exactly what broke DNS verification before).
-    local = email.split("@", 1)[0] if "@" in email else ""
-    name = local.replace(".", " ").replace("-", " ").title() or "My organization"
-
-    org = Organization(name=name, primary_domain=None)
-    db.add(org)
-    try:
-        await db.flush()
-    except IntegrityError:
-        await db.rollback()
-        raise HTTPException(status_code=409, detail="Could not provision organization")  # noqa
-
-    db.add(Member(org_id=org.id, user_id=user_id, role="owner"))
-    await db.commit()
-
-    # Write org_id into Supabase app_metadata so future tokens carry the claim.
-    headers = {
-        "apikey": settings.supabase_service_key.get_secret_value(),
-        "Authorization": f"Bearer {settings.supabase_service_key.get_secret_value()}",
-        "Content-Type": "application/json",
-    }
-    admin_url = f"{settings.supabase_url}/auth/v1/admin/users/{user_id}"
-    async with httpx.AsyncClient() as client:
-        resp = await client.put(
-            admin_url, headers=headers, json={"app_metadata": {"org_id": str(org.id)}}
-        )
-        if resp.status_code >= 400:
-            raise HTTPException(
-                status_code=502, detail="Provisioned org but failed to set token claim"
-            )
-
-    return ProvisionResponse(org_id=str(org.id), created=True)
+    # If the user has not completed Step 1 yet, do NOT invent fake placeholder org data.
+    # Real business name and domain are collected during Onboarding Step 1.
+    return ProvisionResponse(org_id="", created=False)
 
 
 @router.post("/refresh", response_model=AuthResponse)

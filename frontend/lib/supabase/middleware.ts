@@ -64,7 +64,8 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = POST_LOGIN_ROUTE;
+    const hasOrg = Boolean(user.app_metadata.org_id);
+    url.pathname = hasOrg ? POST_LOGIN_ROUTE : '/onboarding';
     url.search = '';
     return NextResponse.redirect(url);
   }
